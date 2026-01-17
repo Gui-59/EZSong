@@ -1,5 +1,6 @@
 ﻿using EZSong.Enums;
 using EZSong.EnumsStringifier;
+using EZSong.Exporting.Lilypond;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,12 +52,17 @@ namespace EZSong.Serializable {
         public ChordMode SeventhNoteMode;
         public ChordMode NinthNoteMode;
 
+        private readonly ILilypondConverter _lilypondSerializer;
+
         public Chord() {
             // Constructeur par défaut (requis pour la sérialisation)
+            _lilypondSerializer = new LilypondConverter();
             Duration = new();
         }
 
         public Chord(string uiChordString) {
+
+            _lilypondSerializer = new LilypondConverter();
 
             //Valeurs par défaut
             IsSilentChord = false;
@@ -181,8 +187,8 @@ namespace EZSong.Serializable {
             }
 
             string lilyPondString = "";
-            lilyPondString += NoteStepStringifier.ToLilyPondString(RootNote);
-            lilyPondString += AlterationStringifier.ToLilyPondString(RootNoteAlteration);
+            lilyPondString += _lilypondSerializer.NoteStepToLilyPondString(RootNote);
+            lilyPondString += _lilypondSerializer.AlterationToLilyPondString(RootNoteAlteration);
 
             lilyPondString += Duration.ToLilyPondString();
 

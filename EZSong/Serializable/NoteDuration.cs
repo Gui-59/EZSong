@@ -1,6 +1,7 @@
-﻿using Gtk;
-using EZSong.Enums;
+﻿using EZSong.Enums;
 using EZSong.EnumsStringifier;
+using EZSong.Exporting.Lilypond;
+using Gtk;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,11 +20,17 @@ namespace EZSong.Serializable {
         public bool Doted;
         public bool Doubledoted;
 
+        private readonly ILilypondConverter _lilypondSerializer;
+
         public NoteDuration() {
             // Constructeur par défaut (requis pour la sérialisation)
+            _lilypondSerializer = new LilypondConverter();
         }
 
         public NoteDuration(WholeFraction fraction, int dotsCount) {
+
+            _lilypondSerializer = new LilypondConverter();
+
             Fraction = fraction;
             if (dotsCount == 1) {
                 Doted = true;
@@ -39,7 +46,7 @@ namespace EZSong.Serializable {
 
         public string ToLilyPondString() {
             string lilyPondString = string.Empty;
-            lilyPondString += WholeFractionStringifier.ToLilyPondString(Fraction);
+            lilyPondString += _lilypondSerializer.WholeFractionToLilyPondString(Fraction);
             if (Doubledoted) {
                 lilyPondString += "..";
             } else if (Doted) {

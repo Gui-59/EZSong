@@ -1,5 +1,6 @@
 ﻿using EZSong.Enums;
 using EZSong.EnumsStringifier;
+using EZSong.Exporting.Lilypond;
 using EZSong.UI.Widgets.WidgetsData;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,17 @@ namespace EZSong.Serializable {
         public NoteStep Note;
         public Alteration Alteration;
         public int OctaveOffset;
-        
+
+        private readonly ILilypondConverter _lilypondSerializer;
+
         public Pitch() {
             //Contructeur par défaut (requis pour la sérialisation)
+            _lilypondSerializer = new LilypondConverter();
         }
 
         public Pitch(NoteStep note, Alteration alteration, int octaveOffset = 0) {
+            _lilypondSerializer = new LilypondConverter();
+
             Note = note;
             Alteration = alteration;
             OctaveOffset = octaveOffset;
@@ -29,8 +35,8 @@ namespace EZSong.Serializable {
         public string ToLilyPondString() {
             string lilyPondString = string.Empty;
 
-            lilyPondString += NoteStepStringifier.ToLilyPondString(Note);
-            lilyPondString += AlterationStringifier.ToLilyPondString(Alteration);
+            lilyPondString += _lilypondSerializer.NoteStepToLilyPondString(Note);
+            lilyPondString += _lilypondSerializer.AlterationToLilyPondString(Alteration);
 
             int sheetOctaveOffset = OctaveOffset + 1; //On augmente d'une octave se mettre naturellement dans la portée
 

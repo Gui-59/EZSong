@@ -1,13 +1,11 @@
-﻿using EZSong.Enums;
+using EZSong.Enums;
 using EZSong.Serializable;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace EZSong.Exporting.Lilypond {
-
     public class LilypondFileBuilder {
 
         const string _backslash = "\\";
@@ -24,14 +22,18 @@ namespace EZSong.Exporting.Lilypond {
         const string _lilypondvarSongmelody = "songmelody";
 
         private Song _song;
+        private readonly ILilypondConverter _lilypondSerializer;
 
-        public LilypondFileBuilder(Song song) {
-            _song = song;
+        public LilypondFileBuilder(Song song) : this(song, new LilypondConverter()) {
         }
 
-        public void GenerateLilypondFile(String outputFilePath) {           
+        public LilypondFileBuilder(Song song, ILilypondConverter serializer) {
+            _song = song;
+            _lilypondSerializer = serializer;
+        }
 
-            String fullScript = "";
+        public void GenerateLilypondFile(String outputFilePath) {
+            String fullScript = string.Empty;
 
             fullScript += GenerateLilypondScriptHeader();
             fullScript += GenerateLilypondSheetHeader();
@@ -44,10 +46,9 @@ namespace EZSong.Exporting.Lilypond {
         }
 
         private string GenerateLilypondScriptHeader() {
+            StringBuilder sw = new();
 
-            System.Text.StringBuilder sw = new();
-
-            //version de LilyPond
+			//version de LilyPond
             _ = sw.AppendLine($"{_backslash}version {_dblquote}{_lilypondTargetVersion}{_dblquote}");
 
             //Feuille de style
@@ -57,42 +58,42 @@ namespace EZSong.Exporting.Lilypond {
         }
 
         private string GenerateLilypondSheetHeader() {
+            StringBuilder sw = new();
 
-            System.Text.StringBuilder sw = new();
-
-            //Entête (titre et compositeur)
+			//Ent�te (titre et compositeur)
             _ = sw.AppendLine($"{_backslash}header {_opening_bracket} title = {_dblquote}{_song.Title}{_dblquote} composer = {_dblquote}{_song.Artist}{_dblquote} {_closing_bracket}");
 
             return sw.ToString();
         }
 
         private string GenerateLilypondSongmelodyVar() {
+            StringBuilder sw = new();
 
-            /*
+           /*
              * Rappel de la synthaxe : 
              * 
-             * Les noms des notes doivent toujours être en minuscules 
-             * (et doivent indiquer une durée totale exactement égale à la longeur de la mesure)            
-             * c' → do une octave au-dessus
-             * c'' → deux octaves au-dessus
-             * c → do central
-             * c, → do une octave en dessous
-             * c,, → deux octaves en dessous
+             * Les noms des notes doivent toujours �tre en minuscules 
+             * (et doivent indiquer une dur�e totale exactement �gale � la longeur de la mesure)            
+             * c' ? do une octave au-dessus
+             * c'' ? deux octaves au-dessus
+             * c ? do central
+             * c, ? do une octave en dessous
+             * c,, ? deux octaves en dessous
              * 
-             * Altérations : 
-             * Altération	        Suffixe	
-             * ♯ (dièse)	        is	    
-             * ♭ (bémol)	        es	
-             * ♮ (bécarre)	        !	
-             * ♯♯ (double dièse)	isis	
-             * ♭♭ (double bémol)	eses
+             * Alt�rations : 
+             * Alt�ration	        Suffixe	
+             * ? (di�se)	        is	    
+             * ? (b�mol)	        es	
+             * ? (b�carre)	        !	
+             * ?? (double di�se)	isis	
+             * ?? (double b�mol)	eses
              * 
-             * On entoure les notes d’un accord avec < >.
+             * On entoure les notes d�un accord avec < >.
              * 
              * 
-             * La durée est indiquée par un chiffre après la note :
+             * La dur�e est indiqu�e par un chiffre apr�s la note :
              * 
-             * Durée	        Code LilyPond	Nom français
+             * Dur�e	        Code LilyPond	Nom fran�ais
              * ronde	        1	            1
              * blanche	        2	            1/2
              * noire	        4	            1/4
@@ -100,20 +101,17 @@ namespace EZSong.Exporting.Lilypond {
              * double croche    16	            1/16
              * triple croche    32	            1/32
              * 
-             * Pour les notes pointées : 
-             * On ajoute un "." après la durée
+             * Pour les notes point�es : 
+             * On ajoute un "." apr�s la dur�e
              * 
              * Un tuplet (ex. trois croches en une noire) se note avec \tuplet.
              * Exemple : "\tuplet 3/2 { c8 d e }"   (3 croches en place de 2)
              * 
-             * Pour lier une note avec sa suivante : il suffit de mettre un tilde juste après la note
+             * Pour lier une note avec sa suivante : il suffit de mettre un tilde juste apr�s la note
              * 
-             * un silence est matérialisé par "r" (avec une durée comme pour les notes)
+             * un silence est mat�rialis� par "r" (avec une dur�e comme pour les notes)
              * */
-
-            System.Text.StringBuilder sw = new();
-
-            //Mélodie
+			//M�lodie
             _ = sw.AppendLine($"{_lilypondvarSongmelody} = {_opening_bracket}");
 
             foreach (MeasureData m in _song.Measures) {
@@ -123,57 +121,56 @@ namespace EZSong.Exporting.Lilypond {
                 TimeSignature timeSignature = new(m.TimeSignature.Upper, m.TimeSignature.Lower);
                 _ = sw.AppendLine(GenerateLilypondTimeSignature(timeSignature));
 
-                _ = sw.AppendLine(m.Melody.ToLilyPondString());
+                _ = sw.AppendLine(_lilypondSerializer.FormatMeasureMelody(m.Melody));
 
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
             }
+
             _ = sw.AppendLine($"{_closing_bracket}");
 
             return sw.ToString();
         }
 
         private string GenerateLilypondTimeSignature(TimeSignature timeSignature) {
-            return "\\time " + timeSignature.ToLilyPondString();
+            return "\\time " + _lilypondSerializer.FormatTimeSignature(timeSignature);
         }
 
         private string GenerateLilypondKeySignature(KeySignature keySignature) {
-
-            /*
-             * Tonalité	    Armure		Notes altérées							Commande LilyPond
-             * Do majeur	—			—										\key c \major
-             * La mineur	—			—										\key a \minor
-             * Sol majeur	1 ♯			fa♯										\key g \major
-             * Mi mineur	1 ♯			fa♯										\key e \minor
-             * Ré majeur	2 ♯			fa♯, do♯								\key d \major
-             * Si mineur	2 ♯			fa♯, do♯								\key b \minor
-             * La majeur	3 ♯			fa♯, do♯, sol♯							\key a \major
-             * Fa♯ mineur	3 ♯			fa♯, do♯, sol♯							\key fis \minor
-             * Mi majeur	4 ♯			fa♯, do♯, sol♯, ré♯						\key e \major
-             * Do♯ mineur	4 ♯			fa♯, do♯, sol♯, ré♯						\key cis \minor
-             * Si majeur	5 ♯			fa♯, do♯, sol♯, ré♯, la♯				\key b \major
-             * Sol♯ mineur	5 ♯			fa♯, do♯, sol♯, ré♯, la♯				\key gis \minor
-             * Fa♯ majeur	6 ♯			fa♯, do♯, sol♯, ré♯, la♯, mi♯			\key fis \major
-             * Ré♯ mineur	6 ♯			fa♯, do♯, sol♯, ré♯, la♯, mi♯			\key dis \minor
-             * Do♯ majeur	7 ♯			fa♯, do♯, sol♯, ré♯, la♯, mi♯, si♯		\key cis \major
-             * La♯ mineur	7 ♯			fa♯, do♯, sol♯, ré♯, la♯, mi♯, si♯		\key ais \minor
-             * Fa majeur	1 ♭			si♭										\key f \major
-             * Ré mineur	1 ♭			si♭										\key d \minor
-             * Si♭ majeur	2 ♭			si♭, mi♭									\key bes \major
-             * Sol mineur	2 ♭			si♭, mi♭									\key g \minor
-             * Mi♭ majeur	3 ♭			si♭, mi♭, la♭							\key ees \major
-             * Do mineur	3 ♭			si♭, mi♭, la♭							\key c \minor
-             * La♭ majeur	4 ♭			si♭, mi♭, la♭, ré♭						\key aes \major
-             * Fa mineur	4 ♭			si♭, mi♭, la♭, ré♭						\key f \minor
-             * Ré♭ majeur	5 ♭			si♭, mi♭, la♭, ré♭, sol♭					\key des \major
-             * Si♭ mineur	5 ♭			si♭, mi♭, la♭, ré♭, sol♭					\key bes \minor
-             * Sol♭ majeur	6 ♭			si♭, mi♭, la♭, ré♭, sol♭, do♭				\key ges \major
-             * Mi♭ mineur	6 ♭			si♭, mi♭, la♭, ré♭, sol♭, do♭				\key ees \minor
-             * Do♭ majeur	7 ♭			si♭, mi♭, la♭, ré♭, sol♭, do♭, fa♭		\key ces \major
-             * La♭ mineur	7 ♭			si♭, mi♭, la♭, ré♭, sol♭, do♭, fa♭		\key aes \minor
+            // Pour l'instant, on r�impl�mente ici la conversion (ou d�l�guer � _serializer lorsque disponible).
+            string lilypondCode = string.Empty;
+			/*
+             * Tonalit�	    Armure		Notes alt�r�es							Commande LilyPond
+             * Do majeur	�			�										\key c \major
+             * La mineur	�			�										\key a \minor
+             * Sol majeur	1 ?			fa?										\key g \major
+             * Mi mineur	1 ?			fa?										\key e \minor
+             * R� majeur	2 ?			fa?, do?								\key d \major
+             * Si mineur	2 ?			fa?, do?								\key b \minor
+             * La majeur	3 ?			fa?, do?, sol?							\key a \major
+             * Fa? mineur	3 ?			fa?, do?, sol?							\key fis \minor
+             * Mi majeur	4 ?			fa?, do?, sol?, r�?						\key e \major
+             * Do? mineur	4 ?			fa?, do?, sol?, r�?						\key cis \minor
+             * Si majeur	5 ?			fa?, do?, sol?, r�?, la?				\key b \major
+             * Sol? mineur	5 ?			fa?, do?, sol?, r�?, la?				\key gis \minor
+             * Fa? majeur	6 ?			fa?, do?, sol?, r�?, la?, mi?			\key fis \major
+             * R�? mineur	6 ?			fa?, do?, sol?, r�?, la?, mi?			\key dis \minor
+             * Do? majeur	7 ?			fa?, do?, sol?, r�?, la?, mi?, si?		\key cis \major
+             * La? mineur	7 ?			fa?, do?, sol?, r�?, la?, mi?, si?		\key ais \minor
+             * Fa majeur	1 ?			si?										\key f \major
+             * R� mineur	1 ?			si?										\key d \minor
+             * Si? majeur	2 ?			si?, mi?									\key bes \major
+             * Sol mineur	2 ?			si?, mi?									\key g \minor
+             * Mi? majeur	3 ?			si?, mi?, la?							\key ees \major
+             * Do mineur	3 ?			si?, mi?, la?							\key c \minor
+             * La? majeur	4 ?			si?, mi?, la?, r�?						\key aes \major
+             * Fa mineur	4 ?			si?, mi?, la?, r�?						\key f \minor
+             * R�? majeur	5 ?			si?, mi?, la?, r�?, sol?					\key des \major
+             * Si? mineur	5 ?			si?, mi?, la?, r�?, sol?					\key bes \minor
+             * Sol? majeur	6 ?			si?, mi?, la?, r�?, sol?, do?				\key ges \major
+             * Mi? mineur	6 ?			si?, mi?, la?, r�?, sol?, do?				\key ees \minor
+             * Do? majeur	7 ?			si?, mi?, la?, r�?, sol?, do?, fa?		\key ces \major
+             * La? mineur	7 ?			si?, mi?, la?, r�?, sol?, do?, fa?		\key aes \minor
              */
-
-
-            string lilypondCode = "";
 
             lilypondCode += "\\key ";
 
@@ -200,7 +197,7 @@ namespace EZSong.Exporting.Lilypond {
                     lilypondCode += "g";
                     break;
                 default:
-                    return "";
+                    return string.Empty;
             }
 
             switch (keySignature.Alteration) {
@@ -211,10 +208,10 @@ namespace EZSong.Exporting.Lilypond {
                     lilypondCode += "is";
                     break;
                 case Alteration.neutral:
-                    lilypondCode += "";
+                    lilypondCode += string.Empty;
                     break;
                 default:
-                    return "";
+                    return string.Empty;
             }
 
             lilypondCode += " ";
@@ -227,49 +224,46 @@ namespace EZSong.Exporting.Lilypond {
                     lilypondCode += "\\minor";
                     break;
                 default:
-                    return "";
+                    return string.Empty;
             }
 
             return lilypondCode;
         }
 
         private string GenerateLilypondSongchordsVar() {
+            StringBuilder sw = new();
 
-            System.Text.StringBuilder sw = new();
-
-            //accords
+			//accords
             _ = sw.AppendLine($"{_lilypondvarSongchords} =  {_backslash}chordmode {_opening_bracket} ");
             foreach (MeasureData m in _song.Measures) {
-                _ = sw.AppendLine($"{m.ChordSequence.ToLilyPondString()}"); //Les noms d'accords doivent toujours être en minuscules
+                _ = sw.AppendLine($"{_lilypondSerializer.FormatChordSequence(m.ChordSequence)}");
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
-
             }
+
             _ = sw.AppendLine($"{_closing_bracket} ");
 
             return sw.ToString();
         }
 
         private string GenerateLilypondSonglyricsVar() {
+            StringBuilder sw = new();
 
-            System.Text.StringBuilder sw = new();
-
-            //Paroles sans découpage par syllabe (une phrase par mesure)
+			//Paroles sans d�coupage par syllabe (une phrase par mesure)
             _ = sw.AppendLine($"{_lilypondvarSonglyrics} = {_opening_bracket}");
             foreach (MeasureData m in _song.Measures) {
                 _ = sw.AppendLine($"s1_{_backslash}markup {_opening_bracket} {_dblquote}{m.Lyrics}{_dblquote} {_closing_bracket} ");
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
-
             }
+
             _ = sw.AppendLine($"{_closing_bracket} ");
 
             return sw.ToString();
         }
 
         private string GenerateLilypondScoreAssembly() {
+            StringBuilder sw = new();
 
-            System.Text.StringBuilder sw = new();
-
-            //Code LilyPond pour l'assemblage de la partition 
+			//Code LilyPond pour l'assemblage de la partition 	
             _ = sw.AppendLine($"{_backslash}score {_opening_bracket}");
             _ = sw.AppendLine($"<<");
 
@@ -286,7 +280,6 @@ namespace EZSong.Exporting.Lilypond {
             _ = sw.AppendLine($"{_closing_bracket}");
 
             return sw.ToString();
-
         }
     }
 }

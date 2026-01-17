@@ -1,6 +1,7 @@
-﻿using Gtk;
-using EZSong.Enums;
+﻿using EZSong.Enums;
 using EZSong.EnumsStringifier;
+using EZSong.Exporting.Lilypond;
+using Gtk;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +17,16 @@ namespace EZSong.Serializable {
         public Alteration Alteration;
         public SongMode Mode;
 
+        private readonly ILilypondConverter _lilypondSerializer;
+
         public KeySignature() {
             // Constructeur par défaut (requis pour la sérialisation)
+            _lilypondSerializer = new LilypondConverter();
         }
 
         public KeySignature(string keySignatureDropDownId) {
+
+            _lilypondSerializer = new LilypondConverter();
 
             //Premier caractère de l'id : la note (hors altération)
             switch (keySignatureDropDownId.Substring(0, 1).ToLowerInvariant()) {
@@ -75,14 +81,15 @@ namespace EZSong.Serializable {
             Note = note; 
             Alteration = alteration;
             Mode = mode;
+            _lilypondSerializer = new LilypondConverter();
         }
 
         public string ToDropDownId() {
-            return 
-                NoteStepStringifier.ToLilyPondString(Note) 
-                + AlterationStringifier.ToLilyPondString(Alteration) 
+            return
+                _lilypondSerializer.NoteStepToLilyPondString(Note) 
+                + _lilypondSerializer.AlterationToLilyPondString(Alteration) 
                 + " "
-                + SongModeStringifier.ToLilyPondString(Mode);
+                + _lilypondSerializer.SongModeToLilyPondString(Mode);
         }
 
         public string ToDropDownLabel() {

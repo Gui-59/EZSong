@@ -8,25 +8,7 @@ using System.Threading.Tasks;
 namespace EZSong.EnumsStringifier {
     public static class NoteStepStringifier {
 
-        public static string ToLilyPondString(NoteStep note) {
-            switch (note) {
-                case NoteStep.C:
-                    return "c";
-                case NoteStep.D:
-                    return "d";
-                case NoteStep.E:
-                    return "e";
-                case NoteStep.F:
-                    return "f";
-                case NoteStep.G:
-                    return "g";
-                case NoteStep.A:
-                    return "a";
-                case NoteStep.B:
-                    return "b";
-            }
-            return "?";
-        }
+        
 
         public static string ToHumanString(NoteStep note) {
             switch (note) {
