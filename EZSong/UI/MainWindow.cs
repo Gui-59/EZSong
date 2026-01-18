@@ -147,6 +147,8 @@ namespace EZSong.UI
             _melodyMeasureEditorWidgets = new();
 
             AddMeasures(5); //5 mesures par défaut
+
+            Maximize(); // Démarrer en mode maximisé
         }
 
         private void PopulateMenuTabs() {
@@ -325,9 +327,15 @@ namespace EZSong.UI
         private void AddMeasure(MeasureData measure) {
             Box row = new(Orientation.Vertical, 0); //On met en superposé les elements qui définissent une mesure
 
-            // Label mesure
+            // Barre de boutons en haut : label + actions
+            Box topBar = new(Orientation.Horizontal, 6) { Homogeneous = false };
+
+            // Label mesure (aligné à gauche)
             Label label = new($"{measure.Index}") { Xalign = 0f, Yalign = 0.5f };
-            row.PackStart(label, false, false, 6);
+            topBar.PackStart(label, true, true, 6);
+
+            // Conteneur pour les boutons (alignés à droite)
+            Box buttonsBox = new(Orientation.Horizontal, 4) { Homogeneous = false };
 
             //Bouton de suppression de la mesure
             Button deleteSelf = new();
@@ -335,23 +343,28 @@ namespace EZSong.UI
             deleteSelf.Clicked += (o, args) => {
                 DeleteMesure(measure.Index - 1);
             };
-            row.PackStart(deleteSelf, false, false, 6);
+            buttonsBox.PackStart(deleteSelf, false, false, 0);
 
-            //Bouton de d'ajout de mesure avant
+            //Bouton d'ajout de mesure avant
             Button addBefore = new();
             addBefore.Label = "Ajouter une mesure avant";
             addBefore.Clicked += (o, args) => {
                 AddMesureBefore(measure.Index - 1);
             };
-            row.PackStart(addBefore, false, false, 6);
+            buttonsBox.PackStart(addBefore, false, false, 0);
 
-            //Bouton de d'ajout de mesure après
+            //Bouton d'ajout de mesure après
             Button addAfter = new();
-            addAfter.Label = "Ajouter une mesure avant";
+            addAfter.Label = "Ajouter une mesure après";
             addAfter.Clicked += (o, args) => {
                 AddMesureAfter(measure.Index - 1);
             };
-            row.PackStart(addAfter, false, false, 6);
+            buttonsBox.PackStart(addAfter, false, false, 0);
+
+            topBar.PackStart(buttonsBox, false, false, 0);
+
+            // Ajouter la barre de boutons en haut de la mesure
+            row.PackStart(topBar, false, false, 6);
 
             // Signature temporelle : Upper (ComboBoxText)
             ComboBoxText upperTimeSigCombo = new();
