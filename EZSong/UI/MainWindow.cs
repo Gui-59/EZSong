@@ -120,6 +120,8 @@ namespace EZSong.UI
 
             ShowAll();
 
+            
+
             //Detection de la saisie via clavier MIDI
             _midiManager = new MidiInputManager();
 
@@ -143,6 +145,8 @@ namespace EZSong.UI
             };
 
             _melodyMeasureEditorWidgets = new();
+
+            AddMeasures(5); //5 mesures par défaut
         }
 
         private void PopulateMenuTabs() {
@@ -171,7 +175,6 @@ namespace EZSong.UI
                     break;
 
                 case "mesures":
-                    flow.Add(CreateIconButton("Ajouter à la fin", (s, e) => AddMeasure()));
                     break;
 
                 case "export":
@@ -302,13 +305,21 @@ namespace EZSong.UI
             }
         }
 
-        private void AddMeasure() {
-            int num = _currentSong.Measures.Count + 1;
-            MeasureData m = new() { Index = num, TimeSignature = new(4, 4), KeySignature = new(NoteStep.C, Alteration.neutral, SongMode.major) };
-            _currentSong.Measures.Add(m);
-            _ = _measureStore.AppendValues(num.ToString(), m.TimeSignature, m.KeySignature, m.ChordSequence, m.Lyrics);
+        private void AddMeasures(int number) {
 
-            AddMeasure(m);
+            for (int i = 0; i < number; i++) {
+
+                int num = _currentSong.Measures.Count + 1;
+                MeasureData m = new() {
+                    Index = num,
+                    TimeSignature = new(4, 4),
+                    KeySignature = new(NoteStep.C, Alteration.neutral, SongMode.major)
+                };
+                _currentSong.Measures.Add(m);
+                _ = _measureStore.AppendValues(num.ToString(), m.TimeSignature, m.KeySignature, m.ChordSequence, m.Lyrics);
+
+                AddMeasure(m);
+            }
         }
 
         private void AddMeasure(MeasureData measure) {
@@ -511,6 +522,13 @@ namespace EZSong.UI
         }
 
         private void DeleteMesure(int index) {
+
+            if (_currentSong.Measures.Count <= 1) {
+                // Ne pas permettre la suppression si c'est la dernière mesure
+                _ = _statusBar.Push(_statusBarContextId, "Impossible de supprimer la dernière mesure.");
+                return;
+            }
+
             // Vérification de l'index
             if (_currentSong == null || _currentSong.Measures == null) {
                 return;
