@@ -189,11 +189,11 @@ namespace EZSong.UI.Widgets {
              */
 
             if (
-                noteInOctave == 2 && octaveOffset == 1
-                || noteInOctave == 4 && octaveOffset == 1
-                || noteInOctave == 6 && octaveOffset == 1
-                || noteInOctave == 1 && octaveOffset == 2
-                || noteInOctave == 3 && octaveOffset == 2
+                (noteInOctave == 2 && octaveOffset == 1)
+                || (noteInOctave == 4 && octaveOffset == 1)
+                || (noteInOctave == 6 && octaveOffset == 1)
+                || (noteInOctave == 1 && octaveOffset == 2)
+                || (noteInOctave == 3 && octaveOffset == 2)
              ) {
                 //Ligne pleine
                 cr.LineWidth = 2.0;
@@ -203,12 +203,12 @@ namespace EZSong.UI.Widgets {
                 cr.LineTo(Allocation.Width, y);
                 cr.Stroke();
             } else if (
-                noteInOctave == 1 && octaveOffset == 0
-                || noteInOctave == 3 && octaveOffset == 0
-                || noteInOctave == 5 && octaveOffset == 0
-                || noteInOctave == 0 && octaveOffset == 1
-                || noteInOctave == 5 && octaveOffset == 2
-                || noteInOctave == 0 && octaveOffset == 3
+                (noteInOctave == 1 && octaveOffset == 0)
+                || (noteInOctave == 3 && octaveOffset == 0)
+                || (noteInOctave == 5 && octaveOffset == 0)
+                || (noteInOctave == 0 && octaveOffset == 1)
+                || (noteInOctave == 5 && octaveOffset == 2)
+                || (noteInOctave == 0 && octaveOffset == 3)
             ) {
                 //Ligne pointillée
                 cr.LineWidth = 2.0;
@@ -482,7 +482,7 @@ namespace EZSong.UI.Widgets {
                 int idx = Math.Min(_chords.Count - 1, Math.Max(0, col));
                 if (idx >= 0 && idx < _chords.Count) {
                     // compute which pitch is clicked and cycle its alteration if present, otherwise add with flat
-                    CycleAlterAt(idx, row);
+                    _ = CycleAlterAt(idx, row);
                     QueueDraw();
                     ContentChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -524,12 +524,107 @@ namespace EZSong.UI.Widgets {
                 // if chord becomes empty, keep it (empty chord allowed) — you can remove if desired
             } else {
                 chord.Pitches.Add(new WidgetPitch(noteIndex, octaveOffset, Alteration.neutral));
-
-                await _embeddedMidiSynth.EchoChordAsync(new[] { noteIndex }, new[] { 100 }, 800);
+                
+                int noteNumber = GetNoteNumber(NoteNumberInFullOctaveFromIndexInOctave(noteIndex), 5 + octaveOffset, Alteration.neutral);
+                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { 100 }, 800);
             }
         }
 
-        private void CycleAlterAt(int chordIndex, int rowFromTop) {
+        private int GetNoteNumber(int noteNumberInFullOctave, int midiOctave, Alteration alteration) {
+            int ret = GetMidiCNoteFromOctave(midiOctave) + (noteNumberInFullOctave);
+
+            switch (alteration) {
+                case Alteration.flatflat:
+                    ret -= 2;
+                    break;
+                case Alteration.flat:
+                    ret -= 1;
+                    break;
+                case Alteration.sharp:
+                    ret += 1;
+                    break;
+                case Alteration.sharpsharp:
+                    ret += 2;
+                    break;
+            }
+
+            return ret;
+        }
+
+        //TODO : a migrer ailleurs
+        private int GetMidiCNoteFromOctave(int midiOctave) {
+
+            if (midiOctave == 1) {
+                return 0;
+            }
+            if (midiOctave == 2) {
+                return 24;
+            }
+            if (midiOctave == 3) {
+                return 36;
+            }
+            if (midiOctave == 4) {
+                return 48;
+            }
+            if (midiOctave == 5) {
+                return 60;
+            }
+            if (midiOctave == 6) {
+                return 72;
+            }
+            if (midiOctave == 7) {
+                return 84;
+            }
+            if (midiOctave == 8) {
+                return 96;
+            }
+            if (midiOctave == 9) {
+                return 108;
+            }
+            if (midiOctave == 10) {
+                return 120;
+            }
+
+            return 0;
+        }   
+
+        //TODO : a migrer ailleurs
+        //Retourne la position de la note de 1 à 12 dans l'octave
+        // A partir de sa position dans l'octave
+        private int NoteNumberInFullOctaveFromIndexInOctave(int noteIndexInOctave) {
+
+            if (noteIndexInOctave==0) {
+                return 0; //C
+            }
+
+            if (noteIndexInOctave==1) {
+                return 2; //D 
+            }
+
+            if (noteIndexInOctave==2) {
+                return 4; //E 
+            }
+
+            if (noteIndexInOctave==3) {
+                return 5; //F 
+            }
+
+            if (noteIndexInOctave==4) {
+                return 7; //G 
+            }
+
+            if (noteIndexInOctave==5) {
+                return 9; //A 
+            }
+
+            if (noteIndexInOctave==6) {
+                return 11; //B                                                                          
+            }
+
+            throw new Exception("NoteIndexInOctave invalide : " + noteIndexInOctave);
+        }
+
+        private async Task CycleAlterAt(int chordIndex, int rowFromTop) {
             if (chordIndex < 0 || chordIndex >= _chords.Count) {
                 return;
             }
@@ -550,6 +645,9 @@ namespace EZSong.UI.Widgets {
                 } else {
                     existing.Alteration = Alteration.neutral;
                 }
+
+                int noteNumber = GetNoteNumber(NoteNumberInFullOctaveFromIndexInOctave(existing.NoteIndex), 5 + existing.OctaveOffset, existing.Alteration);
+                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { 100 }, 800);
             } else {
                 // add with flat by default
                 chord.Pitches.Add(new WidgetPitch(noteIndex, octaveOffset, Alteration.flat));

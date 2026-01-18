@@ -38,22 +38,23 @@ namespace EZSong.MIDI {
         /// Joue une note MIDI sur le canal 0 (0–15).
         /// </summary>
         public async Task EchoChordAsync(
-        IEnumerable<int> notes,
+        IEnumerable<int> noteNumbers,
         IEnumerable<int> velocities,
         int durationMs) {
 
             //TODO : ne fonctionne pas !
 
             int index = 0;
-            foreach (int note in notes) {
-                _synth.NoteOn(_channel, note, velocities.ToArray()[index]);
+            foreach (int noteNumber in noteNumbers) {
+                Console.WriteLine("EchoChordAsync : note=" + noteNumber);
+                _synth.NoteOn(_channel, noteNumber, velocities.ToArray()[index]);
                 index++;
             }
 
             await Task.Delay(durationMs);
 
-            foreach (int note in notes) {
-                _synth.NoteOff(_channel, note);
+            foreach (int noteNumber in noteNumbers) {
+                _synth.NoteOff(_channel, noteNumber);
             }
         }
 
@@ -61,6 +62,7 @@ namespace EZSong.MIDI {
         /// Joue une note MIDI sur le canal 0 (0–15).
         /// </summary>
         public void PlayNote(int noteNumber, int velocity = 100) {
+            Console.WriteLine("PlayNote : noteNumber=" + noteNumber);
             _synth.NoteOn(_channel, noteNumber, velocity);
         }
 

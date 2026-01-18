@@ -78,7 +78,7 @@ namespace EZSong.MIDI {
                     if (!_currentlyPressedNotes.Contains(noteOn.NoteNumber)) {
                         _currentlyPressedNotes.Add(noteOn.NoteNumber);
                         //Echo MIDI
-                        _embeddedMidiSynth.PlayNote(noteOn.NoteNumber);
+                        _embeddedMidiSynth.PlayNote(noteOn.NoteNumber, noteOn.Velocity);
                     }
                 }
 
