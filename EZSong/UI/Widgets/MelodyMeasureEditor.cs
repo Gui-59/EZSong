@@ -17,6 +17,9 @@ namespace EZSong.UI.Widgets {
 
         const int _notesPerOctave = 7;   // C D E F G A B
 
+        const int _echoVelocity = 100;   
+        const int _echoDuration = 400;   
+
         // Public properties for configuration
         public int OctaveCount { get; set; } = 3; // number of octaves to display
         public int BaseOctave { get; set; } = 4;  // visual reference (middle C octave)
@@ -526,7 +529,7 @@ namespace EZSong.UI.Widgets {
                 chord.Pitches.Add(new WidgetPitch(noteIndex, octaveOffset, Alteration.neutral));
                 
                 int noteNumber = GetNoteNumber(NoteNumberInFullOctaveFromIndexInOctave(noteIndex), 5 + octaveOffset, Alteration.neutral);
-                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { 100 }, 800);
+                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _echoVelocity }, _echoDuration);
             }
         }
 
@@ -647,10 +650,13 @@ namespace EZSong.UI.Widgets {
                 }
 
                 int noteNumber = GetNoteNumber(NoteNumberInFullOctaveFromIndexInOctave(existing.NoteIndex), 5 + existing.OctaveOffset, existing.Alteration);
-                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { 100 }, 800);
+                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _echoVelocity }, _echoDuration);
             } else {
                 // add with flat by default
                 chord.Pitches.Add(new WidgetPitch(noteIndex, octaveOffset, Alteration.flat));
+
+                int noteNumber = GetNoteNumber(NoteNumberInFullOctaveFromIndexInOctave(noteIndex), 5 + octaveOffset, Alteration.flat);
+                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _echoVelocity }, _echoDuration);
             }
         }
 
