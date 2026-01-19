@@ -17,8 +17,7 @@ namespace EZSong.UI.Widgets {
 
         const int _notesPerOctave = 7;   // C D E F G A B
 
-        const int _echoVelocity = 100;   
-        const int _echoDuration = 400;   
+        private MIDI.UserSettings _midiUserSettings;
 
         // Public properties for configuration
         public int OctaveCount { get; set; } = 3; // number of octaves to display
@@ -64,6 +63,8 @@ namespace EZSong.UI.Widgets {
 
         public MelodyMeasureEditor() {
 
+            _midiUserSettings = new MIDI.UserSettings();
+
             _topMargin = NoteDiamondRadius*2;
             _leftMargin = NoteDiamondRadius * 2;
 
@@ -90,7 +91,7 @@ namespace EZSong.UI.Widgets {
             CanFocus = true;
 
             SoundFontManager soundFontManager = new();
-            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, GMVoice.PIANO_ElectricPiano1);
+            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, _midiUserSettings.MidiInputEchoVoice);
 
         }
 
@@ -529,7 +530,7 @@ namespace EZSong.UI.Widgets {
                 chord.Pitches.Add(new WidgetPitch(noteIndex, octaveOffset, Alteration.neutral));
                 
                 int noteNumber = GetNoteNumber(NoteNumberInFullOctaveFromIndexInOctave(noteIndex), 5 + octaveOffset, Alteration.neutral);
-                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _echoVelocity }, _echoDuration);
+                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _midiUserSettings.MidiInputEchoVeloctiy }, _midiUserSettings.MidiInputEchoDurationMs);
             }
         }
 
@@ -650,13 +651,14 @@ namespace EZSong.UI.Widgets {
                 }
 
                 int noteNumber = GetNoteNumber(NoteNumberInFullOctaveFromIndexInOctave(existing.NoteIndex), 5 + existing.OctaveOffset, existing.Alteration);
-                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _echoVelocity }, _echoDuration);
+                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _midiUserSettings.MidiInputEchoVeloctiy }, _midiUserSettings.MidiInputEchoDurationMs);
             } else {
                 // add with flat by default
                 chord.Pitches.Add(new WidgetPitch(noteIndex, octaveOffset, Alteration.flat));
 
                 int noteNumber = GetNoteNumber(NoteNumberInFullOctaveFromIndexInOctave(noteIndex), 5 + octaveOffset, Alteration.flat);
-                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _echoVelocity }, _echoDuration);
+                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _midiUserSettings.MidiInputEchoVeloctiy }, _midiUserSettings.MidiInputEchoDurationMs);
+                await _embeddedMidiSynth.EchoChordAsync(new[] { noteNumber }, new[] { _midiUserSettings.MidiInputEchoVeloctiy }, _midiUserSettings.MidiInputEchoDurationMs);
             }
         }
 

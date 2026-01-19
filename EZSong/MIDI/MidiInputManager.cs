@@ -21,6 +21,8 @@ namespace EZSong.MIDI {
         private readonly object _lock = new();
         private System.Timers.Timer? _groupingTimer;
 
+        private readonly UserSettings _midiUserSettings = new();
+
         /// <summary>
         /// Délai d’attente avant de considérer qu’un accord est complet (en ms).
         /// </summary>
@@ -35,7 +37,7 @@ namespace EZSong.MIDI {
 
         public MidiInputManager() {
             SoundFontManager soundFontManager = new();
-            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, GMVoice.PIANO_ElectricPiano1);
+            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, _midiUserSettings.MidiInputEchoVoice);
         }
 
         public static IEnumerable<string> GetAvailableDevices() {
