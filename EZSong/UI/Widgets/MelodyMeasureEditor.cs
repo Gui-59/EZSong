@@ -678,6 +678,9 @@ namespace EZSong.UI.Widgets {
                     _cursorIndex++;
                 }
 
+                //Echo MIDI : jouer la position qui vient d'être parcourue
+                _ = EchoChord(_cursorIndex - 1);
+
                 handled = true;
             } else if (key == Gdk.Key.Delete) {
                 // delete next element at cursor
@@ -717,6 +720,18 @@ namespace EZSong.UI.Widgets {
             } else {
                 args.RetVal = false;
             }
+        }
+
+        private async Task EchoChord(int index) {
+            List<int> notes = new();
+            List<int> velocities = new();
+            foreach (WidgetPitch pitch in _chords[index].Pitches) {
+                notes.Add(GetNoteNumber(NoteNumberInFullOctaveFromIndexInOctave(pitch.NoteIndex), 5 + pitch.OctaveOffset, pitch.Alteration));
+                velocities.Add(_midiUserSettings.MidiInputEchoVeloctiy);
+            }
+
+            await _embeddedMidiSynth.EchoChordAsync(notes, velocities, _midiUserSettings.MidiInputEchoDurationMs);
+
         }
 
         // Placeholder for hooking external MIDI input. When MIDI note(s) arrive call this.

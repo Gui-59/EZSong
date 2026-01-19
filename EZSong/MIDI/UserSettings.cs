@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace EZSong.MIDI {
     internal class UserSettings {
 
-        GMVoice _midiInputEchoVoice = GMVoice.ORGAN_DrawbarOrgan;
+        GMVoice _midiInputEchoVoice = GMVoice.CHROMATICPERCUSSION_Glockenspiel;
         public GMVoice MidiInputEchoVoice {
             get {
                 return _midiInputEchoVoice;
