@@ -9,20 +9,27 @@ namespace EZSong.Serializable {
     [Serializable]
     public class TimeSignature {
 
-        public int Upper;
-        public int Lower;
+        public int Beats;
+        public int BeatUnit;
 
         public TimeSignature() {
             // Constructeur par défaut (requis pour la sérialisation)
         }
 
-        public TimeSignature(int upper, int lower) {
-            Upper = upper;
-            Lower = lower;
+        public TimeSignature(int beat, int beatUnit) {
+            Beats = beat;
+            BeatUnit = beatUnit;
+        }
+
+        /// Durée totale de la mesure, en unités rationnelles
+        public RationalDuration TotalDuration {
+            get {
+                return new RationalDuration(Beats, BeatUnit);
+            }
         }
 
         public string ToLilyPondString() {
-            return Upper + "/" + Lower;
+            return Beats + "/" + BeatUnit;
         }
     }
 }

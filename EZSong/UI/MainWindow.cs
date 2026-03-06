@@ -75,13 +75,22 @@ namespace EZSong.UI
             _titleEntry = new Entry { 
                 PlaceholderText = "Titre du morceau" 
             };
+            _titleEntry.Changed += (o, e) => {
+                _currentSong.Title = _titleEntry.Text;
+            };
             headerBox.PackStart(_titleEntry, true, true, 0);
             _artistEntry = new Entry { 
                 PlaceholderText = "Interprète" 
             };            
+            _artistEntry.Changed += (o, e) => {
+                _currentSong.Artist = _artistEntry.Text;
+            };
             headerBox.PackStart(_artistEntry, true, true, 0);
             _commentEntry = new Entry { 
                 PlaceholderText = "Commentaires" 
+            };
+            _commentEntry.Changed += (o, e) => {
+                _currentSong.Comment = _commentEntry.Buffer.Text;
             };
             headerBox.PackStart(_commentEntry, true, true, 0);
             mainBox.PackStart(headerBox, false, false, 0);
@@ -180,7 +189,8 @@ namespace EZSong.UI
                     break;
 
                 case "export":
-                    flow.Add(CreateIconButton("Exporter au format LilyPond", (s, e) => ExportLilyPond(), "export-lilypond.svg"));
+                    //flow.Add(CreateIconButton("Exporter au format LilyPond", (s, e) => ExportLilyPond(), "export-lilypond.svg"));
+                    flow.Add(CreateIconButton("Exporter au format PDF", (s, e) => ExportPdf(), "export-pdf.svg"));
                     break;
 
             }
@@ -371,13 +381,13 @@ namespace EZSong.UI
             foreach (int upper in _selectableValues.UpperTimeSigs) {
                 upperTimeSigCombo.Append(upper.ToString(), upper.ToString());
             }
-            int tsuIndex = Array.IndexOf(_selectableValues.UpperTimeSigs, measure.TimeSignature.Upper);
+            int tsuIndex = Array.IndexOf(_selectableValues.UpperTimeSigs, measure.TimeSignature.Beats);
             upperTimeSigCombo.Active = tsuIndex >= 0 ? tsuIndex : Array.IndexOf(_selectableValues.UpperTimeSigs, _selectableValues.DefaultUpperTimeSig);
 
             upperTimeSigCombo.Changed += (o, args) => {
                 if (!string.IsNullOrEmpty(upperTimeSigCombo.ActiveId))
                 {
-                    measure.TimeSignature.Upper = Int32.Parse(upperTimeSigCombo.ActiveId);
+                    measure.TimeSignature.Beats = Int32.Parse(upperTimeSigCombo.ActiveId);
                 }
             };
             row.PackStart(new Label("Time Sig. (Upper) :") { Xalign = 0f }, false, false, 0);
@@ -388,12 +398,12 @@ namespace EZSong.UI
             foreach (int lower in _selectableValues.LowerTimeSigs) {
                 lowerTimeSigCombo.Append(lower.ToString(), lower.ToString());
             }
-            int tslIndex = Array.IndexOf(_selectableValues.LowerTimeSigs, measure.TimeSignature.Lower);
+            int tslIndex = Array.IndexOf(_selectableValues.LowerTimeSigs, measure.TimeSignature.BeatUnit);
             lowerTimeSigCombo.Active = tslIndex >= 0 ? tslIndex : Array.IndexOf(_selectableValues.LowerTimeSigs, _selectableValues.DefaultLowerTimeSig);
 
             lowerTimeSigCombo.Changed += (o, args) => {
                 if (!string.IsNullOrEmpty(lowerTimeSigCombo.ActiveId)) {
-                    measure.TimeSignature.Lower = Int32.Parse(lowerTimeSigCombo.ActiveId);
+                    measure.TimeSignature.BeatUnit = Int32.Parse(lowerTimeSigCombo.ActiveId);
                 }
             };
             row.PackStart(new Label("Time Sig. (Lower) :") { Xalign = 0f }, false, false, 0);
@@ -445,6 +455,24 @@ namespace EZSong.UI
 
             editor.WidthRequest = 250;
             row.PackStart(editor, true, false, 0);
+
+            CadenceMeasureEditor cadenceEditor = new();
+            row.PackStart(cadenceEditor, true, false, 0);
+
+            cadenceEditor.CadenceChanged += (s, cadence) =>
+            {
+                //TODO : mettre à jour la measure avec la cadence proposée
+                //currentMeasure.Cadence = cadence;
+            };
+
+            cadenceEditor.ValidationStateChanged += (s, e) =>
+            {
+                //TODO : activer/désactiver le bouton de validation de la cadence en fonction de la validité de celle-ci
+                //validateButton.Sensitive = cadenceEditor.IsComplete;
+            };
+
+            
+
             editor.ShowAll();
 
             // Paroles (une saisie texte ; mots/syllabes séparés par espaces)
@@ -604,9 +632,9 @@ namespace EZSong.UI
         private void SaveProject() {
             FileChooserDialog dlg = new("Enregistrer projet", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Enregistrer", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
-                _currentSong.Title = _titleEntry.Text;
-                _currentSong.Artist = _artistEntry.Text;
-                _currentSong.Comment = _commentEntry.Buffer.Text;
+                
+                
+                
                 using FileStream fs = new(dlg.Filename, FileMode.Create);
                 XmlSerializer ser = new(typeof(Song));
                 ser.Serialize(fs, _currentSong);
@@ -637,6 +665,7 @@ namespace EZSong.UI
             dlg.Destroy();
         }
 
+        /*
         private void ExportLilyPond() {
             FileChooserDialog dlg = new("Exporter LilyPond", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Exporter", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
@@ -644,7 +673,17 @@ namespace EZSong.UI
                 builder.GenerateLilypondFile(dlg.Filename);
             }
             dlg.Destroy();
-        }               
+        } 
+        */
+
+        private void ExportPdf() {
+            FileChooserDialog dlg = new("Exporter en PDF", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Exporter", ResponseType.Accept);
+            if (dlg.Run() == (int)ResponseType.Accept) {
+                LilypondFileBuilder builder = new(_currentSong);
+                builder.GeneratePdfFile(dlg.Filename);
+            }
+            dlg.Destroy();
+        }
 
         private MelodyMeasureEditor? GetFocusedMelodyEditor() {
             foreach (MelodyMeasureEditor melodyMeasureEditorWidget in _melodyMeasureEditorWidgets) {

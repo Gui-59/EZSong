@@ -15,6 +15,7 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Exporting\Lilypond\StyleSheets\default-style.ly" />
     <None Remove="Ressources\SVG\export-lilypond.svg" />
     <None Remove="Ressources\SVG\export-pdf.svg" />
     <None Remove="Ressources\SVG\file-close.svg" />
@@ -22,6 +23,11 @@
     <None Remove="Ressources\SVG\file-save-as.svg" />
     <None Remove="Ressources\SVG\file-save.svg" />
     <None Remove="Ressources\SVG\icon-placeholder.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Exporting\Lilypond\StyleSheets\default-style.ly">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Ressources\SVG\export-lilypond.svg" />

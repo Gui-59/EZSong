@@ -2,6 +2,7 @@ using EZSong.Enums;
 using EZSong.Serializable;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -15,7 +16,7 @@ namespace EZSong.Exporting.Lilypond {
 
 
         const string _lilypondTargetVersion = "2.24.2";
-        const string _styleSheetName = "global-style";
+        const string _styleSheetName = "default-style";
 
         const string _lilypondvarSongchords = "songchords";
         const string _lilypondvarSonglyrics = "songlyrics";
@@ -33,6 +34,12 @@ namespace EZSong.Exporting.Lilypond {
         }
 
         public void GenerateLilypondFile(String outputFilePath) {
+
+            String directory = Path.GetDirectoryName(outputFilePath) ?? string.Empty;
+            if (!Directory.Exists(directory)) {
+                _ = Directory.CreateDirectory(directory);
+            }
+
             String fullScript = string.Empty;
 
             fullScript += GenerateLilypondScriptHeader();
@@ -43,6 +50,46 @@ namespace EZSong.Exporting.Lilypond {
             fullScript += GenerateLilypondScoreAssembly();
 
             File.WriteAllText(outputFilePath, fullScript);
+        }
+
+        public void GeneratePdfFile(String outputFilePath) {
+            String tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            String tempFileName = Path.GetFileNameWithoutExtension(outputFilePath) + ".ly";
+            String tempFilePath = Path.Combine(tempDirectory, tempFileName);
+            GenerateLilypondFile(tempFilePath);
+
+            // On exécute une commande de génération sur le modèle : 
+            // C:\path\to\lilypond.exe -I "C:\temp\dir\path" -I "C:\path\to\stylesheets\directory" -o "C:\output\file\path" "tempFileName.ly"   
+
+            string lilypondExe = @"C:\Users\Guillaume\Desktop\lilypond\bin\lilypond.exe"; //TODO : paramétrer
+
+            string exeDir = AppContext.BaseDirectory;
+            string stylesheetDir = Path.Combine(exeDir, "Exporting", "Lilypond", "Stylesheets");
+
+            string arguments =
+                $"-I \"{tempDirectory}\" " +
+                $"-I \"{stylesheetDir}\" " +
+                $"-o \"{outputFilePath}\" " +
+                $"\"{tempFileName}\"";
+
+            ProcessStartInfo psi = new() {
+                FileName = lilypondExe,
+                Arguments = arguments,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (Process? process = Process.Start(psi)) {
+                if (process != null) {
+                    _ = process.StandardOutput.ReadToEnd();
+
+                    _ = process.StandardError.ReadToEnd();
+
+                    process.WaitForExit();
+                }
+            }
         }
 
         private string GenerateLilypondScriptHeader() {
@@ -118,7 +165,7 @@ namespace EZSong.Exporting.Lilypond {
                 KeySignature keySignature = m.KeySignature;
                 _ = sw.AppendLine(GenerateLilypondKeySignature(keySignature));
 
-                TimeSignature timeSignature = new(m.TimeSignature.Upper, m.TimeSignature.Lower);
+                TimeSignature timeSignature = new(m.TimeSignature.Beats, m.TimeSignature.BeatUnit);
                 _ = sw.AppendLine(GenerateLilypondTimeSignature(timeSignature));
 
                 _ = sw.AppendLine(_lilypondSerializer.FormatMeasureMelody(m.Melody));

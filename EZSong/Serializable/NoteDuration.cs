@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace EZSong.Serializable {
 
 
-
+    /* TODO : A supprimer (remplacé par une autre classe) */
 
     [Serializable]
     public class NoteDuration {
