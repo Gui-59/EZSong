@@ -11,7 +11,7 @@ namespace EZSong.Serializable {
     public class MeasureMelody {
 
         public List<MelodyChord> MelodyChords;
-        public List<CadencyElement> Cadency;
+        public List<RhythmEvent> Cadency;
 
         public bool HasCadency {
             get {
@@ -74,17 +74,17 @@ namespace EZSong.Serializable {
             } else {
 
                 int melodyChordIndex = 0;
-                foreach (CadencyElement cadencyPart in Cadency) {
-                    if (cadencyPart.IsRest) {
+                foreach (RhythmEvent rhythmEvent in Cadency) {
+                    if (rhythmEvent.IsRest) {
                         lilyPondString += "r";
-                        lilyPondString += cadencyPart.Duration.ToLilyPondString();
+                        lilyPondString += rhythmEvent.Duration.ToLilyPondString();
 
                     } else {                     
 
 
                         if (MelodyChords[melodyChordIndex].Pitches.Count == 1) {
                             lilyPondString += MelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
-                            lilyPondString += cadencyPart.Duration.ToLilyPondString();
+                            lilyPondString += rhythmEvent.Duration.ToLilyPondString();
                             lilyPondString += " ";
                         } else {
                             //Dans Lilypond les notes d'un accords sont entre chevrons
@@ -95,7 +95,7 @@ namespace EZSong.Serializable {
                                 lilyPondString += " ";
                             }
                             lilyPondString += " > ";
-                            lilyPondString += cadencyPart.Duration.ToLilyPondString();
+                            lilyPondString += rhythmEvent.Duration.ToLilyPondString();
                             lilyPondString += " ";
                         }
 

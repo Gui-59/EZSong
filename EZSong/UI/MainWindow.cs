@@ -335,6 +335,9 @@ namespace EZSong.UI
         }
 
         private void AddMeasure(MeasureData measure) {
+
+            CadenceMeasureEditor cadenceEditor = new(measure.TimeSignature);
+
             Box row = new(Orientation.Vertical, 0); //On met en superposé les elements qui définissent une mesure
 
             // Barre de boutons en haut : label + actions
@@ -388,6 +391,7 @@ namespace EZSong.UI
                 if (!string.IsNullOrEmpty(upperTimeSigCombo.ActiveId))
                 {
                     measure.TimeSignature.Beats = Int32.Parse(upperTimeSigCombo.ActiveId);
+                    cadenceEditor.TimeSignature = measure.TimeSignature; // Met à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
                 }
             };
             row.PackStart(new Label("Time Sig. (Upper) :") { Xalign = 0f }, false, false, 0);
@@ -404,6 +408,7 @@ namespace EZSong.UI
             lowerTimeSigCombo.Changed += (o, args) => {
                 if (!string.IsNullOrEmpty(lowerTimeSigCombo.ActiveId)) {
                     measure.TimeSignature.BeatUnit = Int32.Parse(lowerTimeSigCombo.ActiveId);
+                    cadenceEditor.TimeSignature = measure.TimeSignature; // Met à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
                 }
             };
             row.PackStart(new Label("Time Sig. (Lower) :") { Xalign = 0f }, false, false, 0);
@@ -456,13 +461,13 @@ namespace EZSong.UI
             editor.WidthRequest = 250;
             row.PackStart(editor, true, false, 0);
 
-            CadenceMeasureEditor cadenceEditor = new();
+            
             row.PackStart(cadenceEditor, true, false, 0);
 
             cadenceEditor.CadenceChanged += (s, cadence) =>
             {
                 //TODO : mettre à jour la measure avec la cadence proposée
-                //currentMeasure.Cadence = cadence;
+                measure.Cadence = cadence;
             };
 
             cadenceEditor.ValidationStateChanged += (s, e) =>

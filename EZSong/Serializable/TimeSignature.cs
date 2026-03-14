@@ -22,9 +22,9 @@ namespace EZSong.Serializable {
         }
 
         /// Durée totale de la mesure, en unités rationnelles
-        public RationalDuration TotalDuration {
+        public RhythmRationalDuration TotalDuration {
             get {
-                return new RationalDuration(Beats, BeatUnit);
+                return new RhythmRationalDuration(Beats, BeatUnit);
             }
         }
 

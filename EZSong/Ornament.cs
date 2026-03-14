@@ -9,11 +9,11 @@ namespace EZSong {
         public OrnamentType Type {
             get;
         }
-        public RationalDuration? SuggestedDuration {
+        public RhythmRationalDuration? SuggestedDuration {
             get;
         }
 
-        public Ornament(OrnamentType type, RationalDuration? suggestedDuration = null) {
+        public Ornament(OrnamentType type, RhythmRationalDuration? suggestedDuration = null) {
             Type = type;
             SuggestedDuration = suggestedDuration;
         }

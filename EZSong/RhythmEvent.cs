@@ -10,22 +10,33 @@ namespace EZSong {
             get; protected set;
         }
 
+        public bool IsRest {
+            get; protected set;
+        }
+
+        public int Dots {
+            get; protected set;
+        }
+
         protected RhythmEvent(RhythmDurationKind durationKind) {
             DurationKind = durationKind;
         }
 
-        public RationalDuration Duration {
+        public RhythmRationalDuration Duration {
             get {
+                //TODO: indiquer les vraies durées (en fonction de la signature rythmique)
                 return DurationKind switch {
-                    RhythmDurationKind.Whole => new RationalDuration(1, 1),
-                    RhythmDurationKind.Half => new RationalDuration(1, 2),
-                    RhythmDurationKind.Quarter => new RationalDuration(1, 4),
-                    RhythmDurationKind.Eighth => new RationalDuration(1, 8),
-                    RhythmDurationKind.Sixteenth => new RationalDuration(1, 16),
+                    RhythmDurationKind.Whole => new RhythmRationalDuration(1, 1, Dots),
+                    RhythmDurationKind.Half => new RhythmRationalDuration(1, 2, Dots),
+                    RhythmDurationKind.Quarter => new RhythmRationalDuration(1, 4, Dots),
+                    RhythmDurationKind.Eighth => new RhythmRationalDuration(1, 8, Dots),
+                    RhythmDurationKind.Sixteenth => new RhythmRationalDuration(1, 16, Dots),
                     _ => throw new NotSupportedException()
                 };
             }
         }
+
+
     }
 }
 

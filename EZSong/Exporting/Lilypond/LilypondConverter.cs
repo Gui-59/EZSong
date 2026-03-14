@@ -34,7 +34,7 @@ namespace EZSong.Exporting.Lilypond {
             return string.Empty;
         }
 
-        public string FormatNoteDuration(NoteDuration noteDuration) {
+        public string FormatNoteDuration(RhythmRationalDuration noteDuration) {
             return noteDuration.ToLilyPondString();
         }
 

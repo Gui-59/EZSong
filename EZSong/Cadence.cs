@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong {
+
+    [Serializable]
     public sealed class Cadence {
         public TimeSignature TimeSignature {
             get;
@@ -21,6 +23,12 @@ namespace EZSong {
             }
         }
 
+        public Cadence() {
+                TimeSignature = new TimeSignature();
+                Quantization = QuantizationMode.Free;
+        }
+
+
         public Cadence(TimeSignature timeSignature, QuantizationMode quantization) {
             TimeSignature = timeSignature;
             Quantization = quantization;
@@ -30,10 +38,10 @@ namespace EZSong {
             _events.Add(ev);
         }
 
-        public RationalDuration GetTotalDuration() {
+        public RhythmRationalDuration GetTotalDuration() {
             return _events
                 .Select(e => e.Duration)
-                .Aggregate(new RationalDuration(0, 1), (a, b) => a + b)
+                .Aggregate(new RhythmRationalDuration(0, 1), (a, b) => a + b)
                 .Normalize();
         }
 

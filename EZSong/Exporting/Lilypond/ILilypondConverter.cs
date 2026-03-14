@@ -10,7 +10,7 @@ namespace EZSong.Exporting.Lilypond {
         string FormatPitch(Pitch pitch);
         string FormatTimeSignature(TimeSignature timeSignature);
         string FormatKeySignature(KeySignature keySignature);
-        string FormatNoteDuration(NoteDuration noteDuration);
+        string FormatNoteDuration(RhythmRationalDuration noteDuration);
 
         string AlterationToLilyPondString(Alteration alteration);
         string NoteStepToLilyPondString(NoteStep note);

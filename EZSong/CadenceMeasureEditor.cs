@@ -42,7 +42,7 @@ public class CadenceMeasureEditor : Bin {
     private const int _staffY = 40;
     private const int _staffHeight = 30;
 
-    public CadenceMeasureEditor() {
+    public CadenceMeasureEditor(TimeSignature timeSignature) {
         _drawingArea = new DrawingArea();
         _drawingArea.SetSizeRequest(500, 90);
 
@@ -52,7 +52,7 @@ public class CadenceMeasureEditor : Bin {
         _drawingArea.ButtonPressEvent += OnButtonPress;
         _drawingArea.AddEvents((int)Gdk.EventMask.ButtonPressMask);
 
-        TimeSignature = new TimeSignature(6, 8); //TODO : paramétrer
+        TimeSignature = timeSignature;
         Cadence = new Cadence(TimeSignature, Quantization);
 
         ShowAll();
@@ -71,8 +71,8 @@ public class CadenceMeasureEditor : Bin {
     }
 
     private void Revalidate() {
-        RationalDuration total = Cadence.GetTotalDuration();
-        RationalDuration expected = TimeSignature.TotalDuration;
+        RhythmRationalDuration total = Cadence.GetTotalDuration();
+        RhythmRationalDuration expected = TimeSignature.TotalDuration;
 
         if (total.Equals(expected)) {
             ValidationState = CadenceValidationState.Complete;
@@ -137,7 +137,7 @@ public class CadenceMeasureEditor : Bin {
 
         cr.SetFontSize(32);
 
-        RationalDuration measureDuration = TimeSignature.TotalDuration;
+        RhythmRationalDuration measureDuration = TimeSignature.TotalDuration;
 
         double totalWidth = _drawingArea.AllocatedWidth - 2 * _padding;
         double currentX = _padding;

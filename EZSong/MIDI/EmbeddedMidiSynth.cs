@@ -42,7 +42,7 @@ namespace EZSong.MIDI {
         IEnumerable<int> velocities,
         int durationMs) {
 
-            //TODO : ne fonctionne pas !
+            //TODO : ne fonctionne pas ?!
 
             int index = 0;
             foreach (int noteNumber in noteNumbers) {

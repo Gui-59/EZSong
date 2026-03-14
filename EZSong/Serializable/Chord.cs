@@ -43,7 +43,7 @@ namespace EZSong.Serializable {
 
         public bool IsSilentChord;
 
-        public NoteDuration Duration;
+        public RhythmRationalDuration Duration;
 
         public NoteStep RootNote;
         public Alteration RootNoteAlteration;
@@ -68,7 +68,7 @@ namespace EZSong.Serializable {
             IsSilentChord = false;
             RootNote = NoteStep.C;
             RootNoteAlteration = Alteration.neutral;
-            Duration = new(WholeFraction.QUARTER, 0); //TODO (par défaut on met la durée d'une noire non pointée)
+            Duration = new(1, 4, 0); //TODO (par défaut on met la durée d'une noire non pointée)
             ThirdNoteMode = ChordMode.None;
             FithNoteMode = ChordMode.None;
             SeventhNoteMode = ChordMode.None;
@@ -92,38 +92,14 @@ namespace EZSong.Serializable {
             string firstHalfRest = beforeColon.Trim('.');
 
             //La durée de la note est la valeur numérique indiquée en fin de première partie
-            WholeFraction wholeFraction = WholeFraction.WHOLE;
+            //WholeFraction wholeFraction = WholeFraction.WHOLE;
             int firstDigitIndex = firstHalfRest.IndexOfAny("0123456789".ToCharArray());
             if (firstDigitIndex > 0) {
-                switch (Int32.Parse(firstHalfRest.Substring(firstDigitIndex))) {
-                    case 1:
-                        wholeFraction = WholeFraction.WHOLE;
-                        break;
-                    case 2:
-                        wholeFraction = WholeFraction.HALF;
-                        break;
-                    case 4:
-                        wholeFraction = WholeFraction.QUARTER;
-                        break;
-                    case 8:
-                        wholeFraction = WholeFraction.EIGHTH;
-                        break;
-                    case 16:
-                        wholeFraction = WholeFraction.SIXTEENTH;
-                        break;
-                    case 32:
-                        wholeFraction = WholeFraction.THIRTYSECOND;
-                        break;
-                    default:
-                        wholeFraction = WholeFraction.WHOLE;
-                        break;
-                }
-
-                
+                Duration = new(1, Int32.Parse(firstHalfRest.Substring(firstDigitIndex)), dotsCount);
                 firstHalfRest = firstHalfRest.Trim("0123456789".ToCharArray());
+            } else {
+                Duration = new(1, 4, dotsCount); //TODO (par défaut on met la durée d'une noire)
             }
-
-            Duration = new(wholeFraction, dotsCount); 
 
             if (firstHalfRest.ToLowerInvariant().EndsWith("isis")) {
                 RootNoteAlteration = Alteration.sharpsharp;
@@ -225,7 +201,7 @@ namespace EZSong.Serializable {
         }
 
         public string ToGuiString() {
-            //TODO (pour le moment, on la syntaxe de saisie dans la GUI doit suivre la syntaxe de LilyPond) 
+            //TODO (pour le moment, la syntaxe de saisie dans la GUI doit suivre la syntaxe de LilyPond) 
             return ToLilyPondString();
         }
 
