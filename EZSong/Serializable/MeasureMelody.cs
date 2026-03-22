@@ -11,7 +11,7 @@ namespace EZSong.Serializable {
     public class MeasureMelody {
 
         public List<MelodyChord> MelodyChords;
-        public List<RhythmEvent> Cadency;
+        public List<RhythmElement> Cadency;
 
         public bool HasCadency {
             get {
@@ -74,7 +74,7 @@ namespace EZSong.Serializable {
             } else {
 
                 int melodyChordIndex = 0;
-                foreach (RhythmEvent rhythmEvent in Cadency) {
+                foreach (RhythmElement rhythmEvent in Cadency) {
                     if (rhythmEvent.IsRest) {
                         lilyPondString += "r";
                         lilyPondString += rhythmEvent.Duration.ToLilyPondString();

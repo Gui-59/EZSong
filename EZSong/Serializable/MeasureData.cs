@@ -18,7 +18,9 @@ namespace EZSong.Serializable
         public ChordSequence ChordSequence { get; set; } = new();       
         public MeasureMelody Melody { get; set; } = new();
         public string Lyrics { get; set; } = "";
-        public Cadence Cadence {  get; set; } = new(new TimeSignature(), QuantizationMode.Free);
+        public MeasureRhythmPattern? RhythmPattern {
+            get; set;
+        }
 
         public MeasureData() {
             //Contructeur par défaut (requis pour la sérialisation)

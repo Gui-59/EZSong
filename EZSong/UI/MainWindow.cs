@@ -1,13 +1,14 @@
 ﻿using Cairo;
-using Gdk;
-using Gtk;
-using Microsoft.VisualBasic;
 using EZSong.Enums;
 using EZSong.Exporting.Lilypond;
 using EZSong.MIDI;
 using EZSong.Serializable;
 using EZSong.UI.Widgets;
 using EZSong.UI.Widgets.WidgetsData;
+using Gdk;
+using Gtk;
+using Melanchall.DryWetMidi.Composing;
+using Microsoft.VisualBasic;
 using Pango;
 using System;
 using System.Collections;
@@ -158,6 +159,8 @@ namespace EZSong.UI
             AddMeasures(5); //5 mesures par défaut
 
             Maximize(); // Démarrer en mode maximisé
+
+
         }
 
         private void PopulateMenuTabs() {
@@ -336,7 +339,7 @@ namespace EZSong.UI
 
         private void AddMeasure(MeasureData measure) {
 
-            CadenceMeasureEditor cadenceEditor = new(measure.TimeSignature);
+            
 
             Box row = new(Orientation.Vertical, 0); //On met en superposé les elements qui définissent une mesure
 
@@ -391,7 +394,8 @@ namespace EZSong.UI
                 if (!string.IsNullOrEmpty(upperTimeSigCombo.ActiveId))
                 {
                     measure.TimeSignature.Beats = Int32.Parse(upperTimeSigCombo.ActiveId);
-                    cadenceEditor.TimeSignature = measure.TimeSignature; // Met à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
+                   
+                    // TODO ? : Mettre à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
                 }
             };
             row.PackStart(new Label("Time Sig. (Upper) :") { Xalign = 0f }, false, false, 0);
@@ -408,7 +412,7 @@ namespace EZSong.UI
             lowerTimeSigCombo.Changed += (o, args) => {
                 if (!string.IsNullOrEmpty(lowerTimeSigCombo.ActiveId)) {
                     measure.TimeSignature.BeatUnit = Int32.Parse(lowerTimeSigCombo.ActiveId);
-                    cadenceEditor.TimeSignature = measure.TimeSignature; // Met à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
+                    //TODO ? : Mettre à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
                 }
             };
             row.PackStart(new Label("Time Sig. (Lower) :") { Xalign = 0f }, false, false, 0);
@@ -461,22 +465,33 @@ namespace EZSong.UI
             editor.WidthRequest = 250;
             row.PackStart(editor, true, false, 0);
 
-            
-            row.PackStart(cadenceEditor, true, false, 0);
+            //Test de définition de pattern rythmique
+            TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
+            MeasureRhythmPattern pattern = new(ts);
+            BeatPattern b1 = new();
+            b1.Elements.Add(new RhythmElement(
+                new RhythmRationalDuration(1, 4)));
 
-            cadenceEditor.CadenceChanged += (s, cadence) =>
-            {
-                //TODO : mettre à jour la measure avec la cadence proposée
-                measure.Cadence = cadence;
-            };
+            BeatPattern b2 = new();
+            b2.Elements.Add(new RhythmElement(
+                new RhythmRationalDuration(1, 8)));
 
-            cadenceEditor.ValidationStateChanged += (s, e) =>
-            {
-                //TODO : activer/désactiver le bouton de validation de la cadence en fonction de la validité de celle-ci
-                //validateButton.Sensitive = cadenceEditor.IsComplete;
-            };
+            b2.Elements.Add(new RhythmElement(
+                new RhythmRationalDuration(1, 8)));
 
-            
+            pattern.Beats.Add(b1);
+            pattern.Beats.Add(b2);
+
+            Console.WriteLine("================================");
+            Console.WriteLine(pattern.ToString());
+            Console.WriteLine(pattern.IsDurationValid()); // Devrait être true pour un pattern valide
+            Console.WriteLine(pattern.AreBeatsValid()); // Devrait être true si tous les beats sont valides par rapport à la signature temporelle
+            Console.WriteLine(pattern.IsCompatibleWithNoteCount(
+                5,
+                0)
+            ); // Devrait être true si le pattern peut être appliqué au nombre de notes de la mesure
+
+            //TODO : instancier et ajouter un selecteur de cadence            
 
             editor.ShowAll();
 

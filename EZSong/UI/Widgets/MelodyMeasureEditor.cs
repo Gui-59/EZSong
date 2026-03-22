@@ -329,7 +329,7 @@ namespace EZSong.UI.Widgets {
         }
 
         // PUBLIC API: load external model into widget
-        public void LoadFromModel(IEnumerable<WidgetMelodyChord> chords, IEnumerable<RhythmEvent>? rhythmEvents = null, int initialCursor = 0) {
+        public void LoadFromModel(IEnumerable<WidgetMelodyChord> chords, IEnumerable<RhythmElement>? rhythmEvents = null, int initialCursor = 0) {
             _melodyChords = chords != null ? new List<WidgetMelodyChord>(chords.Select(c => DeepCopyChord(c))) : new List<WidgetMelodyChord>();
             _cadency = rhythmEvents != null ? new WidgetMeasureCadency(rhythmEvents.ToList()) : new WidgetMeasureCadency();
             _cursorIndex = Math.Max(0, Math.Min(_melodyChords.Count, initialCursor));
