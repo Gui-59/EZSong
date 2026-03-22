@@ -4,7 +4,13 @@ namespace EZSong {
 
     public class MeasureRhythmPattern {
 
-        public List<BeatPattern> Beats { get; } = new();
+        private readonly List<BeatPattern> _beats = new();
+
+        public IReadOnlyList<BeatPattern> Beats {
+            get {
+                return _beats;
+            }
+        }
 
         public TimeSignature TimeSignature {
             get;
@@ -12,6 +18,11 @@ namespace EZSong {
 
         public MeasureRhythmPattern(TimeSignature ts) {
             TimeSignature = ts;
+            InitializeFromTimeSignature(ts);
+        }
+
+        public void SetBeat(int index, BeatPattern beat) {
+            _beats[index] = beat;
         }
 
         public RhythmRationalDuration GetTotalDuration() {
@@ -47,13 +58,8 @@ namespace EZSong {
         }
 
         public bool AreBeatsValid() {
-
-            RhythmRationalDuration beatDuration =
-                new(1, TimeSignature.BeatUnit);
-
             foreach (BeatPattern beat in Beats) {
-
-                if (!beat.GetTotalDuration().Equals(beatDuration)) {
+                if (!beat.GetTotalDuration().Equals(beat.ExpectedDuration)) {
                     return false;
                 }
             }
@@ -115,6 +121,19 @@ namespace EZSong {
             }
 
             return string.Join(" : ", beatStrings) ;
+        }
+
+        public void InitializeFromTimeSignature(TimeSignature ts) {
+            _beats.Clear();
+
+            int beatCount = ts.GetBeatCount();
+            RhythmRationalDuration beatDuration = ts.GetBeatDuration();
+
+            for (int i = 0; i < beatCount; i++) {
+                _beats.Add(new BeatPattern {
+                    ExpectedDuration = beatDuration
+                });
+            }
         }
 
     }

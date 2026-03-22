@@ -4,6 +4,10 @@
 
         public List<RhythmElement> Elements { get; } = new();
 
+        public RhythmRationalDuration ExpectedDuration {
+            get; set;
+        }
+
         public RhythmRationalDuration GetTotalDuration() {
 
             RhythmRationalDuration total = new(0, 1);

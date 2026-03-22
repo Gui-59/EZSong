@@ -8,6 +8,7 @@ using EZSong.UI.Widgets.WidgetsData;
 using Gdk;
 using Gtk;
 using Melanchall.DryWetMidi.Composing;
+using Melanchall.DryWetMidi.Interaction;
 using Microsoft.VisualBasic;
 using Pango;
 using System;
@@ -465,7 +466,10 @@ namespace EZSong.UI
             editor.WidthRequest = 250;
             row.PackStart(editor, true, false, 0);
 
+            editor.ShowAll();
+
             //Test de définition de pattern rythmique
+            /*
             TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
             MeasureRhythmPattern pattern = new(ts);
             BeatPattern b1 = new();
@@ -490,10 +494,20 @@ namespace EZSong.UI
                 5,
                 0)
             ); // Devrait être true si le pattern peut être appliqué au nombre de notes de la mesure
+            */
 
             //TODO : instancier et ajouter un selecteur de cadence            
 
-            editor.ShowAll();
+            MeasureRhythmEditor rhythmEditor = new();
+
+            Serializable.TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
+            rhythmEditor.SetPattern(new MeasureRhythmPattern(ts));
+
+            // exemple
+            rhythmEditor.NoteCount = 4;
+            rhythmEditor.GraceNoteCount = 0;
+
+            row.PackStart(rhythmEditor, true, false, 0);
 
             // Paroles (une saisie texte ; mots/syllabes séparés par espaces)
             Entry lyricsEntry = new() { Text = measure.Lyrics ?? "", WidthChars = 24, PlaceholderText = "Paroles (séparées par espaces)" };
