@@ -1,5 +1,6 @@
 ﻿namespace EZSong {
 
+    [Serializable]
     public class RhythmElement {
         public RhythmRationalDuration Duration {
             get;
@@ -15,6 +16,11 @@
 
         public RhythmTuplet? Tuplet {
             get;
+        }
+
+        /// Constructeur par défaut pour la sérialisation
+        public RhythmElement() {
+        
         }
 
         public RhythmElement(

@@ -2,6 +2,7 @@
 
 namespace EZSong {
 
+    [Serializable]
     public class MeasureRhythmPattern {
 
         private readonly List<BeatPattern> _beats = new();
@@ -14,6 +15,11 @@ namespace EZSong {
 
         public TimeSignature TimeSignature {
             get;
+        }
+
+        public MeasureRhythmPattern() {
+            // Constructeur par défaut pour la sérialisation
+            TimeSignature = default!;
         }
 
         public MeasureRhythmPattern(TimeSignature ts) {
