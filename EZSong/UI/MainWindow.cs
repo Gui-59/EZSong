@@ -500,7 +500,7 @@ namespace EZSong.UI
 
             MeasureRhythmEditor rhythmEditor = new();
 
-            Serializable.TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
+            TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
             rhythmEditor.SetPattern(new MeasureRhythmPattern(ts));
 
             // exemple

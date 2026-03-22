@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EZSong.Serializable {
+namespace EZSong {
     [Serializable]
     public class MeasureMelody {
 

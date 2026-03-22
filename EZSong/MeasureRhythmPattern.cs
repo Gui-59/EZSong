@@ -1,6 +1,4 @@
-﻿using EZSong.Serializable;
-
-namespace EZSong {
+﻿namespace EZSong {
 
     [Serializable]
     public class MeasureRhythmPattern {

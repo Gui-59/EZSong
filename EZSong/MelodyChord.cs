@@ -1,6 +1,6 @@
 ﻿using EZSong.UI.Widgets.WidgetsData;
 
-namespace EZSong.Serializable {
+namespace EZSong {
 
     [Serializable]
     public class MelodyChord {

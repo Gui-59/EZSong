@@ -5,8 +5,9 @@ using System.Linq;
 using System.Xml.Linq;
 using Gtk;
 using EZSong.Enums;
+using EZSong.Serializable;
 
-namespace EZSong.Serializable
+namespace EZSong
 {
     [Serializable]
     public class MeasureData
