@@ -11,8 +11,8 @@ namespace EZSong.Model {
 
     public class MeasureMelody {
 
-        public List<MelodyChord> MelodyChords;
-        public MeasureRhythmPattern RhythmPattern;
+        public List<MelodyChord> MelodyChords { get; set; }
+        public MeasureRhythmPattern RhythmPattern { get; set; }
 
         public bool HasCadency {
             get {

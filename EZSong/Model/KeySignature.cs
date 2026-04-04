@@ -12,9 +12,9 @@ namespace EZSong.Model {
 
     public class KeySignature {
         
-        public NoteStep Note;
-        public Alteration Alteration;
-        public SongMode Mode;
+        public NoteStep Note { get; set; }
+        public Alteration Alteration { get; set; }
+        public SongMode Mode { get; set; }
 
         private readonly ILilypondConverter _lilypondConverter;
 

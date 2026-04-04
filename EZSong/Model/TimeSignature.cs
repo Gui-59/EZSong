@@ -8,8 +8,12 @@ namespace EZSong.Model {
 
     public class TimeSignature {
 
-        public int Beats;
-        public int BeatUnit;
+        public int Beats {
+            get; set;
+        }
+        public int BeatUnit {
+            get; set;
+        }
 
         public TimeSignature(int beat, int beatUnit) {
             Beats = beat;

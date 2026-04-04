@@ -15,9 +15,9 @@ namespace EZSong.Model {
      * - aucune logique
      */
     public class KeySignatureDto {
-        public NoteStep Note;
-        public Alteration Alteration;
-        public SongMode Mode;
+        public NoteStep Note { get; set; }
+        public Alteration Alteration { get; set; }
+        public SongMode Mode { get; set; }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public KeySignatureDto() { 

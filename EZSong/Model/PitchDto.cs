@@ -10,9 +10,15 @@ namespace EZSong.Model {
      * - aucune logique
      */
     public class PitchDto {
-        public NoteStep Note;
-        public Alteration Alteration;
-        public int OctaveOffset;
+        public NoteStep Note {
+            get; set;
+        }
+        public Alteration Alteration {
+            get; set;
+        }
+        public int OctaveOffset {
+            get; set;
+        }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public PitchDto() {

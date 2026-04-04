@@ -8,7 +8,7 @@ namespace EZSong.Model {
 
     public class ChordSequence {
 
-        public List<Chord> Chords;
+        public List<Chord> Chords { get; set; }
 
         public ChordSequence(List<Chord> chords) {
             Chords = chords;

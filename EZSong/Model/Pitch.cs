@@ -12,9 +12,15 @@ namespace EZSong.Model {
 
     public class Pitch {
 
-        public NoteStep Note;
-        public Alteration Alteration;
-        public int OctaveOffset;
+        public NoteStep Note {
+            get; set;
+        }
+        public Alteration Alteration {
+            get; set;
+        }
+        public int OctaveOffset {
+            get; set;
+        }
 
         private readonly ILilypondConverter _lilypondConverter;
 

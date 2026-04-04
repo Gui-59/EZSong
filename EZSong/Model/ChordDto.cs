@@ -10,16 +10,16 @@ namespace EZSong.Model {
      * - aucune logique
      */
     public class ChordDto {
-        public bool IsSilentChord;
+        public bool IsSilentChord { get; set; }
 
-        public RhythmRationalDuration Duration;
+        public RhythmRationalDuration Duration { get; set; }
 
-        public NoteStep RootNote;
-        public Alteration RootNoteAlteration;
-        public ChordMode ThirdNoteMode;
-        public ChordMode FithNoteMode;
-        public ChordMode SeventhNoteMode;
-        public ChordMode NinthNoteMode;
+        public NoteStep RootNote { get; set; }
+        public Alteration RootNoteAlteration { get; set; }
+        public ChordMode ThirdNoteMode { get; set; }
+        public ChordMode FithNoteMode { get; set; }
+        public ChordMode SeventhNoteMode { get; set; }
+        public ChordMode NinthNoteMode { get; set; }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public ChordDto() {

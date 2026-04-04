@@ -4,7 +4,7 @@ namespace EZSong.Model {
 
     public class MelodyChord {
 
-        public List<Pitch> Pitches;
+        public List<Pitch> Pitches { get; set; }
 
         public MelodyChord(List<Pitch> pitches) {
             Pitches = pitches;
