@@ -27,7 +27,7 @@ namespace EZSong.Model {
 
         public RhythmRationalDuration GetTotalDuration() {
 
-            RhythmRationalDuration total = new(0, 1);
+            RhythmRationalDuration total = new(0, 1, 0);
 
             foreach (BeatPattern beat in Beats) {
                 total += beat.GetTotalDuration();
@@ -149,10 +149,10 @@ namespace EZSong.Model {
             
            
 
-            MeasureRhythmPatternDto measureRhythmPatternDto = new(
-                Beats.Select(beat => BeatPattern.ToDto(beat)).ToList(),
-                TimeSignature
-            );
+            MeasureRhythmPatternDto measureRhythmPatternDto = new() {
+                Beats = Beats.Select(beat => BeatPattern.ToDto(beat)).ToList(),    
+                TimeSignature = TimeSignature
+            };
 
             return measureRhythmPatternDto;
 
@@ -160,11 +160,11 @@ namespace EZSong.Model {
        
        
 
-        public static MeasureRhythmPattern FromDto(MeasureRhythmPatternDto dto) {
+        public static MeasureRhythmPattern FromDto(MeasureRhythmPatternDto dto, TimeSignature ts) {
 
             
 
-            MeasureRhythmPattern pattern = new(dto.TimeSignature) {};
+            MeasureRhythmPattern pattern = new(ts) {};
 
             int i = 0;
             foreach (BeatPatternDto beat in dto.Beats) {

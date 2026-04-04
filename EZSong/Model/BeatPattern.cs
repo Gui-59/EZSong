@@ -14,7 +14,7 @@ namespace EZSong.Model {
 
         public RhythmRationalDuration GetTotalDuration() {
 
-            RhythmRationalDuration total = new(0, 1);
+            RhythmRationalDuration total = new(0, 1, 0);
 
             foreach (RhythmElement e in Elements) {
                 total += e.GetEffectiveDuration();
@@ -32,10 +32,10 @@ namespace EZSong.Model {
         }
 
         internal static BeatPatternDto ToDto(BeatPattern beat) {
-            return new BeatPatternDto (
-                beat.Elements.Select(e => RhythmElement.ToDto(e)).ToList(),
-                beat.ExpectedDuration
-            );
+            return new BeatPatternDto() {
+                Elements = beat.Elements.Select(e => RhythmElement.ToDto(e)).ToList(),
+                ExpectedDuration=  beat.ExpectedDuration
+            };
         }
 
         public int AttackCount {

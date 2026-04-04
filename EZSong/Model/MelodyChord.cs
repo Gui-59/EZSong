@@ -24,9 +24,9 @@ namespace EZSong.Model {
             foreach (Pitch pitch in Pitches) {
                 pitchDtos.Add(pitch.ToDto());
             }
-            return new MelodyChordDto(
-                pitchDtos
-            );
+            return new MelodyChordDto() {
+                Pitches = pitchDtos
+            };
 
         }
 

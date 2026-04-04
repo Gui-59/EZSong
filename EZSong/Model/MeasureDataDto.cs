@@ -5,6 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.Model {
+
+    /*
+     * Un DTO compatible JSON doit être :
+     * - public class
+     * - constructeur vide
+     * - propriétés publiques get/set
+     * - aucune logique
+     */
     public class MeasureDataDto {
 
         public int Index {
@@ -35,13 +43,14 @@ namespace EZSong.Model {
             get; set;
         }
 
-        public MeasureDataDto(TimeSignatureDto timeSignature, KeySignatureDto keySignature, ChordSequenceDto chordSequence, MeasureMelodyDto melody, string lyrics, MeasureRhythmPatternDto rhythm) {
-            TimeSignature = timeSignature;
-            KeySignature = keySignature;
-            ChordSequence = chordSequence;
-            Melody = melody;
-            Lyrics = lyrics;
-            Rhythm = rhythm;
+        //Constructeur vide (requis pour la sérialisation JSON)
+        public MeasureDataDto() {
+            TimeSignature = new TimeSignatureDto();
+            KeySignature = new KeySignatureDto();
+            ChordSequence = new ChordSequenceDto();
+            Melody = new MeasureMelodyDto();
+            Lyrics = string.Empty;
+            Rhythm = new MeasureRhythmPatternDto();
         }
     }
 }

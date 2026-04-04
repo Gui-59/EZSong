@@ -1,6 +1,6 @@
 ﻿namespace EZSong.Model {
 
-    public readonly struct RhythmRationalDuration : IEquatable<RhythmRationalDuration> {
+    public struct RhythmRationalDuration : IEquatable<RhythmRationalDuration> {
         public int Numerator {
             get;
         }
@@ -11,7 +11,7 @@
             get;
         }
 
-        public RhythmRationalDuration(int numerator, int denominator, int dots = 0) {
+        public RhythmRationalDuration(int numerator, int denominator, int dots) {
             Numerator = numerator;
             Denominator = denominator;
             Dots = dots;
@@ -28,10 +28,7 @@
             int factorNum = (int)Math.Pow(2, Dots + 1) - 1;
             int factorDen = (int)Math.Pow(2, Dots);
 
-            return new RhythmRationalDuration(
-                num * factorNum,
-                den * factorDen
-            ).Normalize();
+            return new RhythmRationalDuration(num * factorNum, den * factorDen, 0).Normalize();
         }
 
         public static RhythmRationalDuration operator +(
@@ -47,17 +44,13 @@
             int den =
                 a.Denominator * b.Denominator;
 
-            return new RhythmRationalDuration(num, den).Normalize();
+            return new RhythmRationalDuration(num, den, 0).Normalize();
         }
 
         public RhythmRationalDuration Normalize() {
             int gcd = Gcd(Numerator, Denominator);
 
-            return new RhythmRationalDuration(
-                Numerator / gcd,
-                Denominator / gcd,
-                Dots
-            );
+            return new RhythmRationalDuration(Numerator / gcd, Denominator / gcd, Dots);
         }
 
         private static int Gcd(int a, int b) {

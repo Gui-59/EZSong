@@ -74,7 +74,8 @@ namespace EZSong.Model {
             IsSilentChord = false;
             RootNote = NoteStep.C;
             RootNoteAlteration = Alteration.neutral;
-            Duration = new(1, 4, 0); //TODO (par défaut on met la durée d'une noire non pointée)
+            //TODO (par défaut on met la durée d'une noire non pointée)
+            Duration = new(1, 4, 0); 
             ThirdNoteMode = ChordMode.None;
             FithNoteMode = ChordMode.None;
             SeventhNoteMode = ChordMode.None;
@@ -104,7 +105,8 @@ namespace EZSong.Model {
                 Duration = new(1, int.Parse(firstHalfRest.Substring(firstDigitIndex)), dotsCount);
                 firstHalfRest = firstHalfRest.Trim("0123456789".ToCharArray());
             } else {
-                Duration = new(1, 4, dotsCount); //TODO (par défaut on met la durée d'une noire)
+                //TODO (par défaut on met la durée d'une noire)
+                Duration = new(1, 4, 0); 
             }
 
             if (firstHalfRest.ToLowerInvariant().EndsWith("isis")) {

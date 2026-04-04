@@ -5,14 +5,24 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.Model {
+
+    /*
+     * Un DTO compatible JSON doit être :
+     * - public class
+     * - constructeur vide
+     * - propriétés publiques get/set
+     * - aucune logique
+     */
+
     public class BeatPatternDto {
         public List<RhythmElementDto> Elements { get; set; }
 
         public RhythmRationalDuration ExpectedDuration {get; set;}
 
-        public BeatPatternDto(List<RhythmElementDto> elements, RhythmRationalDuration expectedDuration) { 
-            Elements = elements;    
-            ExpectedDuration = expectedDuration;
+        //Constructeur vide (requis pour la sérialisation JSON)
+        public BeatPatternDto() { 
+            Elements = new List<RhythmElementDto>();
+            ExpectedDuration = new RhythmRationalDuration(0, 1, 0);
         }
     }
 }

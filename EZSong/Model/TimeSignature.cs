@@ -19,7 +19,7 @@ namespace EZSong.Model {
         /// Durée totale de la mesure, en unités rationnelles
         public RhythmRationalDuration TotalDuration {
             get {
-                return new RhythmRationalDuration(Beats, BeatUnit);
+                return new RhythmRationalDuration(Beats, BeatUnit, 0);
             }
         }
 
@@ -37,11 +37,11 @@ namespace EZSong.Model {
             // signature composée
             if (Beats % 3 == 0 && BeatUnit == 8 && Beats > 3) {
                 // noire pointée = 3 croches
-                return new RhythmRationalDuration(3, 8);
+                return new RhythmRationalDuration(3, 8, 0);
             }
 
             // cas simple
-            return new RhythmRationalDuration(1, BeatUnit);
+            return new RhythmRationalDuration(1, BeatUnit, 0);
         }
 
         public string ToLilyPondString() {

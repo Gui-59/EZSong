@@ -128,10 +128,10 @@ namespace EZSong.Model {
         }
 
         internal MeasureMelodyDto ToDto() {
-            MeasureMelodyDto dto = new(
-                MelodyChords.Select(mc => mc.ToDto()).ToList(),
-                RhythmPattern
-            );
+            MeasureMelodyDto dto = new() {
+                MelodyChords = MelodyChords.Select(mc => mc.ToDto()).ToList(),
+                RhythmPattern = RhythmPattern.ToDto()
+            };
             return dto;
 
         }
@@ -143,7 +143,7 @@ namespace EZSong.Model {
                 melodyChords.Add(MelodyChord.FromDto(melodyChordDto));
             }
 
-            MeasureMelody measureMelody = new(melodyChords, melody.RhythmPattern);
+            MeasureMelody measureMelody = new(melodyChords, MeasureRhythmPattern.FromDto(melody.RhythmPattern, melody.RhythmPattern.TimeSignature));
             return measureMelody;
 
         }

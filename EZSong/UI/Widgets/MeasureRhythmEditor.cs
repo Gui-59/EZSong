@@ -150,10 +150,10 @@ namespace EZSong.UI.Widgets {
 
             // Exemple simple : toggle entre ♩ et ♪♪
             if (Pattern.Beats[index].Elements.Count == 1) {
-                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8), false, new RhythmTuplet(1,1)));
-                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8), false, new RhythmTuplet(1, 1)));
+                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1,1)));
+                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1, 1)));
             } else {
-                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 4), false, new RhythmTuplet(1, 1)));
+                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 4, 0), false, new RhythmTuplet(1, 1)));
             }
 
             Pattern.SetBeat(index, beat);

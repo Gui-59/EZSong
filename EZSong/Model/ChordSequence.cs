@@ -38,7 +38,9 @@ namespace EZSong.Model {
         }
 
         public ChordSequenceDto ToDto() {
-            ChordSequenceDto dto = new(Chords.Select(c => c.ToDto()).ToList());
+            ChordSequenceDto dto = new() {
+                Chords = Chords.Select(c => c.ToDto()).ToList()
+            };
             return dto;
         }
 

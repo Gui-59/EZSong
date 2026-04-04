@@ -37,14 +37,11 @@
             int num = baseDur.Numerator * Tuplet.InTimeOf;
             int den = baseDur.Denominator * Tuplet.Count;
 
-            return new RhythmRationalDuration(num, den).Normalize();
+            return new RhythmRationalDuration(num, den, 0).Normalize();
         }
 
         public static RhythmElement FromDto(RhythmElementDto rhythmElementDto) {
-            RhythmRationalDuration duration = new(
-                rhythmElementDto.Numerator,
-                rhythmElementDto.Denominator,
-                rhythmElementDto.Dots);
+            RhythmRationalDuration duration = new(rhythmElementDto.Numerator, rhythmElementDto.Denominator, rhythmElementDto.Dots);
             return new RhythmElement(
                 duration,
                 rhythmElementDto.IsRest,
@@ -56,14 +53,14 @@
         }
 
         internal static RhythmElementDto ToDto(RhythmElement rhythmElement) {
-            return new RhythmElementDto(
-                rhythmElement.Duration.Numerator,
-                rhythmElement.Duration.Denominator,
-                rhythmElement.Duration.Dots,
-                rhythmElement.IsRest,
-                rhythmElement.TieToNext,
-                RhythmTupletDto.ToDto(rhythmElement.Tuplet)
-            );
+            return new RhythmElementDto() {
+                Numerator = rhythmElement.Duration.Numerator,
+                Denominator = rhythmElement.Duration.Denominator,
+                Dots = rhythmElement.Duration.Dots,
+                IsRest = rhythmElement.IsRest,
+                TieToNext = rhythmElement.TieToNext,
+                Tuplet = RhythmTupletDto.ToDto(rhythmElement.Tuplet)
+            };
         }
     }
 

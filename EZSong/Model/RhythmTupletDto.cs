@@ -1,6 +1,14 @@
 ﻿
 
 namespace EZSong.Model {
+
+    /*
+     * Un DTO compatible JSON doit être :
+     * - public class
+     * - constructeur vide
+     * - propriétés publiques get/set
+     * - aucune logique
+     */
     public class RhythmTupletDto {
         public int Count {
             get; set;
@@ -9,9 +17,8 @@ namespace EZSong.Model {
             get; set;
         }
 
-        public RhythmTupletDto(int count, int inTimeOf) {
-            Count = count;
-            InTimeOf = inTimeOf;
+        //Constructeur vide (requis pour la sérialisation JSON)
+        public RhythmTupletDto() {
         }
 
         public static RhythmTuplet FromDto(RhythmTupletDto tuplet) {
@@ -24,9 +31,15 @@ namespace EZSong.Model {
 
         internal static RhythmTupletDto ToDto(RhythmTuplet tuplet) {
             if (tuplet == null) {
-                return new RhythmTupletDto(1, 1);
+                return new RhythmTupletDto() {
+                        Count = 1,
+                        InTimeOf = 1
+                };
             }
-            return new RhythmTupletDto(tuplet.Count, tuplet.InTimeOf);
+            return new RhythmTupletDto() {
+                Count = tuplet.Count,
+                InTimeOf = tuplet.InTimeOf
+            };
         }
     }
 }
