@@ -4,17 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EZSong {
+namespace EZSong.Model {
 
-    [Serializable]
     public class TimeSignature {
 
         public int Beats;
         public int BeatUnit;
-
-        public TimeSignature() {
-            // Constructeur par défaut (requis pour la sérialisation)
-        }
 
         public TimeSignature(int beat, int beatUnit) {
             Beats = beat;

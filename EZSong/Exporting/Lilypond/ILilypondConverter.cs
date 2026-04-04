@@ -1,5 +1,5 @@
 using EZSong.Enums;
-using EZSong.Serializable;
+using EZSong.Model;
 
 namespace EZSong.Exporting.Lilypond {
     public interface ILilypondConverter {

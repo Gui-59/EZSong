@@ -1,25 +1,11 @@
-﻿using Cairo;
-using EZSong.Enums;
+﻿using EZSong.Enums;
 using EZSong.Exporting.Lilypond;
+using EZSong.IO;
 using EZSong.MIDI;
-using EZSong.Serializable;
+using EZSong.Model;
 using EZSong.UI.Widgets;
 using EZSong.UI.Widgets.WidgetsData;
-using Gdk;
 using Gtk;
-using Melanchall.DryWetMidi.Composing;
-using Melanchall.DryWetMidi.Interaction;
-using Microsoft.VisualBasic;
-using Pango;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Xml.Linq;
-using System.Xml.Serialization;
 
 namespace EZSong.UI
 {
@@ -31,7 +17,7 @@ namespace EZSong.UI
         private const int _initialHeight = 600;
         private const int _compactThreshold = 800;
 
-        private Song _currentSong = new();
+        private Song _currentSong;
         private ListStore _measureStore;
 
         private MidiInputManager _midiManager;
@@ -53,6 +39,13 @@ namespace EZSong.UI
 
         public MainWindow() : base("EZSong")
         {
+            _currentSong = new Song (
+                "",
+                "",
+                "",
+                new List<MeasureData>()
+            );
+
             SetDefaultSize(_initialWidth, _initialHeight);
             DeleteEvent += (o, e) => Application.Quit();
 
@@ -157,7 +150,7 @@ namespace EZSong.UI
 
             _melodyMeasureEditorWidgets = new();
 
-            AddMeasures(5); //5 mesures par défaut
+            AddBlankMeasures(5); //5 mesures par défaut
 
             Maximize(); // Démarrer en mode maximisé
 
@@ -321,16 +314,22 @@ namespace EZSong.UI
             }
         }
 
-        private void AddMeasures(int number) {
+        private void AddBlankMeasures(int number) {
+
+            TimeSignature newMesuresTimeSig = new(4, 4);
 
             for (int i = 0; i < number; i++) {
 
                 int num = _currentSong.Measures.Count + 1;
-                MeasureData m = new() {
-                    Index = num,
-                    TimeSignature = new(4, 4),
-                    KeySignature = new(NoteStep.C, Alteration.neutral, SongMode.major)
-                };
+                MeasureData m = new(
+                    num,
+                    newMesuresTimeSig,
+                    new(NoteStep.C, Alteration.neutral, SongMode.major),
+                    new ChordSequence(""),
+                    new MeasureMelody(new List<MelodyChord>(), new MeasureRhythmPattern(newMesuresTimeSig)),
+                    "",
+                    new MeasureRhythmPattern(newMesuresTimeSig)
+                );
                 _currentSong.Measures.Add(m);
                 _ = _measureStore.AppendValues(num.ToString(), m.TimeSignature, m.KeySignature, m.ChordSequence, m.Lyrics);
 
@@ -436,11 +435,11 @@ namespace EZSong.UI
             row.PackStart(keyCombo, false, false, 0);
 
             // Accords (1 champ texte: accords séparés par espaces, 1 accord par temps)
-            Entry chordEntry = new() { Text = measure.ChordSequence.ToLilyPondString() ?? new ChordSequence().ToString(), WidthChars = 24, PlaceholderText = "Accords (ex: C Am Dm G7)" };
+            Entry chordEntry = new() { Text = measure.ChordSequence.ToLilyPondString() ?? new ChordSequence("").ToString(), WidthChars = 24, PlaceholderText = "Accords (ex: C Am Dm G7)" };
             chordEntry.Changed += (o, args) => {
                 string? text = chordEntry.Text;
                 if (text is null) {
-                    measure.ChordSequence = new();
+                    measure.ChordSequence = new("");
                 } else {
                     measure.ChordSequence = new(text);
                 }
@@ -449,24 +448,25 @@ namespace EZSong.UI
             row.PackStart(chordEntry, true, true, 0);
 
             // Editeur de mélodie/cadence
-            MelodyMeasureEditor editor = new();
-            _melodyMeasureEditorWidgets.Add(editor);
-            editor.LoadFromModel(measure.Melody.ToWidgetChords(), null, initialCursor: 0);
+            MelodyMeasureEditor melodyMeasureEditor = new();
+            _melodyMeasureEditorWidgets.Add(melodyMeasureEditor);
+            melodyMeasureEditor.LoadFromModel(measure.Melody.ToWidgetChords(), null, initialCursor: 0);
 
             // Handler local : met à jour la measure associée (capture 'measure' et 'editor')
-            editor.ContentChanged += (s, e) =>
+            melodyMeasureEditor.ContentChanged += (s, e) =>
             {
-                MeasureMelody newMeasureMelody = new();
-                foreach (WidgetMelodyChord widgetChord in editor.ExportToModel()) {
+                MeasureMelody newMeasureMelody = measure.Melody;
+                newMeasureMelody.MelodyChords = new List<MelodyChord>();
+                foreach (WidgetMelodyChord widgetChord in melodyMeasureEditor.ExportToModel()) {
                     newMeasureMelody.MelodyChords.Add(widgetChord.ToMelodyChord());
                 }
                 measure.Melody = newMeasureMelody;
             };
 
-            editor.WidthRequest = 250;
-            row.PackStart(editor, true, false, 0);
+            melodyMeasureEditor.WidthRequest = 250;
+            row.PackStart(melodyMeasureEditor, true, false, 0);
 
-            editor.ShowAll();
+            melodyMeasureEditor.ShowAll();
 
             //Test de définition de pattern rythmique
             /*
@@ -536,7 +536,20 @@ namespace EZSong.UI
                 insertIndex = _currentSong.Measures.Count;
             }
 
-            MeasureData m = new() { Index = 0, TimeSignature = new(4, 4), KeySignature = new(NoteStep.C, Alteration.neutral, SongMode.major) };
+            TimeSignature newMesureTs = _currentSong.Measures[index].TimeSignature;
+
+            MeasureData m = 
+                new(
+                    insertIndex, 
+                    newMesureTs, 
+                    new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major), 
+                    new ChordSequence(""), 
+                    new MeasureMelody(new List<MelodyChord>(), new MeasureRhythmPattern(newMesureTs)), 
+                    "", 
+                    new MeasureRhythmPattern(newMesureTs)
+                );
+                
+            
             _currentSong.Measures.Insert(insertIndex, m);
 
             // Réindexation
@@ -573,7 +586,18 @@ namespace EZSong.UI
                 insertIndex = _currentSong.Measures.Count;
             }
 
-            MeasureData m = new() { Index = 0, TimeSignature = new(4, 4), KeySignature = new(NoteStep.C, Alteration.neutral, SongMode.major) };
+            TimeSignature newMesureTs = _currentSong.Measures[index].TimeSignature;
+
+            MeasureData m = 
+                new(
+                    insertIndex, 
+                    newMesureTs,
+                    new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major),
+                    new ChordSequence(""),
+                    new MeasureMelody(new List<MelodyChord>(), new MeasureRhythmPattern(newMesureTs)),
+                    "", 
+                    new MeasureRhythmPattern(newMesureTs)
+                );
             _currentSong.Measures.Insert(insertIndex, m);
 
             // Réindexation
@@ -640,38 +664,10 @@ namespace EZSong.UI
             _ = _statusBar.Push(_statusBarContextId, $"Mesure {index + 1} supprimée. Total mesures : {_currentSong.Measures.Count}.");
         }
 
-        private void EditorContentChanged(object? sender, EventArgs e) {
-    
-            if (sender is null) {
-                return;
-            }
-
-            MelodyMeasureEditor editor = (MelodyMeasureEditor)sender;
-
-            int measureIndex = _melodyMeasureEditorWidgets.IndexOf(editor);
-            if (measureIndex < 0 || measureIndex >= _currentSong.Measures.Count) {
-                return;
-            }
-
-            MeasureMelody newMeasureMelody = new();
-            foreach (WidgetMelodyChord widgetChord in editor.ExportToModel()) {
-                newMeasureMelody.MelodyChords.Add(widgetChord.ToMelodyChord());
-            }
-
-            _currentSong.Measures[measureIndex].Melody = newMeasureMelody;
-
-            // (Pas de mise à jour du ListStore nécessaire pour la mélodie)
-        }
-
         private void SaveProject() {
             FileChooserDialog dlg = new("Enregistrer projet", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Enregistrer", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
-                
-                
-                
-                using FileStream fs = new(dlg.Filename, FileMode.Create);
-                XmlSerializer ser = new(typeof(Song));
-                ser.Serialize(fs, _currentSong);
+                SongPersistancyManager.Save(dlg.Filename, _currentSong);
             }
             dlg.Destroy();
         }
@@ -680,21 +676,9 @@ namespace EZSong.UI
         {
             FileChooserDialog dlg = new("Ouvrir projet", this, FileChooserAction.Open, "Annuler", ResponseType.Cancel, "Ouvrir", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
-                _measureStore.Clear();
 
-                using FileStream fs = new(dlg.Filename, FileMode.Open);
-                XmlSerializer ser = new(typeof(Song));
-                
-                Object? obj = ser.Deserialize(fs);
-                if (obj is not null) {
-                    _currentSong = (Song)obj;
-                    _titleEntry.Text = _currentSong.Title;
-                    _artistEntry.Text = _currentSong.Artist;
-                    _commentEntry.Buffer.Text = _currentSong.Comment;
-                    
-                    RefreshMeasuresView();
-                }
-                
+                _currentSong = SongPersistancyManager.Load(dlg.Filename);
+
             }
             dlg.Destroy();
         }

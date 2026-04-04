@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EZSong {
+namespace EZSong.Enums {
     public enum RhythmDurationKind {
         Whole,
         Half,

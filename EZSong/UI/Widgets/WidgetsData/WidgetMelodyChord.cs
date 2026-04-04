@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EZSong.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,12 +29,13 @@ namespace EZSong.UI.Widgets.WidgetsData {
         }
 
         internal MelodyChord ToMelodyChord() {
-            MelodyChord melodyChord = new();
             
+            List<Pitch> pitches = new();
             foreach (WidgetPitch widgetPitch in _pitches) {
-                melodyChord.Pitches.Add(widgetPitch.ToPitch());
+                pitches.Add(widgetPitch.ToPitch());
             }
 
+            MelodyChord melodyChord = new(pitches);
             return melodyChord;
         }
     }

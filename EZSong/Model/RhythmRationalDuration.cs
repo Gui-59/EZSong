@@ -1,4 +1,4 @@
-﻿namespace EZSong {
+﻿namespace EZSong.Model {
 
     public readonly struct RhythmRationalDuration : IEquatable<RhythmRationalDuration> {
         public int Numerator {

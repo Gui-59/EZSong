@@ -1,4 +1,5 @@
 using EZSong.Enums;
+using EZSong.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,14 +23,14 @@ namespace EZSong.Exporting.Lilypond {
         const string _lilypondvarSongmelody = "songmelody";
 
         private Song _song;
-        private readonly ILilypondConverter _lilypondSerializer;
+        private readonly ILilypondConverter _lilypondConverter;
 
         public LilypondFileBuilder(Song song) : this(song, new LilypondConverter()) {
         }
 
-        public LilypondFileBuilder(Song song, ILilypondConverter serializer) {
+        public LilypondFileBuilder(Song song, ILilypondConverter converter) {
             _song = song;
-            _lilypondSerializer = serializer;
+            _lilypondConverter = converter;
         }
 
         public void GenerateLilypondFile(String outputFilePath) {
@@ -167,7 +168,7 @@ namespace EZSong.Exporting.Lilypond {
                 TimeSignature timeSignature = new(m.TimeSignature.Beats, m.TimeSignature.BeatUnit);
                 _ = sw.AppendLine(GenerateLilypondTimeSignature(timeSignature));
 
-                _ = sw.AppendLine(_lilypondSerializer.FormatMeasureMelody(m.Melody));
+                _ = sw.AppendLine(_lilypondConverter.FormatMeasureMelody(m.Melody));
 
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
             }
@@ -178,11 +179,11 @@ namespace EZSong.Exporting.Lilypond {
         }
 
         private string GenerateLilypondTimeSignature(TimeSignature timeSignature) {
-            return "\\time " + _lilypondSerializer.FormatTimeSignature(timeSignature);
+            return "\\time " + _lilypondConverter.FormatTimeSignature(timeSignature);
         }
 
         private string GenerateLilypondKeySignature(KeySignature keySignature) {
-            // Pour l'instant, on réimplémente ici la conversion (ou déléguer à _serializer lorsque disponible).
+            // Pour l'instant, on réimplémente ici la conversion
             string lilypondCode = string.Empty;
 			/*
              * Tonalité	    Armure		Notes altérées							Commande LilyPond
@@ -282,7 +283,7 @@ namespace EZSong.Exporting.Lilypond {
 			//accords
             _ = sw.AppendLine($"{_lilypondvarSongchords} =  {_backslash}chordmode {_opening_bracket} ");
             foreach (MeasureData m in _song.Measures) {
-                _ = sw.AppendLine($"{_lilypondSerializer.FormatChordSequence(m.ChordSequence)}");
+                _ = sw.AppendLine($"{_lilypondConverter.FormatChordSequence(m.ChordSequence)}");
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
             }
 

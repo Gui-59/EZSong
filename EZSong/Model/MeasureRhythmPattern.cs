@@ -1,6 +1,7 @@
-﻿namespace EZSong {
+﻿using Cairo;
 
-    [Serializable]
+namespace EZSong.Model {
+
     public class MeasureRhythmPattern {
 
         private readonly List<BeatPattern> _beats = new();
@@ -12,12 +13,7 @@
         }
 
         public TimeSignature TimeSignature {
-            get;
-        }
-
-        public MeasureRhythmPattern() {
-            // Constructeur par défaut pour la sérialisation
-            TimeSignature = default!;
+            get; set;
         }
 
         public MeasureRhythmPattern(TimeSignature ts) {
@@ -134,10 +130,56 @@
             RhythmRationalDuration beatDuration = ts.GetBeatDuration();
 
             for (int i = 0; i < beatCount; i++) {
-                _beats.Add(new BeatPattern {
-                    ExpectedDuration = beatDuration
-                });
+                List<RhythmElement> elements = new() {
+                    new RhythmElement(
+                        beatDuration,
+                        true,
+                        new RhythmTuplet(1, 1)
+                    )
+                };
+                _beats.Add(new BeatPattern (
+                    elements,
+                    beatDuration
+                ));
             }
+        }
+
+        public MeasureRhythmPatternDto ToDto() {
+
+            
+           
+
+            MeasureRhythmPatternDto measureRhythmPatternDto = new(
+                Beats.Select(beat => BeatPattern.ToDto(beat)).ToList(),
+                TimeSignature
+            );
+
+            return measureRhythmPatternDto;
+
+        }
+       
+       
+
+        public static MeasureRhythmPattern FromDto(MeasureRhythmPatternDto dto) {
+
+            
+
+            MeasureRhythmPattern pattern = new(dto.TimeSignature) {};
+
+            int i = 0;
+            foreach (BeatPatternDto beat in dto.Beats) {
+
+                pattern.SetBeat(
+                    i,
+                    BeatPattern.FromDto(beat)
+                );
+
+                i++;
+            }
+
+
+            return pattern;
+
         }
 
     }

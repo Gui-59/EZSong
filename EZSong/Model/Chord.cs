@@ -8,9 +8,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace EZSong.Serializable {
+namespace EZSong.Model {
 
-    [Serializable]
     public class Chord {
 
         /* 
@@ -52,17 +51,24 @@ namespace EZSong.Serializable {
         public ChordMode SeventhNoteMode;
         public ChordMode NinthNoteMode;
 
-        private readonly ILilypondConverter _lilypondSerializer;
+        
 
-        public Chord() {
-            // Constructeur par défaut (requis pour la sérialisation)
-            _lilypondSerializer = new LilypondConverter();
-            Duration = new();
+        public Chord(bool isSilentChord, RhythmRationalDuration duration, NoteStep rootNote, Alteration rootNoteAlteration, 
+            ChordMode thirdNoteMode, ChordMode fithNoteMode, ChordMode seventhNoteMode, ChordMode ninthNoteMode) {
+  
+            IsSilentChord = isSilentChord;
+            Duration = duration;    
+            RootNote = rootNote;    
+            RootNoteAlteration = rootNoteAlteration;    
+            ThirdNoteMode = thirdNoteMode;
+            FithNoteMode = fithNoteMode;    
+            SeventhNoteMode = seventhNoteMode;  
+            NinthNoteMode = ninthNoteMode;  
         }
 
         public Chord(string uiChordString) {
 
-            _lilypondSerializer = new LilypondConverter();
+            LilypondConverter _lilypondConverter = new();
 
             //Valeurs par défaut
             IsSilentChord = false;
@@ -95,7 +101,7 @@ namespace EZSong.Serializable {
             //WholeFraction wholeFraction = WholeFraction.WHOLE;
             int firstDigitIndex = firstHalfRest.IndexOfAny("0123456789".ToCharArray());
             if (firstDigitIndex > 0) {
-                Duration = new(1, Int32.Parse(firstHalfRest.Substring(firstDigitIndex)), dotsCount);
+                Duration = new(1, int.Parse(firstHalfRest.Substring(firstDigitIndex)), dotsCount);
                 firstHalfRest = firstHalfRest.Trim("0123456789".ToCharArray());
             } else {
                 Duration = new(1, 4, dotsCount); //TODO (par défaut on met la durée d'une noire)
@@ -156,15 +162,19 @@ namespace EZSong.Serializable {
             NinthNoteMode = ChordMode.None;
         }
 
+
+
         public string ToLilyPondString() {
 
             if (IsSilentChord) {
                 return "";            
             }
 
+            ILilypondConverter _lilypondConverter = new LilypondConverter();
+
             string lilyPondString = "";
-            lilyPondString += _lilypondSerializer.NoteStepToLilyPondString(RootNote);
-            lilyPondString += _lilypondSerializer.AlterationToLilyPondString(RootNoteAlteration);
+            lilyPondString += _lilypondConverter.NoteStepToLilyPondString(RootNote);
+            lilyPondString += _lilypondConverter.AlterationToLilyPondString(RootNoteAlteration);
 
             lilyPondString += Duration.ToLilyPondString();
 
@@ -205,6 +215,32 @@ namespace EZSong.Serializable {
             return ToLilyPondString();
         }
 
+        internal ChordDto ToDto() {
+            return new ChordDto {
+                IsSilentChord = IsSilentChord,
+                Duration = Duration,
+                RootNote = RootNote,
+                RootNoteAlteration = RootNoteAlteration,
+                ThirdNoteMode = ThirdNoteMode,
+                FithNoteMode = FithNoteMode,
+                SeventhNoteMode = SeventhNoteMode,
+                NinthNoteMode = NinthNoteMode
+            };
 
+        }
+
+        public static Chord FromDto(ChordDto chordDto) {
+            return new Chord (
+                chordDto.IsSilentChord,
+                chordDto.Duration,
+                chordDto.RootNote,
+                chordDto.RootNoteAlteration,
+                chordDto.ThirdNoteMode,
+                chordDto.FithNoteMode,
+                chordDto.SeventhNoteMode,
+                chordDto.NinthNoteMode
+            );
+
+        }
     }
 }

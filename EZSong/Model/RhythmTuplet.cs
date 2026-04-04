@@ -1,4 +1,4 @@
-﻿namespace EZSong {
+﻿namespace EZSong.Model {
 
     public class RhythmTuplet {
         public int Count {

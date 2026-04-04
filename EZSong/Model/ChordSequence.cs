@@ -4,17 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EZSong.Serializable {
+namespace EZSong.Model {
 
-    [Serializable]
     public class ChordSequence {
 
-        public List<Chord> Chords; 
+        public List<Chord> Chords;
 
-        public ChordSequence() {
-            // Constructeur par défaut (requis pour la sérialisation)
-            Chords = new();
+        public ChordSequence(List<Chord> chords) {
+            Chords = chords;
         }
+
         public ChordSequence(string chordListGuiString) {
             Chords = new();
             foreach (string guiChord in chordListGuiString.Split(" ")) {
@@ -36,6 +35,20 @@ namespace EZSong.Serializable {
                 guiString += chord.ToGuiString() + " ";
             }
             return guiString.Trim();
+        }
+
+        public ChordSequenceDto ToDto() {
+            ChordSequenceDto dto = new(Chords.Select(c => c.ToDto()).ToList());
+            return dto;
+        }
+
+        public static ChordSequence FromDto(ChordSequenceDto chords) {
+            List<Chord> chordList = new();
+            foreach (ChordDto chordDto in chords.Chords) {
+                chordList.Add(Chord.FromDto(chordDto));
+            }
+            return new ChordSequence (chordList);
+
         }
     }
 }

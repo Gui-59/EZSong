@@ -8,25 +8,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EZSong {
+namespace EZSong.Model {
 
-    [Serializable]
     public class KeySignature {
         
         public NoteStep Note;
         public Alteration Alteration;
         public SongMode Mode;
 
-        private readonly ILilypondConverter _lilypondSerializer;
-
-        public KeySignature() {
-            // Constructeur par défaut (requis pour la sérialisation)
-            _lilypondSerializer = new LilypondConverter();
-        }
+        private readonly ILilypondConverter _lilypondConverter;
 
         public KeySignature(string keySignatureDropDownId) {
 
-            _lilypondSerializer = new LilypondConverter();
+            _lilypondConverter = new LilypondConverter();
 
             //Premier caractère de l'id : la note (hors altération)
             switch (keySignatureDropDownId.Substring(0, 1).ToLowerInvariant()) {
@@ -81,15 +75,15 @@ namespace EZSong {
             Note = note; 
             Alteration = alteration;
             Mode = mode;
-            _lilypondSerializer = new LilypondConverter();
+            _lilypondConverter = new LilypondConverter();
         }
 
         public string ToDropDownId() {
             return
-                _lilypondSerializer.NoteStepToLilyPondString(Note) 
-                + _lilypondSerializer.AlterationToLilyPondString(Alteration) 
+                _lilypondConverter.NoteStepToLilyPondString(Note) 
+                + _lilypondConverter.AlterationToLilyPondString(Alteration) 
                 + " "
-                + _lilypondSerializer.SongModeToLilyPondString(Mode);
+                + _lilypondConverter.SongModeToLilyPondString(Mode);
         }
 
         public string ToDropDownLabel() {
@@ -100,5 +94,12 @@ namespace EZSong {
                 + SongModeStringifier.ToHumanString(Mode);
         }
 
+        public static KeySignature FromDto(KeySignatureDto? keySignature) {
+            if (keySignature == null) {
+                return new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major);
+            } else {
+                return new KeySignature(keySignature.Note, keySignature.Alteration, keySignature.Mode);
+            }
+        }
     }
 }

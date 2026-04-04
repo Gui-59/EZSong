@@ -4,13 +4,13 @@ using Gtk;
 using EZSong.Enums;
 using EZSong.MIDI;
 using EZSong.MIDI.Enums;
-using EZSong.Serializable;
 using EZSong.UI.Widgets.WidgetsData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EZSong.Model;
 
 namespace EZSong.UI.Widgets {
     public class MelodyMeasureEditor : DrawingArea {
@@ -345,8 +345,6 @@ namespace EZSong.UI.Widgets {
 
             return c;
         }
-
-        // export model for serialisation
 
         public List<WidgetMelodyChord> ExportToModel() {
             return _melodyChords.Select(DeepCopyChord).ToList();

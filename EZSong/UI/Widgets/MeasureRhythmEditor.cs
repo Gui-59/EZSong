@@ -1,5 +1,6 @@
 ﻿using Gtk;
 using Cairo;
+using EZSong.Model;
 
 namespace EZSong.UI.Widgets {
     public class MeasureRhythmEditor : DrawingArea {
@@ -145,14 +146,14 @@ namespace EZSong.UI.Widgets {
                 return;
             }
 
-            BeatPattern beat = new();
+            BeatPattern beat = Pattern.Beats[index];
 
             // Exemple simple : toggle entre ♩ et ♪♪
             if (Pattern.Beats[index].Elements.Count == 1) {
-                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8)));
-                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8)));
+                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8), false, new RhythmTuplet(1,1)));
+                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8), false, new RhythmTuplet(1, 1)));
             } else {
-                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 4)));
+                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 4), false, new RhythmTuplet(1, 1)));
             }
 
             Pattern.SetBeat(index, beat);

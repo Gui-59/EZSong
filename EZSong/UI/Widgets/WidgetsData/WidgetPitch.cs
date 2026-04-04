@@ -1,4 +1,5 @@
 ﻿using EZSong.Enums;
+using EZSong.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,35 +39,33 @@ namespace EZSong.UI.Widgets.WidgetsData {
         }
 
         internal Pitch ToPitch() {
-            Pitch pitch = new();
-           
+            
+            NoteStep note = NoteStep.C; // default value, will be overwritten by switch
             switch (NoteIndex) {
                 case 0:
-                    pitch.Note = NoteStep.C;
+                    note = NoteStep.C;
                     break;
                 case 1:
-                    pitch.Note = NoteStep.D;
+                    note = NoteStep.D;
                     break;
                 case 2:
-                    pitch.Note = NoteStep.E;
+                    note = NoteStep.E;
                     break;
                 case 3:
-                    pitch.Note = NoteStep.F;
+                    note = NoteStep.F;
                     break;
                 case 4:
-                    pitch.Note = NoteStep.G;
+                    note = NoteStep.G;
                     break;
                 case 5:
-                    pitch.Note = NoteStep.A;
+                    note = NoteStep.A;
                     break;
                 case 6:
-                    pitch.Note = NoteStep.B;
+                    note = NoteStep.B;
                     break;
             }
 
-            pitch.Alteration = Alteration;
-            pitch.OctaveOffset = OctaveOffset;
-
+            Pitch pitch = new(note, Alteration, OctaveOffset);
             return pitch;
         }
     }

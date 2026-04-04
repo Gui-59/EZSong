@@ -8,24 +8,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EZSong {
+namespace EZSong.Model {
 
-    [Serializable]
     public class Pitch {
 
         public NoteStep Note;
         public Alteration Alteration;
         public int OctaveOffset;
 
-        private readonly ILilypondConverter _lilypondSerializer;
+        private readonly ILilypondConverter _lilypondConverter;
 
-        public Pitch() {
-            //Contructeur par défaut (requis pour la sérialisation)
-            _lilypondSerializer = new LilypondConverter();
-        }
 
         public Pitch(NoteStep note, Alteration alteration, int octaveOffset = 0) {
-            _lilypondSerializer = new LilypondConverter();
+            _lilypondConverter = new LilypondConverter();
 
             Note = note;
             Alteration = alteration;
@@ -35,8 +30,8 @@ namespace EZSong {
         public string ToLilyPondString() {
             string lilyPondString = string.Empty;
 
-            lilyPondString += _lilypondSerializer.NoteStepToLilyPondString(Note);
-            lilyPondString += _lilypondSerializer.AlterationToLilyPondString(Alteration);
+            lilyPondString += _lilypondConverter.NoteStepToLilyPondString(Note);
+            lilyPondString += _lilypondConverter.AlterationToLilyPondString(Alteration);
 
             int sheetOctaveOffset = OctaveOffset + 1; //On augmente d'une octave se mettre naturellement dans la portée
 
@@ -89,6 +84,15 @@ namespace EZSong {
             widgetPitch.OctaveOffset = OctaveOffset;
 
             return widgetPitch;
+        }
+
+        internal PitchDto ToDto() {
+            return new PitchDto {
+                Note = Note,
+                Alteration = Alteration,
+                OctaveOffset = OctaveOffset
+             };
+
         }
     }
 }
