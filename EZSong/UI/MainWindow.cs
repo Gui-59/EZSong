@@ -677,10 +677,47 @@ namespace EZSong.UI
             FileChooserDialog dlg = new("Ouvrir projet", this, FileChooserAction.Open, "Annuler", ResponseType.Cancel, "Ouvrir", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
 
-                _currentSong = SongPersistancyManager.Load(dlg.Filename);
+                SetSong(SongPersistancyManager.Load(dlg.Filename));
+
+                RefreshUI();
 
             }
             dlg.Destroy();
+        }
+
+        public void SetSong(Song song) {
+            _currentSong = song ?? throw new ArgumentNullException(nameof(song));
+            RefreshUI();
+        }
+
+        private void RefreshUI() {
+            ClearMeasuresUI();
+
+            
+            foreach (MeasureData measure in _currentSong.Measures) {
+                AddMeasure(measure);
+            }
+            
+
+            UpdateSongInfoUI();
+        }
+
+        private void UpdateSongInfoUI() {
+            if (_currentSong != null) {
+                _titleEntry.Text = _currentSong.Title ?? string.Empty;
+                _artistEntry.Text = _currentSong.Artist ?? string.Empty;
+                _commentEntry.Text = _currentSong.Comment ?? string.Empty;
+            } else {
+                _titleEntry.Text = string.Empty;
+                _artistEntry.Text = string.Empty;
+                _commentEntry.Text = string.Empty;
+            }
+        }
+
+        private void ClearMeasuresUI() {
+            foreach (Widget? child in _measuresBox.Children) {
+                _measuresBox.Remove(child);
+            }
         }
 
         /*
