@@ -13,7 +13,14 @@ namespace EZSong.Model {
         }
 
         public TimeSignature TimeSignature {
-            get; set;
+            get; 
+            set;
+        }
+
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public MeasureRhythmPattern() {
+            TimeSignature = new TimeSignature();
+            InitializeFromTimeSignature(TimeSignature);
         }
 
         public MeasureRhythmPattern(TimeSignature ts) {
@@ -27,7 +34,7 @@ namespace EZSong.Model {
 
         public RhythmRationalDuration GetTotalDuration() {
 
-            RhythmRationalDuration total = new(0, 1, 0);
+            RhythmRationalDuration total = new(0, 1, 0); //TODO ?
 
             foreach (BeatPattern beat in Beats) {
                 total += beat.GetTotalDuration();
@@ -47,14 +54,11 @@ namespace EZSong.Model {
                 }
 
                 return count;
-
             }
         }
 
         public bool IsDurationValid() {
-
             return GetTotalDuration().Equals(TimeSignature.TotalDuration);
-
         }
 
         public bool AreBeatsValid() {
@@ -146,29 +150,25 @@ namespace EZSong.Model {
 
         public MeasureRhythmPatternDto ToDto() {
 
-            
-           
+            List<BeatPatternDto> beatDtos = new();
+            foreach (BeatPattern beat in Beats) {
+                beatDtos.Add(BeatPattern.ToDto(beat));
+            }
 
             MeasureRhythmPatternDto measureRhythmPatternDto = new() {
-                Beats = Beats.Select(beat => BeatPattern.ToDto(beat)).ToList(),    
+                Beats = beatDtos,    
                 TimeSignature = TimeSignature
             };
 
             return measureRhythmPatternDto;
-
         }
        
-       
-
         public static MeasureRhythmPattern FromDto(MeasureRhythmPatternDto dto, TimeSignature ts) {
-
-            
 
             MeasureRhythmPattern pattern = new(ts) {};
 
             int i = 0;
             foreach (BeatPatternDto beat in dto.Beats) {
-
                 pattern.SetBeat(
                     i,
                     BeatPattern.FromDto(beat)
@@ -177,11 +177,8 @@ namespace EZSong.Model {
                 i++;
             }
 
-
             return pattern;
 
         }
-
     }
-
 }

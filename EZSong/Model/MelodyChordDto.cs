@@ -8,7 +8,10 @@
      * - aucune logique
      */
     public class MelodyChordDto {
-        public List<PitchDto> Pitches { get; set; }
+        public List<PitchDto> Pitches { 
+            get; 
+            set; 
+        }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public MelodyChordDto() {

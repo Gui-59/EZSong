@@ -8,7 +8,15 @@ namespace EZSong.Model {
 
     public class ChordSequence {
 
-        public List<Chord> Chords { get; set; }
+        public List<Chord> Chords { 
+            get; 
+            set; 
+        }
+
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public ChordSequence() { 
+            Chords = new List<Chord>();
+        }
 
         public ChordSequence(List<Chord> chords) {
             Chords = chords;
@@ -38,8 +46,12 @@ namespace EZSong.Model {
         }
 
         public ChordSequenceDto ToDto() {
+            List<ChordDto> chordDtos = new();
+            foreach (Chord chord in Chords) {
+                chordDtos.Add(chord.ToDto());
+            }
             ChordSequenceDto dto = new() {
-                Chords = Chords.Select(c => c.ToDto()).ToList()
+                Chords = chordDtos
             };
             return dto;
         }

@@ -13,17 +13,27 @@ namespace EZSong.Model {
     public class Pitch {
 
         public NoteStep Note {
-            get; set;
+            get; 
+            set;
         }
         public Alteration Alteration {
-            get; set;
+            get;
+            set;
         }
         public int OctaveOffset {
-            get; set;
+            get;
+            set;
         }
 
         private readonly ILilypondConverter _lilypondConverter;
 
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public Pitch() {
+            Note = NoteStep.C;
+            Alteration = Alteration.neutral;
+            OctaveOffset = 0;
+            _lilypondConverter = new LilypondConverter();
+        }
 
         public Pitch(NoteStep note, Alteration alteration, int octaveOffset = 0) {
             _lilypondConverter = new LilypondConverter();
@@ -98,7 +108,6 @@ namespace EZSong.Model {
                 Alteration = Alteration,
                 OctaveOffset = OctaveOffset
              };
-
         }
     }
 }

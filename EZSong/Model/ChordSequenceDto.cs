@@ -8,7 +8,10 @@
      * - aucune logique
      */
     public class ChordSequenceDto {
-        public List<ChordDto> Chords { get; set; }
+        public List<ChordDto> Chords { 
+            get; 
+            set; 
+        }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public ChordSequenceDto() {

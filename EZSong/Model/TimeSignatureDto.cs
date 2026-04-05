@@ -15,10 +15,12 @@ namespace EZSong.Model {
      */
     public class TimeSignatureDto {
         public int Beats {
-            get; set;
+            get; 
+            set;
         }
         public int BeatUnit {
-            get; set;
+            get; 
+            set;
         }
 
         //Constructeur vide (requis pour la sérialisation JSON)

@@ -14,10 +14,22 @@ namespace EZSong.Model {
      * - aucune logique
      */
     public class SongDto {
-        public string Title { get; set; }
-        public string Artist { get; set; }
-        public string Comment { get; set; }
-        public List<MeasureDataDto> Measures { get; set; }
+        public string Title { 
+            get; 
+            set; 
+        }
+        public string Artist { 
+            get; 
+            set; 
+        }
+        public string Comment { 
+            get; 
+            set; 
+        }
+        public List<MeasureDataDto> Measures { 
+            get;
+            set; 
+        }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public SongDto() {

@@ -10,14 +10,45 @@ namespace EZSong.Model
 {
     public class MeasureData
     {
-        public int Index { get; set; }
+        public int Index { 
+            get; 
+            set; 
+        }
 
-        public TimeSignature TimeSignature { get; set; }
-        public KeySignature KeySignature { get; set; }
-        public ChordSequence ChordSequence { get; set; }      
-        public MeasureMelody Melody { get; set; }
-        public string Lyrics { get; set; }
-        public MeasureRhythmPattern RhythmPattern {get; set;}
+        public TimeSignature TimeSignature { 
+            get; 
+            set; 
+        }
+        public KeySignature KeySignature { 
+            get; 
+            set; 
+        }
+        public ChordSequence ChordSequence { 
+            get; 
+            set; 
+        }      
+        public MeasureMelody Melody { 
+            get; 
+            set; 
+        }
+        public string Lyrics { 
+            get; 
+            set; 
+        }
+        public MeasureRhythmPattern RhythmPattern {
+            get; 
+            set;
+        }
+
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public MeasureData() { 
+            TimeSignature = new TimeSignature();
+            KeySignature = new KeySignature();
+            ChordSequence = new ChordSequence();
+            Melody = new MeasureMelody();
+            Lyrics = string.Empty;
+            RhythmPattern = new MeasureRhythmPattern();
+        }
 
         public MeasureData(int index, TimeSignature timeSignature, KeySignature keySignature, ChordSequence chordSequence, MeasureMelody melody, string lyrics, MeasureRhythmPattern rhythmPattern) {
             Index = index;
@@ -31,20 +62,11 @@ namespace EZSong.Model
 
         public MeasureDataDto ToDto() {
 
-            TimeSignatureDto timeSignature = new() {
-                Beats = TimeSignature.Beats,
-                BeatUnit = TimeSignature.BeatUnit
-            };
+            TimeSignatureDto timeSignature = TimeSignature.ToDTo();
 
-            KeySignatureDto keySignature = new() {
-                Note = KeySignature.Note,
-                Alteration = KeySignature.Alteration,
-                Mode = KeySignature.Mode
-            };
-
+            KeySignatureDto keySignature = KeySignature.ToDto();
 
             ChordSequenceDto chordSequence = ChordSequence.ToDto();
-
 
             MeasureMelodyDto melody = Melody.ToDto();
 
@@ -69,29 +91,13 @@ namespace EZSong.Model
             MeasureData measure = 
                 new(
                     dto.Index, 
-                    ts, 
-                    KeySignature.FromDto(dto.KeySignature),  
-                    ChordSequence.FromDto(dto.ChordSequence), 
+                    TimeSignature.FromDto(dto.TimeSignature), 
+                    KeySignature.FromDto(dto.KeySignature),
+                    ChordSequence.FromDto(dto.ChordSequence),
                     MeasureMelody.FromDto(dto.Melody), 
-                    dto.Lyrics, 
+                    dto.Lyrics,
                     MeasureRhythmPattern.FromDto(dto.Rhythm, ts)
                 );               
-            
-
-            measure.RhythmPattern = MeasureRhythmPattern.FromDto(dto.Rhythm, ts);
-
-            // KeySignature
-            if (dto.KeySignature != null) {
-                measure.KeySignature = new KeySignature(dto.KeySignature.Note, dto.KeySignature.Alteration, dto.KeySignature.Mode);
-            }
-
-            // Chords
-            measure.ChordSequence = ChordSequence.FromDto(dto.ChordSequence);
-
-            // Melody
-            if (dto.Melody != null) {
-                measure.Melody = MeasureMelody.FromDto(dto.Melody);
-            }
 
             return measure;
         }

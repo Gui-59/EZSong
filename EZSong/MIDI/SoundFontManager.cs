@@ -10,7 +10,7 @@ namespace EZSong.MIDI {
         private string _currentSoundFont;
 
         public SoundFontManager() {
-            _currentSoundFont = "C:\\SoundFonts\\Arachno SoundFont - Version 1.0.sf2";
+            _currentSoundFont = "C:\\SoundFonts\\Arachno SoundFont - Version 1.0.sf2"; //TODO: rendre ça configurable
         }
 
         public string GetCurrentSoundFontPath() {

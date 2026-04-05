@@ -8,6 +8,12 @@
             get;
         }
 
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public RhythmTuplet() {
+            Count = 1;
+            InTimeOf = 1;
+        }
+
         public RhythmTuplet(int count, int inTimeOf) {
             Count = count;
             InTimeOf = inTimeOf;

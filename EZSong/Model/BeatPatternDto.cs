@@ -15,14 +15,20 @@ namespace EZSong.Model {
      */
 
     public class BeatPatternDto {
-        public List<RhythmElementDto> Elements { get; set; }
+        public List<RhythmElementDto> Elements { 
+            get; 
+            set; 
+        }
 
-        public RhythmRationalDuration ExpectedDuration {get; set;}
+        public RhythmRationalDuration ExpectedDuration {
+            get; 
+            set;
+        }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public BeatPatternDto() { 
             Elements = new List<RhythmElementDto>();
-            ExpectedDuration = new RhythmRationalDuration(0, 1, 0);
+            ExpectedDuration = new RhythmRationalDuration(0, 1, 0); //TODO ?
         }
     }
 }

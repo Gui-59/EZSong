@@ -3,16 +3,33 @@ using EZSong.UI.Widgets.WidgetsData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.Model {
 
-
     public class MeasureMelody {
 
-        public List<MelodyChord> MelodyChords { get; set; }
-        public MeasureRhythmPattern RhythmPattern { get; set; }
+        public List<MelodyChord> MelodyChords { 
+            get; 
+            set; 
+        }
+        public MeasureRhythmPattern RhythmPattern { 
+            get; 
+            set; 
+        }
+
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public MeasureMelody() { 
+            MelodyChords = new List<MelodyChord>();
+            RhythmPattern = new MeasureRhythmPattern();
+        }
+
+        public MeasureMelody(List<MelodyChord> melodyChords, MeasureRhythmPattern rhythmPattern) {
+            MelodyChords = melodyChords;
+            RhythmPattern = rhythmPattern;
+        }
 
         public bool HasCadency {
             get {
@@ -25,11 +42,6 @@ namespace EZSong.Model {
                 }
                 return false;
             }
-        }
-
-        public MeasureMelody(List<MelodyChord> melodyChords, MeasureRhythmPattern rhythmPattern) {
-            MelodyChords = melodyChords;
-            RhythmPattern = rhythmPattern;
         }
 
         public string ToLilyPondString() {
@@ -78,16 +90,13 @@ namespace EZSong.Model {
 
                 foreach (BeatPattern beat in RhythmPattern.Beats) {
                 
-
                     foreach (RhythmElement rhythmEvent in beat.Elements) {
-
 
                         if (rhythmEvent.IsRest) {
                             lilyPondString += "r";
                             lilyPondString += rhythmEvent.Duration.ToLilyPondString();
 
                         } else {
-
 
                             if (MelodyChords[melodyChordIndex].Pitches.Count == 1) {
                                 lilyPondString += MelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
@@ -108,8 +117,6 @@ namespace EZSong.Model {
 
                             melodyChordIndex++;
                         }
-
-
                     }
                 }
             }
@@ -128,12 +135,17 @@ namespace EZSong.Model {
         }
 
         internal MeasureMelodyDto ToDto() {
+
+            List<MelodyChordDto> melodyChords = new();
+            foreach (MelodyChord melodyChord in MelodyChords) {
+                melodyChords.Add(melodyChord.ToDto());
+            }
+
             MeasureMelodyDto dto = new() {
-                MelodyChords = MelodyChords.Select(mc => mc.ToDto()).ToList(),
+                MelodyChords = melodyChords,
                 RhythmPattern = RhythmPattern.ToDto()
             };
             return dto;
-
         }
 
         public static MeasureMelody FromDto(MeasureMelodyDto melody) {
@@ -143,7 +155,11 @@ namespace EZSong.Model {
                 melodyChords.Add(MelodyChord.FromDto(melodyChordDto));
             }
 
-            MeasureMelody measureMelody = new(melodyChords, MeasureRhythmPattern.FromDto(melody.RhythmPattern, melody.RhythmPattern.TimeSignature));
+            MeasureMelody measureMelody = 
+                new(
+                    melodyChords, 
+                    MeasureRhythmPattern.FromDto(melody.RhythmPattern, melody.RhythmPattern.TimeSignature)
+                );
             return measureMelody;
 
         }

@@ -15,24 +15,30 @@ namespace EZSong.Model {
      */
     public class RhythmElementDto {
         public int Numerator {
-            get; set;
+            get; 
+            set;
         }
         public int Denominator {
-            get; set;
+            get; 
+            set;
         }
         public int Dots {
-            get; set;
+            get; 
+            set;
         }
 
         public bool IsRest {
-            get; set;
+            get; 
+            set;
         }
         public bool TieToNext {
-            get; set;
+            get; 
+            set;
         }
 
         public RhythmTupletDto Tuplet {
-            get; set;
+            get; 
+            set;
         }
 
         //Constructeur vide (requis pour la sérialisation JSON)

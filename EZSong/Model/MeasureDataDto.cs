@@ -16,31 +16,38 @@ namespace EZSong.Model {
     public class MeasureDataDto {
 
         public int Index {
-            get; set;
+            get;
+            set;
         }
 
         public TimeSignatureDto TimeSignature {
-            get; set;
+            get; 
+            set;
         }
 
         public KeySignatureDto KeySignature {
-            get; set;
+            get; 
+            set;
         }
 
         public ChordSequenceDto ChordSequence {
-            get; set;
+            get; 
+            set;
         }
 
         public MeasureMelodyDto Melody {
-            get; set;
+            get; 
+            set;
         }
 
         public string Lyrics {
-            get; set;
+            get; 
+            set;
         }
 
         public MeasureRhythmPatternDto Rhythm {
-            get; set;
+            get; 
+            set;
         }
 
         //Constructeur vide (requis pour la sérialisation JSON)

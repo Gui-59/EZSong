@@ -14,8 +14,14 @@ namespace EZSong.Model {
      * - aucune logique
      */
     public class MeasureRhythmPatternDto {
-        public List<BeatPatternDto> Beats { get; set; }
-        public TimeSignature TimeSignature { get; set; }
+        public List<BeatPatternDto> Beats { 
+            get; 
+            set; 
+        }
+        public TimeSignature TimeSignature { 
+            get; 
+            set; 
+        }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public MeasureRhythmPatternDto() {

@@ -42,28 +42,48 @@ namespace EZSong.Model {
 
         public bool IsSilentChord;
 
-        public RhythmRationalDuration Duration { get; set; }
+        public RhythmRationalDuration Duration { 
+            get; 
+            set; 
+        }
 
         public NoteStep RootNote {
-            get; set;
+            get; 
+            set;
         }
         public Alteration RootNoteAlteration {
-            get; set;
+            get; 
+            set;
         }
         public ChordMode ThirdNoteMode {
-            get; set;
+            get; 
+            set;
         }
         public ChordMode FithNoteMode {
-            get; set;
+            get; 
+            set;
         }
         public ChordMode SeventhNoteMode {
-            get; set;
+            get; 
+            set;
         }
         public ChordMode NinthNoteMode {
-            get; set;
+            get; 
+            set;
         }
 
-
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public Chord() {
+            IsSilentChord = false;
+            RootNote = NoteStep.C;
+            RootNoteAlteration = Alteration.neutral;
+            //TODO (par défaut on met la durée d'une noire non pointée)
+            Duration = new(1, 4, 0); 
+            ThirdNoteMode = ChordMode.None;
+            FithNoteMode = ChordMode.None;
+            SeventhNoteMode = ChordMode.None;
+            NinthNoteMode = ChordMode.None;
+        }
 
         public Chord(bool isSilentChord, RhythmRationalDuration duration, NoteStep rootNote, Alteration rootNoteAlteration, 
             ChordMode thirdNoteMode, ChordMode fithNoteMode, ChordMode seventhNoteMode, ChordMode ninthNoteMode) {
@@ -192,9 +212,7 @@ namespace EZSong.Model {
 
             lilyPondString += Duration.ToLilyPondString();
 
-
             lilyPondString += ":";
-            
 
             switch (ThirdNoteMode) {
                 case ChordMode.Minor:
@@ -240,7 +258,6 @@ namespace EZSong.Model {
                 SeventhNoteMode = SeventhNoteMode,
                 NinthNoteMode = NinthNoteMode
             };
-
         }
 
         public static Chord FromDto(ChordDto chordDto) {

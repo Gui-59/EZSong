@@ -2,21 +2,30 @@
 
     public class RhythmElement {
         public RhythmRationalDuration Duration {
-            get; set;
+            get; 
+            set;
         }
 
         public bool TieToNext {
-            get; set;
+            get; 
+            set;
         }
 
         public bool IsRest {
-            get; set;
+            get; 
+            set;
         }
 
         public RhythmTuplet Tuplet {
             get;
         }
 
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public RhythmElement() {
+            Duration = new RhythmRationalDuration(1, 4, 0);
+            IsRest = false;
+            Tuplet = new();
+        }
 
         public RhythmElement(
             RhythmRationalDuration duration,

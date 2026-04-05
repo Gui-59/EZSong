@@ -4,7 +4,15 @@ namespace EZSong.Model {
 
     public class MelodyChord {
 
-        public List<Pitch> Pitches { get; set; }
+        public List<Pitch> Pitches { 
+            get; 
+            set; 
+        }
+
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public MelodyChord() {
+            Pitches = new List<Pitch>();
+        }
 
         public MelodyChord(List<Pitch> pitches) {
             Pitches = pitches;

@@ -9,10 +9,18 @@ namespace EZSong.Model {
     public class TimeSignature {
 
         public int Beats {
-            get; set;
+            get; 
+            set;
         }
         public int BeatUnit {
-            get; set;
+            get; 
+            set;
+        }
+
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public TimeSignature() {
+            Beats = 4;
+            BeatUnit = 4;
         }
 
         public TimeSignature(int beat, int beatUnit) {
@@ -50,6 +58,18 @@ namespace EZSong.Model {
 
         public string ToLilyPondString() {
             return Beats + "/" + BeatUnit;
+        }
+
+
+        internal static TimeSignature FromDto(TimeSignatureDto timeSignature) {
+            return new TimeSignature(timeSignature.Beats, timeSignature.BeatUnit);
+        }
+
+        internal TimeSignatureDto ToDTo() {
+            return new TimeSignatureDto() {
+                Beats = Beats,
+                BeatUnit = BeatUnit
+            };
         }
     }
 }

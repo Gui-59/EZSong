@@ -14,8 +14,8 @@ namespace EZSong.Exporting.Lilypond {
         const string _opening_bracket = "{";
         const string _closing_bracket = "}";
 
-
         const string _lilypondTargetVersion = "2.24.2";
+
         const string _styleSheetName = "default-style";
 
         const string _lilypondvarSongchords = "songchords";

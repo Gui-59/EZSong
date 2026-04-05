@@ -12,11 +12,35 @@ namespace EZSong.Model {
 
     public class KeySignature {
         
-        public NoteStep Note { get; set; }
-        public Alteration Alteration { get; set; }
-        public SongMode Mode { get; set; }
+        public NoteStep Note { 
+            get; 
+            set; 
+        }
+        public Alteration Alteration { 
+            get; 
+            set; 
+        }
+        public SongMode Mode { 
+            get; 
+            set; 
+        }
 
         private readonly ILilypondConverter _lilypondConverter;
+
+        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        public KeySignature() {
+            Note = NoteStep.C;
+            Alteration = Alteration.neutral;
+            Mode = SongMode.major;
+            _lilypondConverter = new LilypondConverter();
+        }
+
+        public KeySignature(NoteStep note, Alteration alteration, SongMode mode) {
+            Note = note;
+            Alteration = alteration;
+            Mode = mode;
+            _lilypondConverter = new LilypondConverter();
+        }
 
         public KeySignature(string keySignatureDropDownId) {
 
@@ -71,13 +95,6 @@ namespace EZSong.Model {
 
         }
 
-        public KeySignature(NoteStep note, Alteration alteration, SongMode mode) {
-            Note = note; 
-            Alteration = alteration;
-            Mode = mode;
-            _lilypondConverter = new LilypondConverter();
-        }
-
         public string ToDropDownId() {
             return
                 _lilypondConverter.NoteStepToLilyPondString(Note) 
@@ -100,6 +117,15 @@ namespace EZSong.Model {
             } else {
                 return new KeySignature(keySignature.Note, keySignature.Alteration, keySignature.Mode);
             }
+        }
+
+        internal KeySignatureDto ToDto() {
+            return new KeySignatureDto() {
+                Note = Note,
+                Alteration = Alteration,
+                Mode = Mode
+            };
+
         }
     }
 }

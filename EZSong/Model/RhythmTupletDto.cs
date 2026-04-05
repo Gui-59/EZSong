@@ -11,10 +11,12 @@ namespace EZSong.Model {
      */
     public class RhythmTupletDto {
         public int Count {
-            get; set;
+            get;
+            set;
         }
         public int InTimeOf {
-            get; set;
+            get; 
+            set;
         }
 
         //Constructeur vide (requis pour la sérialisation JSON)
