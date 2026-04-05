@@ -30,12 +30,13 @@ namespace EZSong.UI
         private Entry _titleEntry;
         private Entry _artistEntry;
         private Entry _commentEntry;
-        private Box _measuresBox;
-        private List<MelodyMeasureEditor> _melodyMeasureEditorWidgets;
+        private MeasuresEditor _measuresEditor;
+
+        
         private Statusbar _statusBar;
         private uint _statusBarContextId;
 
-        private SelectableValues _selectableValues = new();            
+                 
 
         public MainWindow() : base("EZSong")
         {
@@ -98,10 +99,9 @@ namespace EZSong.UI
                 typeof(string),  // Accords
                 typeof(string)   // Paroles
             );
-            _measuresBox = new Box(Orientation.Horizontal, 4); //Les mesures seront cotes à cotes
-
+            _measuresEditor = new MeasuresEditor();
             ScrolledWindow scrolled = new();
-            scrolled.Add(_measuresBox);
+            scrolled.Add(_measuresEditor);
             mainBox.PackStart(scrolled, true, true, 0);
 
             // Barre de status
@@ -139,7 +139,7 @@ namespace EZSong.UI
             _midiManager.NotesPlayed += notes =>
             {
                 // Trouve l'éditeur de mesure actuellement focus
-                MelodyMeasureEditor? focusedEditor = GetFocusedMelodyEditor();
+                MelodyMeasureEditor? focusedEditor = _measuresEditor.GetFocusedMelodyEditor();
                 if (focusedEditor != null) {
                     Gtk.Application.Invoke((s, e) =>  // nécessaire car le callback MIDI n’est pas sur le thread GTK
                     {
@@ -148,9 +148,10 @@ namespace EZSong.UI
                 }
             };
 
-            _melodyMeasureEditorWidgets = new();
+            
 
             AddBlankMeasures(5); //5 mesures par défaut
+            _measuresEditor.SetSong(_currentSong);
 
             Maximize(); // Démarrer en mode maximisé
 
@@ -293,27 +294,6 @@ namespace EZSong.UI
             StyleContext.AddProviderForScreen(Gdk.Screen.Default, cssProvider, uint.MaxValue);
         }
 
-        private void RefreshMeasuresView()  {
-
-            if (_measureStore == null) {
-                return;
-            }
-
-            _measureStore.Clear();
-
-            foreach (MeasureData measure in _currentSong.Measures) {
-                _ = _measureStore.AppendValues(
-                    measure.Index.ToString(),
-                    measure.TimeSignature,
-                    measure.KeySignature,
-                    measure.ChordSequence,
-                    measure.Lyrics
-                );
-
-                AddMeasure(measure);
-            }
-        }
-
         private void AddBlankMeasures(int number) {
 
             TimeSignature newMesuresTimeSig = new(4, 4);
@@ -333,335 +313,8 @@ namespace EZSong.UI
                 _currentSong.Measures.Add(m);
                 _ = _measureStore.AppendValues(num.ToString(), m.TimeSignature, m.KeySignature, m.ChordSequence, m.Lyrics);
 
-                AddMeasure(m);
+                _measuresEditor.AddMeasure(m);
             }
-        }
-
-        private void AddMeasure(MeasureData measure) {
-
-            
-
-            Box row = new(Orientation.Vertical, 0); //On met en superposé les elements qui définissent une mesure
-
-            // Barre de boutons en haut : label + actions
-            Box topBar = new(Orientation.Horizontal, 6) { Homogeneous = false };
-
-            // Label mesure (aligné à gauche)
-            Label label = new($"{measure.Index}") { Xalign = 0f, Yalign = 0.5f };
-            topBar.PackStart(label, true, true, 6);
-
-            // Conteneur pour les boutons (alignés à droite)
-            Box buttonsBox = new(Orientation.Horizontal, 4) { Homogeneous = false };
-
-            //Bouton de suppression de la mesure
-            Button deleteSelf = new();
-            deleteSelf.Label = "Supprimer";
-            deleteSelf.Clicked += (o, args) => {
-                DeleteMesure(measure.Index - 1);
-            };
-            buttonsBox.PackStart(deleteSelf, false, false, 0);
-
-            //Bouton d'ajout de mesure avant
-            Button addBefore = new();
-            addBefore.Label = "Ajouter une mesure avant";
-            addBefore.Clicked += (o, args) => {
-                AddMesureBefore(measure.Index - 1);
-            };
-            buttonsBox.PackStart(addBefore, false, false, 0);
-
-            //Bouton d'ajout de mesure après
-            Button addAfter = new();
-            addAfter.Label = "Ajouter une mesure après";
-            addAfter.Clicked += (o, args) => {
-                AddMesureAfter(measure.Index - 1);
-            };
-            buttonsBox.PackStart(addAfter, false, false, 0);
-
-            topBar.PackStart(buttonsBox, false, false, 0);
-
-            // Ajouter la barre de boutons en haut de la mesure
-            row.PackStart(topBar, false, false, 6);
-
-            // Signature temporelle : Upper (ComboBoxText)
-            ComboBoxText upperTimeSigCombo = new();
-            foreach (int upper in _selectableValues.UpperTimeSigs) {
-                upperTimeSigCombo.Append(upper.ToString(), upper.ToString());
-            }
-            int tsuIndex = Array.IndexOf(_selectableValues.UpperTimeSigs, measure.TimeSignature.Beats);
-            upperTimeSigCombo.Active = tsuIndex >= 0 ? tsuIndex : Array.IndexOf(_selectableValues.UpperTimeSigs, _selectableValues.DefaultUpperTimeSig);
-
-            upperTimeSigCombo.Changed += (o, args) => {
-                if (!string.IsNullOrEmpty(upperTimeSigCombo.ActiveId))
-                {
-                    measure.TimeSignature.Beats = Int32.Parse(upperTimeSigCombo.ActiveId);
-                   
-                    // TODO ? : Mettre à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
-                }
-            };
-            row.PackStart(new Label("Time Sig. (Upper) :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(upperTimeSigCombo, false, false, 0);
-
-            // Signature temporelle : Lower (ComboBoxText)
-            ComboBoxText lowerTimeSigCombo = new();
-            foreach (int lower in _selectableValues.LowerTimeSigs) {
-                lowerTimeSigCombo.Append(lower.ToString(), lower.ToString());
-            }
-            int tslIndex = Array.IndexOf(_selectableValues.LowerTimeSigs, measure.TimeSignature.BeatUnit);
-            lowerTimeSigCombo.Active = tslIndex >= 0 ? tslIndex : Array.IndexOf(_selectableValues.LowerTimeSigs, _selectableValues.DefaultLowerTimeSig);
-
-            lowerTimeSigCombo.Changed += (o, args) => {
-                if (!string.IsNullOrEmpty(lowerTimeSigCombo.ActiveId)) {
-                    measure.TimeSignature.BeatUnit = Int32.Parse(lowerTimeSigCombo.ActiveId);
-                    //TODO ? : Mettre à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
-                }
-            };
-            row.PackStart(new Label("Time Sig. (Lower) :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(lowerTimeSigCombo, false, false, 0);
-
-            // Tonalité (ComboBoxText)
-            ComboBoxText keyCombo = new();
-            foreach (string k in _selectableValues.Tonalities.Keys) {
-                keyCombo.Append(k, _selectableValues.Tonalities[k]);
-            }
-            keyCombo.ActiveId = measure.KeySignature.ToDropDownId() != "" ? measure.KeySignature.ToDropDownId() : _selectableValues.DefaultKeySignature.ToDropDownId();
-            keyCombo.Changed += (o, args) => {
-                if (!string.IsNullOrEmpty(keyCombo.ActiveId) && _selectableValues.Tonalities.ContainsKey(keyCombo.ActiveId))
-                {
-                    measure.KeySignature = new(keyCombo.ActiveId);
-                }
-            };
-
-            row.PackStart(new Label("Tonalité :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(keyCombo, false, false, 0);
-
-            // Accords (1 champ texte: accords séparés par espaces, 1 accord par temps)
-            Entry chordEntry = new() { Text = measure.ChordSequence.ToLilyPondString() ?? new ChordSequence("").ToString(), WidthChars = 24, PlaceholderText = "Accords (ex: C Am Dm G7)" };
-            chordEntry.Changed += (o, args) => {
-                string? text = chordEntry.Text;
-                if (text is null) {
-                    measure.ChordSequence = new("");
-                } else {
-                    measure.ChordSequence = new(text);
-                }
-            };
-            row.PackStart(new Label("Accords :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(chordEntry, true, true, 0);
-
-            // Editeur de mélodie/cadence
-            MelodyMeasureEditor melodyMeasureEditor = new();
-            _melodyMeasureEditorWidgets.Add(melodyMeasureEditor);
-            melodyMeasureEditor.LoadFromModel(measure.Melody.ToWidgetChords(), null, initialCursor: 0);
-
-            // Handler local : met à jour la measure associée (capture 'measure' et 'editor')
-            melodyMeasureEditor.ContentChanged += (s, e) =>
-            {
-                MeasureMelody newMeasureMelody = measure.Melody;
-                newMeasureMelody.MelodyChords = new List<MelodyChord>();
-                foreach (WidgetMelodyChord widgetChord in melodyMeasureEditor.ExportToModel()) {
-                    newMeasureMelody.MelodyChords.Add(widgetChord.ToMelodyChord());
-                }
-                measure.Melody = newMeasureMelody;
-            };
-
-            melodyMeasureEditor.WidthRequest = 250;
-            row.PackStart(melodyMeasureEditor, true, false, 0);
-
-            melodyMeasureEditor.ShowAll();
-
-            //Test de définition de pattern rythmique
-            /*
-            TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
-            MeasureRhythmPattern pattern = new(ts);
-            BeatPattern b1 = new();
-            b1.Elements.Add(new RhythmElement(
-                new RhythmRationalDuration(1, 4)));
-
-            BeatPattern b2 = new();
-            b2.Elements.Add(new RhythmElement(
-                new RhythmRationalDuration(1, 8)));
-
-            b2.Elements.Add(new RhythmElement(
-                new RhythmRationalDuration(1, 8)));
-
-            pattern.Beats.Add(b1);
-            pattern.Beats.Add(b2);
-
-            Console.WriteLine("================================");
-            Console.WriteLine(pattern.ToString());
-            Console.WriteLine(pattern.IsDurationValid()); // Devrait être true pour un pattern valide
-            Console.WriteLine(pattern.AreBeatsValid()); // Devrait être true si tous les beats sont valides par rapport à la signature temporelle
-            Console.WriteLine(pattern.IsCompatibleWithNoteCount(
-                5,
-                0)
-            ); // Devrait être true si le pattern peut être appliqué au nombre de notes de la mesure
-            */
-
-            //TODO : instancier et ajouter un selecteur de cadence            
-
-            MeasureRhythmEditor rhythmEditor = new();
-
-            TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
-            rhythmEditor.SetPattern(new MeasureRhythmPattern(ts));
-
-            // exemple
-            rhythmEditor.NoteCount = 4;
-            rhythmEditor.GraceNoteCount = 0;
-
-            row.PackStart(rhythmEditor, true, false, 0);
-
-            // Paroles (une saisie texte ; mots/syllabes séparés par espaces)
-            Entry lyricsEntry = new() { Text = measure.Lyrics ?? "", WidthChars = 24, PlaceholderText = "Paroles (séparées par espaces)" };
-            lyricsEntry.Changed += (o, args) => {
-                measure.Lyrics = lyricsEntry.Text;
-            };
-            row.PackStart(new Label("Paroles :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(lyricsEntry, true, true, 0);
-
-            // Ajout à la zone parent (assure-toi d'avoir un 'measuresBox' ou équivalent)
-            _measuresBox.PackStart(row, false, false, 2);
-            _measuresBox.ShowAll();
-        }
-
-        private void AddMesureAfter(int index) {
-            if (_currentSong == null || _currentSong.Measures == null) {
-                return;
-            }
-
-            int insertIndex = index + 1;
-            if (insertIndex < 0) {
-                insertIndex = 0;
-            }
-
-            if (insertIndex > _currentSong.Measures.Count) {
-                insertIndex = _currentSong.Measures.Count;
-            }
-
-            TimeSignature newMesureTs = _currentSong.Measures[index].TimeSignature;
-
-            MeasureData m = 
-                new(
-                    insertIndex, 
-                    newMesureTs, 
-                    new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major), 
-                    new ChordSequence(""), 
-                    new MeasureMelody(new List<MelodyChord>(), new MeasureRhythmPattern(newMesureTs)), 
-                    "", 
-                    new MeasureRhythmPattern(newMesureTs)
-                );
-                
-            
-            _currentSong.Measures.Insert(insertIndex, m);
-
-            // Réindexation
-            for (int i = 0; i < _currentSong.Measures.Count; i++) {
-                _currentSong.Measures[i].Index = i + 1;
-            }
-
-            // Reconstruire la vue
-            Widget[] children = _measuresBox.Children;
-            for (int i = children.Length - 1; i >= 0; i--) {
-                Widget child = children[i];
-                _measuresBox.Remove(child);
-                child.Destroy();
-            }
-
-            _melodyMeasureEditorWidgets = new List<MelodyMeasureEditor>();
-            _measureStore.Clear();
-            RefreshMeasuresView();
-
-            _ = _statusBar.Push(_statusBarContextId, $"Mesure insérée après {index + 1}. Total mesures : {_currentSong.Measures.Count}.");
-        }
-
-        private void AddMesureBefore(int index) {
-            if (_currentSong == null || _currentSong.Measures == null) {
-                return;
-            }
-
-            int insertIndex = index;
-            if (insertIndex < 0) {
-                insertIndex = 0;
-            }
-
-            if (insertIndex > _currentSong.Measures.Count) {
-                insertIndex = _currentSong.Measures.Count;
-            }
-
-            TimeSignature newMesureTs = _currentSong.Measures[index].TimeSignature;
-
-            MeasureData m = 
-                new(
-                    insertIndex, 
-                    newMesureTs,
-                    new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major),
-                    new ChordSequence(""),
-                    new MeasureMelody(new List<MelodyChord>(), new MeasureRhythmPattern(newMesureTs)),
-                    "", 
-                    new MeasureRhythmPattern(newMesureTs)
-                );
-            _currentSong.Measures.Insert(insertIndex, m);
-
-            // Réindexation
-            for (int i = 0; i < _currentSong.Measures.Count; i++) {
-                _currentSong.Measures[i].Index = i + 1;
-            }
-
-            // Reconstruire la vue
-            Widget[] children = _measuresBox.Children;
-            for (int i = children.Length - 1; i >= 0; i--) {
-                Widget child = children[i];
-                _measuresBox.Remove(child);
-                child.Destroy();
-            }
-
-            _melodyMeasureEditorWidgets = new List<MelodyMeasureEditor>();
-            _measureStore.Clear();
-            RefreshMeasuresView();
-
-            _ = _statusBar.Push(_statusBarContextId, $"Mesure insérée avant {index + 1}. Total mesures : {_currentSong.Measures.Count}.");
-        }
-
-        private void DeleteMesure(int index) {
-
-            if (_currentSong.Measures.Count <= 1) {
-                // Ne pas permettre la suppression si c'est la dernière mesure
-                _ = _statusBar.Push(_statusBarContextId, "Impossible de supprimer la dernière mesure.");
-                return;
-            }
-
-            // Vérification de l'index
-            if (_currentSong == null || _currentSong.Measures == null) {
-                return;
-            }
-
-            int measuresCount = _currentSong.Measures.Count;
-            if (index < 0 || index >= measuresCount) {
-                return;
-            }
-
-            // Suppression dans le modèle
-            _currentSong.Measures.RemoveAt(index);
-
-            // Réindexation des mesures restantes
-            for (int i = 0; i < _currentSong.Measures.Count; i++) {
-                _currentSong.Measures[i].Index = i + 1;
-            }
-
-            // Nettoyage des widgets de la vue pour éviter les widgets orphelins
-            Widget[] children = _measuresBox.Children;
-            for (int i = children.Length - 1; i >= 0; i--) {
-                Widget child = children[i];
-                _measuresBox.Remove(child);
-                child.Destroy();
-            }
-
-            // Réinitialiser la liste des éditeurs (elles seront recréées par RefreshMeasuresView)
-            _melodyMeasureEditorWidgets = new List<MelodyMeasureEditor>();
-
-            // Reconstruire la ListStore et la vue des mesures
-            RefreshMeasuresView();
-
-            // Mettre à jour la barre de statut
-            _ = _statusBar.Push(_statusBarContextId, $"Mesure {index + 1} supprimée. Total mesures : {_currentSong.Measures.Count}.");
         }
 
         private void SaveProject() {
@@ -687,15 +340,16 @@ namespace EZSong.UI
 
         public void SetSong(Song song) {
             _currentSong = song ?? throw new ArgumentNullException(nameof(song));
+            _measuresEditor.SetSong(_currentSong);
             RefreshUI();
         }
 
         private void RefreshUI() {
-            ClearMeasuresUI();
+            _measuresEditor.Clear();
 
             
             foreach (MeasureData measure in _currentSong.Measures) {
-                AddMeasure(measure);
+                _measuresEditor.AddMeasure(measure);
             }
             
 
@@ -711,12 +365,6 @@ namespace EZSong.UI
                 _titleEntry.Text = string.Empty;
                 _artistEntry.Text = string.Empty;
                 _commentEntry.Text = string.Empty;
-            }
-        }
-
-        private void ClearMeasuresUI() {
-            foreach (Widget? child in _measuresBox.Children) {
-                _measuresBox.Remove(child);
             }
         }
 
@@ -738,16 +386,6 @@ namespace EZSong.UI
                 builder.GeneratePdfFile(dlg.Filename);
             }
             dlg.Destroy();
-        }
-
-        private MelodyMeasureEditor? GetFocusedMelodyEditor() {
-            foreach (MelodyMeasureEditor melodyMeasureEditorWidget in _melodyMeasureEditorWidgets) {
-                if (melodyMeasureEditorWidget.HasFocus) {
-                    return melodyMeasureEditorWidget;
-                }
-            }
-
-            return null;
         }
 
     }
