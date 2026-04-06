@@ -25,7 +25,7 @@ namespace EZSong.Model {
 
         public static RhythmTuplet FromDto(RhythmTupletDto tuplet) {
             if (tuplet == null) {
-                return new RhythmTuplet(1, 1);
+                return new RhythmTuplet();
             }
             return new RhythmTuplet(tuplet.Count, tuplet.InTimeOf);
 

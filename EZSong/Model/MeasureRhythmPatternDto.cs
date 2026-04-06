@@ -26,7 +26,7 @@ namespace EZSong.Model {
         //Constructeur vide (requis pour la sérialisation JSON)
         public MeasureRhythmPatternDto() {
             Beats = new List<BeatPatternDto>();
-            TimeSignature = new TimeSignature(4, 4);
+            TimeSignature = new TimeSignature();
         }
     }
 }
