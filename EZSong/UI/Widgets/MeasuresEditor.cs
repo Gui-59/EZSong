@@ -47,6 +47,8 @@ namespace EZSong.UI.Widgets {
         public void AddMeasure(MeasureData measure) {
             MeasureEditorWidget widget = new();
 
+            widget.WidthRequest = 200;
+
             widget.SetMeasure(measure);
             _melodyMeasureEditorWidgets.Add(widget.MelodyMeasureEditor);
 
@@ -69,6 +71,20 @@ namespace EZSong.UI.Widgets {
             
 
             _container.PackStart(widget, false, false, 2);
+        }
+
+        public void AppendBlankMeasures(int number) {
+
+            for (int i = 0; i < number; i++) {
+
+                MeasureData newMeasure = CreateEmptyMeasure(i, new TimeSignature());
+
+                _song.Measures.Insert(i, newMeasure);
+            }
+
+            Reindex();
+
+            Refresh();
         }
 
         private void InsertAfter(MeasureData measure) {

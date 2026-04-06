@@ -7,18 +7,15 @@ using EZSong.UI.Widgets;
 using EZSong.UI.Widgets.WidgetsData;
 using Gtk;
 
-namespace EZSong.UI
-{
+namespace EZSong.UI {
 
     // Simple GTK UI
-    public class MainWindow : Gtk.Window
-    {
+    public class MainWindow : Gtk.Window {
         private const int _initialWidth = 900;
         private const int _initialHeight = 600;
         private const int _compactThreshold = 800;
 
         private Song _currentSong;
-        private ListStore _measureStore;
 
         private MidiInputManager _midiManager;
 
@@ -32,20 +29,11 @@ namespace EZSong.UI
         private Entry _commentEntry;
         private MeasuresEditor _measuresEditor;
 
-        
         private Statusbar _statusBar;
         private uint _statusBarContextId;
 
-                 
-
-        public MainWindow() : base("EZSong")
-        {
-            _currentSong = new Song (
-                "",
-                "",
-                "",
-                new List<MeasureData>()
-            );
+        public MainWindow() : base("EZSong") {
+            _currentSong = new Song ();
 
             SetDefaultSize(_initialWidth, _initialHeight);
             DeleteEvent += (o, e) => Application.Quit();
@@ -91,14 +79,7 @@ namespace EZSong.UI
             headerBox.PackStart(_commentEntry, true, true, 0);
             mainBox.PackStart(headerBox, false, false, 0);
 
-            // Table mesures
-            _measureStore = new ListStore(
-                typeof(string),  // Numéro
-                typeof(string),  // Signature temporelle
-                typeof(string),  // Tonalité
-                typeof(string),  // Accords
-                typeof(string)   // Paroles
-            );
+            // Mesures
             _measuresEditor = new MeasuresEditor();
             ScrolledWindow scrolled = new();
             scrolled.Add(_measuresEditor);
@@ -124,8 +105,6 @@ namespace EZSong.UI
 
             ShowAll();
 
-            
-
             //Detection de la saisie via clavier MIDI
             _midiManager = new MidiInputManager();
 
@@ -148,14 +127,10 @@ namespace EZSong.UI
                 }
             };
 
-            
-
-            AddBlankMeasures(5); //5 mesures par défaut
             _measuresEditor.SetSong(_currentSong);
-
+            _measuresEditor.AppendBlankMeasures(5); //5 mesures par défaut
+            
             Maximize(); // Démarrer en mode maximisé
-
-
         }
 
         private void PopulateMenuTabs() {
@@ -187,7 +162,6 @@ namespace EZSong.UI
                     break;
 
                 case "export":
-                    //flow.Add(CreateIconButton("Exporter au format LilyPond", (s, e) => ExportLilyPond(), "export-lilypond.svg"));
                     flow.Add(CreateIconButton("Exporter au format PDF", (s, e) => ExportPdf(), "export-pdf.svg"));
                     break;
 
@@ -294,28 +268,7 @@ namespace EZSong.UI
             StyleContext.AddProviderForScreen(Gdk.Screen.Default, cssProvider, uint.MaxValue);
         }
 
-        private void AddBlankMeasures(int number) {
-
-            TimeSignature newMesuresTimeSig = new(4, 4);
-
-            for (int i = 0; i < number; i++) {
-
-                int num = _currentSong.Measures.Count + 1;
-                MeasureData m = new(
-                    num,
-                    newMesuresTimeSig,
-                    new(NoteStep.C, Alteration.neutral, SongMode.major),
-                    new ChordSequence(""),
-                    new MeasureMelody(new List<MelodyChord>(), new MeasureRhythmPattern(newMesuresTimeSig)),
-                    "",
-                    new MeasureRhythmPattern(newMesuresTimeSig)
-                );
-                _currentSong.Measures.Add(m);
-                _ = _measureStore.AppendValues(num.ToString(), m.TimeSignature, m.KeySignature, m.ChordSequence, m.Lyrics);
-
-                _measuresEditor.AddMeasure(m);
-            }
-        }
+        
 
         private void SaveProject() {
             FileChooserDialog dlg = new("Enregistrer projet", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Enregistrer", ResponseType.Accept);
@@ -325,8 +278,7 @@ namespace EZSong.UI
             dlg.Destroy();
         }
 
-        private void LoadProject()
-        {
+        private void LoadProject() {
             FileChooserDialog dlg = new("Ouvrir projet", this, FileChooserAction.Open, "Annuler", ResponseType.Cancel, "Ouvrir", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
 
@@ -347,12 +299,10 @@ namespace EZSong.UI
         private void RefreshUI() {
             _measuresEditor.Clear();
 
-            
             foreach (MeasureData measure in _currentSong.Measures) {
                 _measuresEditor.AddMeasure(measure);
             }
             
-
             UpdateSongInfoUI();
         }
 
@@ -367,17 +317,6 @@ namespace EZSong.UI
                 _commentEntry.Text = string.Empty;
             }
         }
-
-        /*
-        private void ExportLilyPond() {
-            FileChooserDialog dlg = new("Exporter LilyPond", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Exporter", ResponseType.Accept);
-            if (dlg.Run() == (int)ResponseType.Accept) {
-                LilypondFileBuilder builder = new(_currentSong);
-                builder.GenerateLilypondFile(dlg.Filename);
-            }
-            dlg.Destroy();
-        } 
-        */
 
         private void ExportPdf() {
             FileChooserDialog dlg = new("Exporter en PDF", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Exporter", ResponseType.Accept);

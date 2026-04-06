@@ -27,7 +27,7 @@ namespace EZSong.Model
             set; 
         }
 
-        //Constructeur vide (requis pour la (dé)sérialisation JSON)
+        //Constructeur vide (requis, entre autres, pour la (dé)sérialisation JSON)
         public Song() { 
             Title = string.Empty;
             Artist = string.Empty;
