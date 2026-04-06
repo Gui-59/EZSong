@@ -17,30 +17,46 @@ namespace EZSong.UI {
                 throw new Exception($"Ressource SVG introuvable : {resourceName}");
             }
 
-            // Charger le SVG dans un modèle
             SKSvg svg = new();
             _ = svg.Load(stream);
 
-            // Rendu final en SKBitmap
             SKBitmap bmp = new(size, size, true);
+
             using (SKCanvas canvas = new(bmp)) {
                 canvas.Clear(SKColors.Transparent);
+
                 SKPicture? pic = svg.Picture;
-
                 if (pic != null) {
-                    float scaleX = size / pic.CullRect.Width;
-                    float scaleY = size / pic.CullRect.Height;
-                    float scale = Math.Min(scaleX, scaleY);
+                    float scale = Math.Min(
+                        size / pic.CullRect.Width,
+                        size / pic.CullRect.Height);
 
+                    float x = (size - pic.CullRect.Width * scale) / 2;
+                    float y = (size - pic.CullRect.Height * scale) / 2;
+
+                    canvas.Translate(x, y);
                     canvas.Scale(scale);
                     canvas.DrawPicture(pic);
                 }
             }
 
-            // Conversion en Pixbuf pour Gtk
             byte[] data = bmp.Bytes;
+
+            // 🔥 Correction BGRA → RGBA
+            for (int i = 0; i < data.Length; i += 4) {
+                byte b = data[i];
+                byte g = data[i + 1];
+                byte r = data[i + 2];
+                byte a = data[i + 3];
+
+                data[i] = r;
+                data[i + 1] = g;
+                data[i + 2] = b;
+                data[i + 3] = a;
+            }
+
             Pixbuf pixbuf = new(data, true, 8,
-                                    bmp.Width, bmp.Height, bmp.RowBytes);
+                bmp.Width, bmp.Height, bmp.RowBytes);
 
             return new Image(pixbuf);
         }
