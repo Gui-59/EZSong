@@ -348,13 +348,7 @@ namespace EZSong.UI.Widgets {
 
         public List<WidgetMelodyChord> ExportToModel() {
             return _melodyChords.Select(DeepCopyChord).ToList();
-        }
-        /*
-        public List<CadencyPart> ExportCadency() {
-            return _cadency.Select(p => new CadencyPart(p.Label, p.Weight)).ToList();
-        }
-        */
-        
+        }       
 
         // Interaction handlers
 

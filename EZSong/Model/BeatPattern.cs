@@ -1,4 +1,5 @@
 ﻿
+
 namespace EZSong.Model {
 
     public class BeatPattern {
@@ -65,6 +66,10 @@ namespace EZSong.Model {
             };
         }
 
+        internal void Clear() {
+            Elements.Clear();
+
+        }
     }
 
 }

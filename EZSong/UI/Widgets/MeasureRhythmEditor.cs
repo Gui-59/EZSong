@@ -17,7 +17,17 @@ namespace EZSong.UI.Widgets {
 
         public event System.Action? PatternChanged;
 
+        private static readonly String _musicalFontFamily = "Bravura";
+
+        private string _dotGlyph = string.Empty;
+
         public MeasureRhythmEditor() {
+
+            if (_musicalFontFamily != "Bravura") {
+                throw new NotSupportedException("Only Bravura font is supported for music glyphs");
+            }
+            _dotGlyph = "\uE1E7";
+
             HeightRequest = 50; //Taille fixe pour éviter les problèmes de redimensionnement
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
         }
@@ -76,23 +86,25 @@ namespace EZSong.UI.Widgets {
         private void DrawBeat(Context cr, BeatPattern beat, double x, double width, double height) {
             string text = string.Join(" ",
                 beat.Elements.Select(e => {
-                    string s = DurationToString(e.Duration);
+                    string glyph = e.IsRest
+                        ? GetRestGlyph(e)
+                        : GetMusicGlyph(e);
 
-                    if (e.IsRest) {
-                        s = "r" + s;
+                    if (e.Duration.Dots > 0) {
+                        glyph += new string('\uE1E7', e.Duration.Dots);
                     }
 
                     if (e.TieToNext) {
-                        s += "~";
+                        glyph += "\uE1FD"; // tie
                     }
 
-                    return s;
+                    return glyph;
                 }));
 
             cr.SetSourceRGB(0, 0, 0);
 
-            cr.SelectFontFace("Consolas", FontSlant.Normal, FontWeight.Normal);
-            cr.SetFontSize(14);
+            cr.SelectFontFace(_musicalFontFamily, FontSlant.Normal, FontWeight.Normal);
+            cr.SetFontSize(20);
 
             TextExtents ext = cr.TextExtents(text);
 
@@ -101,23 +113,6 @@ namespace EZSong.UI.Widgets {
 
             cr.MoveTo(tx, ty);
             cr.ShowText(text);
-        }
-
-        private string DurationToString(RhythmRationalDuration d) {
-            string s = d.Denominator switch {
-                1 => "w",
-                2 => "h",
-                4 => "q",
-                8 => "e",
-                16 => "s",
-                _ => "?"
-            };
-
-            if (d.Dots > 0) {
-                s += new string('.', d.Dots);
-            }
-
-            return s;
         }
 
         protected override bool OnButtonPressEvent(Gdk.EventButton ev) {
@@ -150,9 +145,11 @@ namespace EZSong.UI.Widgets {
 
             // Exemple simple : toggle entre ♩ et ♪♪
             if (Pattern.Beats[index].Elements.Count == 1) {
+                beat.Clear();
                 beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1,1)));
                 beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1, 1)));
             } else {
+                beat.Clear();
                 beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 4, 0), false, new RhythmTuplet(1, 1)));
             }
 
@@ -181,6 +178,38 @@ namespace EZSong.UI.Widgets {
 
             cr.Rectangle(0, 0, Allocation.Width, 5);
             cr.Fill();
+        }
+
+        private string GetMusicGlyph(RhythmElement e) {
+
+            if (_musicalFontFamily != "Bravura") {
+                throw new NotSupportedException("Only Bravura font is supported for music glyphs");
+            }
+
+            return e.Duration.Denominator switch {
+                1 => "\uE1D2", // ronde
+                2 => "\uE1D3", // blanche
+                4 => "\uE1D5", // noire
+                8 => "\uE1D7", // croche
+                16 => "\uE1D9", // double croche
+                _ => "?"
+            };
+        }
+
+        private string GetRestGlyph(RhythmElement e) {
+
+            if (_musicalFontFamily != "Bravura") {
+                throw new NotSupportedException("Only Bravura font is supported for music glyphs");
+            }
+
+            return e.Duration.Denominator switch {
+                1 => "\uE4E3",
+                2 => "\uE4E4",
+                4 => "\uE4E5",
+                8 => "\uE4E6",
+                16 => "\uE4E7",
+                _ => "?"
+            };
         }
     }
 }
