@@ -32,9 +32,6 @@ namespace EZSong.UI.Widgets {
         // Model: sequence of chords (positioned sequentially)
         private List<WidgetMelodyChord> _melodyChords = new();
 
-        // Optional cadency data
-        private WidgetMeasureCadency _cadency = new();
-
         // Cursor index: insertion point between chords (0..Count)
         private int _cursorIndex = 0;
 
@@ -329,10 +326,8 @@ namespace EZSong.UI.Widgets {
         }
 
         // PUBLIC API: load external model into widget
-        public void LoadFromModel(IEnumerable<WidgetMelodyChord> chords, IEnumerable<RhythmElement>? rhythmEvents = null, int initialCursor = 0) {
-            _melodyChords = chords != null ? new List<WidgetMelodyChord>(chords.Select(c => DeepCopyChord(c))) : new List<WidgetMelodyChord>();
-            _cadency = rhythmEvents != null ? new WidgetMeasureCadency(rhythmEvents.ToList()) : new WidgetMeasureCadency();
-            _cursorIndex = Math.Max(0, Math.Min(_melodyChords.Count, initialCursor));
+        public void LoadFromModel(IEnumerable<WidgetMelodyChord> chords, int initialCursor = 0) {
+            _melodyChords = chords != null ? new List<WidgetMelodyChord>(chords.Select(c => DeepCopyChord(c))) : new List<WidgetMelodyChord>();            _cursorIndex = Math.Max(0, Math.Min(_melodyChords.Count, initialCursor));
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);
         }

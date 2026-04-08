@@ -147,7 +147,7 @@ namespace EZSong.UI.Widgets {
 
             // Editeur de mélodie/cadence
             MelodyMeasureEditor = new();
-            MelodyMeasureEditor.LoadFromModel(_measure.Melody.ToWidgetChords(), null, initialCursor: 0);
+            MelodyMeasureEditor.LoadFromModel(_measure.Melody.ToWidgetChords(), initialCursor: 0);
 
             // Handler local : met à jour la measure associée (capture 'measure' et 'editor')
             MelodyMeasureEditor.ContentChanged += (s, e) => {
@@ -159,19 +159,24 @@ namespace EZSong.UI.Widgets {
                 _measure.Melody = newMeasureMelody;
             };
 
+
+
             MelodyMeasureEditor.WidthRequest = 250;
             row.PackStart(MelodyMeasureEditor, true, false, 0);
 
             MelodyMeasureEditor.ShowAll();
 
             MeasureRhythmEditor rhythmEditor = new();
+            rhythmEditor.PatternChanged += pattern => {
+                _measure.RhythmPattern = pattern;
+                QueueDraw();
+            };
+            rhythmEditor.LoadFromModel(_measure.RhythmPattern);
 
             TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
             rhythmEditor.SetPattern(new MeasureRhythmPattern(ts));
 
-            // exemple
-            rhythmEditor.NoteCount = 4;
-            rhythmEditor.GraceNoteCount = 0;
+
 
             row.PackStart(rhythmEditor, true, false, 0);
 

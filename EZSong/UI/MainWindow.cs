@@ -128,7 +128,7 @@ namespace EZSong.UI {
             };
 
             _measuresEditor.SetSong(_currentSong);
-            _measuresEditor.AppendBlankMeasures(5); //5 mesures par défaut
+            _measuresEditor.AppendBlankMeasures(1); // mesure par défaut
             
             Maximize(); // Démarrer en mode maximisé
         }
@@ -297,12 +297,9 @@ namespace EZSong.UI {
         }
 
         private void RefreshUI() {
-            _measuresEditor.Clear();
 
-            foreach (MeasureData measure in _currentSong.Measures) {
-                _measuresEditor.AddMeasure(measure);
-            }
-            
+            _measuresEditor.Refresh();
+
             UpdateSongInfoUI();
         }
 

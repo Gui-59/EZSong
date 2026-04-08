@@ -1,6 +1,7 @@
-﻿using Gtk;
-using Cairo;
+﻿using Cairo;
 using EZSong.Model;
+using EZSong.UI.Widgets.WidgetsData;
+using Gtk;
 
 namespace EZSong.UI.Widgets {
     public class MeasureRhythmEditor : DrawingArea {
@@ -14,8 +15,6 @@ namespace EZSong.UI.Widgets {
         public int GraceNoteCount {
             get; set;
         }
-
-        public event System.Action? PatternChanged;
 
         private static readonly String _musicalFontFamily = "Bravura";
 
@@ -141,24 +140,23 @@ namespace EZSong.UI.Widgets {
                 return;
             }
 
-            BeatPattern beat = Pattern.Beats[index];
+            BeatPattern newBeat = new();
 
-            // Exemple simple : toggle entre ♩ et ♪♪
             if (Pattern.Beats[index].Elements.Count == 1) {
-                beat.Clear();
-                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1,1)));
-                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1, 1)));
+                newBeat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1, 1)));
+                newBeat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1, 1)));
             } else {
-                beat.Clear();
-                beat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 4, 0), false, new RhythmTuplet(1, 1)));
+                newBeat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 4, 0), false, new RhythmTuplet(1, 1)));
             }
 
-            Pattern.SetBeat(index, beat);
+            // 👉 remplacer réellement dans le pattern
+            Pattern.SetBeat(index, newBeat);
 
-            PatternChanged?.Invoke();
-
-            QueueDraw();
+            PatternChanged?.Invoke(Pattern);
         }
+
+        public event Action<MeasureRhythmPattern>? PatternChanged;
+  
 
         private void DrawStatus(Context cr) {
             if (Pattern == null) {
@@ -210,6 +208,16 @@ namespace EZSong.UI.Widgets {
                 16 => "\uE4E7",
                 _ => "?"
             };
+        }
+
+        // PUBLIC API: load external model into widget
+        public void LoadFromModel(MeasureRhythmPattern rhythmPattern) {
+            
+            Pattern = rhythmPattern;
+
+            QueueDraw();
+
+            PatternChanged?.Invoke(Pattern);
         }
     }
 }
