@@ -23,7 +23,7 @@ namespace EZSong.Model {
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public BeatPattern() {
             Elements = new List<RhythmElement>();
-            ExpectedDuration = new RhythmRationalDuration(0, 1, 0);
+            ExpectedDuration = new RhythmRationalDuration(1, 1, 0);
         }
 
         public BeatPattern(List<RhythmElement> elements, RhythmRationalDuration expectedDuration) { 
@@ -33,7 +33,7 @@ namespace EZSong.Model {
 
         public RhythmRationalDuration GetTotalDuration() {
 
-            RhythmRationalDuration total = new(0, 1, 0); //TODO ?
+            RhythmRationalDuration total = new(1, 1, 0);
 
             foreach (RhythmElement e in Elements) {
                 total += e.GetEffectiveDuration();

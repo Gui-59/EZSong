@@ -34,7 +34,7 @@ namespace EZSong.Model {
 
         public RhythmRationalDuration GetTotalDuration() {
 
-            RhythmRationalDuration total = new(0, 1, 0); //TODO ?
+            RhythmRationalDuration total = new(0, 1, 0);
 
             foreach (BeatPattern beat in Beats) {
                 total += beat.GetTotalDuration();

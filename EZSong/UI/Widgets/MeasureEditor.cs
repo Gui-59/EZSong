@@ -171,11 +171,11 @@ namespace EZSong.UI.Widgets {
                 _measure.RhythmPattern = pattern;
                 QueueDraw();
             };
-            rhythmEditor.LoadFromModel(_measure.RhythmPattern);
+            
 
             TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
-            rhythmEditor.SetPattern(new MeasureRhythmPattern(ts));
-
+            //rhythmEditor.SetPattern(_measure.RhythmPattern);
+            rhythmEditor.LoadFromModel(_measure.RhythmPattern);
 
 
             row.PackStart(rhythmEditor, true, false, 0);

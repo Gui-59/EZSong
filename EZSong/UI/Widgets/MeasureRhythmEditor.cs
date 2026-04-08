@@ -217,7 +217,9 @@ namespace EZSong.UI.Widgets {
 
             QueueDraw();
 
-            PatternChanged?.Invoke(Pattern);
+            //PatternChanged?.Invoke(Pattern);
+
+            SetPattern(Pattern);
         }
     }
 }
