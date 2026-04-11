@@ -41,6 +41,7 @@ namespace EZSong.MIDI {
         }
 
         public static IEnumerable<string> GetAvailableDevices() {
+            //todo : éviter le Select (lent)
             return InputDevice.GetAll().Select(d => d.Name);
         }
 

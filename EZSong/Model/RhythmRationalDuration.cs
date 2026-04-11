@@ -48,7 +48,12 @@
         }
 
         public RhythmRationalDuration Normalize() {
+
+
             int gcd = Gcd(Numerator, Denominator);
+            if (gcd == 0) {
+                throw new InvalidOperationException("Cannot normalize a duration with zero numerator and denominator.");
+            }
 
             return new RhythmRationalDuration(Numerator / gcd, Denominator / gcd, Dots);
         }
@@ -62,6 +67,11 @@
         }
 
         public bool Equals(RhythmRationalDuration other) {
+
+            if (other.Numerator == 0 && other.Denominator == 0) {
+                throw new InvalidOperationException("Cannot compare a duration with zero numerator and denominator.");
+            }
+
             RhythmRationalDuration a = ApplyDots().Normalize();
             RhythmRationalDuration b = other.ApplyDots().Normalize();
 

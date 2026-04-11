@@ -83,6 +83,8 @@ namespace EZSong.UI.Widgets {
         }
 
         private void DrawBeat(Context cr, BeatPattern beat, double x, double width, double height) {
+            
+            //todo : éviter le Select (lent)
             string text = string.Join(" ",
                 beat.Elements.Select(e => {
                     string glyph = e.IsRest
@@ -102,6 +104,7 @@ namespace EZSong.UI.Widgets {
 
             cr.SetSourceRGB(0, 0, 0);
 
+            //TODO : Faire une fois au départ du draw
             cr.SelectFontFace(_musicalFontFamily, FontSlant.Normal, FontWeight.Normal);
             cr.SetFontSize(20);
 

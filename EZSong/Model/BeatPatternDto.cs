@@ -20,15 +20,9 @@ namespace EZSong.Model {
             set; 
         }
 
-        public RhythmRationalDuration ExpectedDuration {
-            get; 
-            set;
-        }
-
         //Constructeur vide (requis pour la sérialisation JSON)
         public BeatPatternDto() { 
             Elements = new List<RhythmElementDto>();
-            ExpectedDuration = new RhythmRationalDuration(1, 1, 0);
         }
     }
 }

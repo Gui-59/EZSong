@@ -9,11 +9,6 @@ namespace EZSong.Model {
             set; 
         }
 
-        public RhythmRationalDuration ExpectedDuration {
-            get; 
-            set;
-        }
-
         public int AttackCount {
             get {
                 return Elements.Count(e => !e.IsRest);
@@ -23,17 +18,15 @@ namespace EZSong.Model {
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public BeatPattern() {
             Elements = new List<RhythmElement>();
-            ExpectedDuration = new RhythmRationalDuration(1, 1, 0);
         }
 
-        public BeatPattern(List<RhythmElement> elements, RhythmRationalDuration expectedDuration) { 
-            Elements = elements;    
-            ExpectedDuration = expectedDuration;    
+        public BeatPattern(List<RhythmElement> elements) { 
+            Elements = elements;      
         }
 
-        public RhythmRationalDuration GetTotalDuration() {
+        public RhythmRationalDuration GetTotalDuration() { //TODO : ne calcul pas correctement ??
 
-            RhythmRationalDuration total = new(1, 1, 0);
+            RhythmRationalDuration total = new(0, 1, 0);
 
             foreach (RhythmElement e in Elements) {
                 total += e.GetEffectiveDuration();
@@ -49,8 +42,7 @@ namespace EZSong.Model {
             }
 
             return new BeatPattern (
-                elements,
-                beat.ExpectedDuration
+                elements
             );
 
         }
@@ -61,8 +53,7 @@ namespace EZSong.Model {
                 elements.Add(RhythmElement.ToDto(element));
             }
             return new BeatPatternDto() {
-                Elements = elements,
-                ExpectedDuration=  beat.ExpectedDuration
+                Elements = elements
             };
         }
 

@@ -132,7 +132,7 @@ namespace EZSong.UI.Widgets {
                 ts,
                 new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major),
                 new ChordSequence(""),
-                new MeasureMelody(new List<MelodyChord>(), new MeasureRhythmPattern(ts)),
+                new MeasureMelody(new List<MelodyChord>()),
                 "",
                 new MeasureRhythmPattern(ts)
             );

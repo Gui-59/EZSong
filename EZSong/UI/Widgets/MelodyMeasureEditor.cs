@@ -327,6 +327,7 @@ namespace EZSong.UI.Widgets {
 
         // PUBLIC API: load external model into widget
         public void LoadFromModel(IEnumerable<WidgetMelodyChord> chords, int initialCursor = 0) {
+            //todo : éviter le Select (lent)
             _melodyChords = chords != null ? new List<WidgetMelodyChord>(chords.Select(c => DeepCopyChord(c))) : new List<WidgetMelodyChord>();            _cursorIndex = Math.Max(0, Math.Min(_melodyChords.Count, initialCursor));
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);
@@ -342,6 +343,7 @@ namespace EZSong.UI.Widgets {
         }
 
         public List<WidgetMelodyChord> ExportToModel() {
+            //todo : éviter le Select (lent)
             return _melodyChords.Select(DeepCopyChord).ToList();
         }       
 

@@ -15,80 +15,81 @@ namespace EZSong.Model {
             get; 
             set; 
         }
-        public MeasureRhythmPattern RhythmPattern { 
-            get; 
-            set; 
-        }
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public MeasureMelody() { 
             MelodyChords = new List<MelodyChord>();
-            RhythmPattern = new MeasureRhythmPattern();
         }
 
-        public MeasureMelody(List<MelodyChord> melodyChords, MeasureRhythmPattern rhythmPattern) {
+        public MeasureMelody(List<MelodyChord> melodyChords) {
             MelodyChords = melodyChords;
-            RhythmPattern = rhythmPattern;
         }
 
-        public bool HasCadency {
-            get {
-                if (RhythmPattern is null) {
-                    return false;
-                } else {
-                    if (RhythmPattern.IsDurationValid()) {
-                        return true;
-                    }
-                }
+        private bool HasCadency(MeasureData measureData) {
+          
+            if (measureData.RhythmPattern is null) {
                 return false;
+            } else {
+                if (measureData.RhythmPattern.IsDurationValid()) {
+                    return true;
+                }
             }
+            return false;
+            
         }
 
-        public string ToLilyPondString() {
+        public string ToLilyPondString(MeasureData measureData) {
 
             string lilyPondString = string.Empty;
 
-            if (!HasCadency) {
+            if (!HasCadency(measureData)) { //TODO
                 //Si pas de cadence, on considère que toutes les notes ont la même durée
 
-                lilyPondString += "\\tuplet " + MelodyChords.Count + "/1 { ";
+                if (MelodyChords.Count == 0) {
+                    //Silence de mesure complete
+                    lilyPondString += "R1"; 
+                } else {
+                
 
-                foreach (MelodyChord melodyChord in MelodyChords) {
+                    lilyPondString += "\\tuplet " + MelodyChords.Count + "/1 { ";
 
-                    //On force le style d'affichage pour la note (retour auto à la normale)
-                    lilyPondString += Environment.NewLine + " \\once \\override NoteHead.style = #'harmonic-black ";
-                    lilyPondString += Environment.NewLine + " \\once \\override Stem.transparent = ##t ";
-                    lilyPondString += Environment.NewLine + " \\once \\override Beam.transparent = ##t ";
-                    lilyPondString += Environment.NewLine + " \\once \\override TupletBracket.transparent = ##t ";
-                    lilyPondString += Environment.NewLine + " \\once \\override TupletNumber.transparent = ##t";
+                    foreach (MelodyChord melodyChord in MelodyChords) {
 
-                    lilyPondString += Environment.NewLine;
+                        //On force le style d'affichage pour la note (retour auto à la normale)
+                        lilyPondString += Environment.NewLine + " \\once \\override NoteHead.style = #'harmonic-black ";
+                        lilyPondString += Environment.NewLine + " \\once \\override Stem.transparent = ##t ";
+                        lilyPondString += Environment.NewLine + " \\once \\override Beam.transparent = ##t ";
+                        lilyPondString += Environment.NewLine + " \\once \\override TupletBracket.transparent = ##t ";
+                        lilyPondString += Environment.NewLine + " \\once \\override TupletNumber.transparent = ##t";
 
-                    if (melodyChord.Pitches.Count == 1) {
-                        lilyPondString += melodyChord.Pitches[0].ToLilyPondString();
-                        lilyPondString += "1";//Durée fixe
-                        lilyPondString += " ";
-                    } else {
-                        //Dans Lilypond les notes d'un accords sont entre chevrons
-                        lilyPondString += " < ";
-                        foreach (Pitch pitch in melodyChord.Pitches) {
-                            lilyPondString += pitch.ToLilyPondString();
+                        lilyPondString += Environment.NewLine;
 
+                        if (melodyChord.Pitches.Count == 1) {
+                            lilyPondString += melodyChord.Pitches[0].ToLilyPondString();
+                            lilyPondString += "1";//Durée fixe
+                            lilyPondString += " ";
+                        } else {
+                            //Dans Lilypond les notes d'un accords sont entre chevrons
+                            lilyPondString += " < ";
+                            foreach (Pitch pitch in melodyChord.Pitches) {
+                                lilyPondString += pitch.ToLilyPondString();
+
+                                lilyPondString += " ";
+                            }
+                            lilyPondString += " > ";
+                            lilyPondString += "1";//Durée fixe
                             lilyPondString += " ";
                         }
-                        lilyPondString += " > ";
-                        lilyPondString += "1";//Durée fixe
-                        lilyPondString += " ";
                     }
-                }
 
-                lilyPondString += "}";
+                    lilyPondString += "}";
+                }
 
             } else {
 
                 int melodyChordIndex = 0;
 
-                foreach (BeatPattern beat in RhythmPattern.Beats) {
+                foreach (BeatPattern beat in measureData.RhythmPattern.Beats) {
                 
                     foreach (RhythmElement rhythmEvent in beat.Elements) {
 
@@ -142,8 +143,7 @@ namespace EZSong.Model {
             }
 
             MeasureMelodyDto dto = new() {
-                MelodyChords = melodyChords,
-                RhythmPattern = RhythmPattern.ToDto()
+                MelodyChords = melodyChords
             };
             return dto;
         }
@@ -157,8 +157,7 @@ namespace EZSong.Model {
 
             MeasureMelody measureMelody = 
                 new(
-                    melodyChords, 
-                    MeasureRhythmPattern.FromDto(melody.RhythmPattern, melody.RhythmPattern.TimeSignature)
+                    melodyChords
                 );
             return measureMelody;
 

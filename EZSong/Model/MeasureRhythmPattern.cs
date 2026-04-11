@@ -32,7 +32,7 @@ namespace EZSong.Model {
             _beats[index] = beat;
         }
 
-        public RhythmRationalDuration GetTotalDuration() {
+        public RhythmRationalDuration GetTotalDuration() { //TODO : ne calcul pas correctement !!!
 
             RhythmRationalDuration total = new(0, 1, 0);
 
@@ -58,12 +58,13 @@ namespace EZSong.Model {
         }
 
         public bool IsDurationValid() {
-            return GetTotalDuration().Equals(TimeSignature.TotalDuration);
+            RhythmRationalDuration totalDuration = GetTotalDuration();
+            return totalDuration.Equals(TimeSignature.TotalDuration);
         }
 
         public bool AreBeatsValid() {
             foreach (BeatPattern beat in Beats) {
-                if (!beat.GetTotalDuration().Equals(beat.ExpectedDuration)) {
+                if (!beat.GetTotalDuration().Equals(TimeSignature.ExpectedBeatDuration)) {
                     return false;
                 }
             }
@@ -142,8 +143,7 @@ namespace EZSong.Model {
                     )
                 };
                 _beats.Add(new BeatPattern (
-                    elements,
-                    beatDuration
+                    elements
                 ));
             }
         }
