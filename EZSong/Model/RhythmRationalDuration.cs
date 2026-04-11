@@ -47,6 +47,19 @@
             return new RhythmRationalDuration(num, den, 0).Normalize();
         }
 
+        public static RhythmRationalDuration operator -(
+            RhythmRationalDuration a,
+            RhythmRationalDuration b) {
+            a = a.ApplyDots();
+            b = b.ApplyDots();
+            int num =
+                a.Numerator * b.Denominator -
+                b.Numerator * a.Denominator;
+            int den =
+                a.Denominator * b.Denominator;
+            return new RhythmRationalDuration(num, den, 0).Normalize();
+        }
+
         public RhythmRationalDuration Normalize() {
 
 

@@ -11,9 +11,10 @@ namespace EZSong.Model {
 
     public class MeasureMelody {
 
-        public List<MelodyChord> MelodyChords { 
-            get; 
-            set; 
+        public List<MelodyChord> MelodyChords
+        {
+            get;
+            set;
         }
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
@@ -42,7 +43,7 @@ namespace EZSong.Model {
 
             string lilyPondString = string.Empty;
 
-            if (!HasCadency(measureData)) { //TODO
+            if (!HasCadency(measureData) || !measureData.RhythmPattern.IsDurationValid()) { //TODO
                 //Si pas de cadence, on considère que toutes les notes ont la même durée
 
                 if (MelodyChords.Count == 0) {

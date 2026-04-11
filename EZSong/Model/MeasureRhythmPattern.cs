@@ -59,7 +59,8 @@ namespace EZSong.Model {
 
         public bool IsDurationValid() {
             RhythmRationalDuration totalDuration = GetTotalDuration();
-            return totalDuration.Equals(TimeSignature.TotalDuration);
+            bool isValid = totalDuration.Equals(TimeSignature.TotalDuration);
+            return isValid;
         }
 
         public bool AreBeatsValid() {

@@ -1,6 +1,4 @@
-﻿
-
-namespace EZSong.Model {
+﻿namespace EZSong.Model {
 
     public class BeatPattern {
 
@@ -24,7 +22,7 @@ namespace EZSong.Model {
             Elements = elements;      
         }
 
-        public RhythmRationalDuration GetTotalDuration() { //TODO : ne calcul pas correctement ??
+        public RhythmRationalDuration GetTotalDuration() {
 
             RhythmRationalDuration total = new(0, 1, 0);
 
@@ -60,6 +58,19 @@ namespace EZSong.Model {
         internal void Clear() {
             Elements.Clear();
 
+        }
+
+        internal RhythmRationalDuration GetRemainingDuration(RhythmRationalDuration beatDuration) {
+            return beatDuration - GetTotalDuration();
+        }
+
+        internal bool CanAdd(RhythmElement element, RhythmRationalDuration beatDuration) {
+            RhythmRationalDuration eltDuration = element.GetEffectiveDuration();
+            if (eltDuration.Numerator <= 0) {
+                return false;
+            }
+            RhythmRationalDuration remaining = beatDuration - GetTotalDuration();
+            return (remaining - eltDuration).Numerator >= 0;
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using Cairo;
 using EZSong.Model;
 using EZSong.UI.Widgets.WidgetsData;
+using Gdk;
 using Gtk;
 
 namespace EZSong.UI.Widgets {
@@ -9,16 +10,14 @@ namespace EZSong.UI.Widgets {
             get; private set;
         }
 
-        public int NoteCount {
-            get; set;
-        }
-        public int GraceNoteCount {
-            get; set;
-        }
-
         private static readonly String _musicalFontFamily = "Bravura";
 
+        bool _durationOk = false;
+        bool _noteOk = false;
+
         private string _dotGlyph = string.Empty;
+
+        int _statusAreaHeight = 15;
 
         public MeasureRhythmEditor() {
 
@@ -112,6 +111,7 @@ namespace EZSong.UI.Widgets {
 
             double tx = x + (width - ext.Width) / 2;
             double ty = height / 2;
+            ty += _statusAreaHeight;
 
             cr.MoveTo(tx, ty);
             cr.ShowText(text);
@@ -133,9 +133,36 @@ namespace EZSong.UI.Widgets {
                 return false;
             }
 
-            EditBeat(index);
+            if (IsInStatusZone(ev.Y)) {
+                ClearBeat(index);
+            } else {
+                EditBeat(index);
+            }
 
             return true;
+        }
+
+        private bool IsInStatusZone(double y) {
+            if (y <= _statusAreaHeight) {
+                return true;
+            }
+            return false;
+        }
+
+        private void ClearBeat(int index) {
+            if (Pattern == null) {
+                return;
+            }
+
+            BeatPattern beat = Pattern.Beats[index];
+            beat.Elements.Clear();
+
+            _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
+
+            int fakeNoteCount = 0; //TODO : calculer le nombre de notes en fonction des éléments présents dans les beats
+            int fakeGraceNoteCount = 0; //TODO : calculer le nombre d'appogiatures en fonction des éléments présents dans les beats
+            _noteOk = Pattern.IsCompatibleWithNoteCount(fakeNoteCount, fakeGraceNoteCount);
+            PatternChanged?.Invoke(Pattern);
         }
 
         private void EditBeat(int index) {
@@ -143,19 +170,63 @@ namespace EZSong.UI.Widgets {
                 return;
             }
 
-            BeatPattern newBeat = new();
+            BeatPattern beat = Pattern.Beats[index];
 
-            if (Pattern.Beats[index].Elements.Count == 1) {
-                newBeat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1, 1)));
-                newBeat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1, 1)));
-            } else {
-                newBeat.Elements.Add(new RhythmElement(new RhythmRationalDuration(1, 4, 0), false, new RhythmTuplet(1, 1)));
+            RhythmRationalDuration remaining = beat.GetRemainingDuration(Pattern.TimeSignature.GetBeatDuration());
+
+            RhythmElement element = CreateElementFromUserChoice(remaining);
+
+            if (element == null) {
+                return;
+            }
+            if (element.Duration.Numerator == 0) {
+                return;
             }
 
-            // 👉 remplacer réellement dans le pattern
-            Pattern.SetBeat(index, newBeat);
+            if (!beat.CanAdd(element, Pattern.TimeSignature.GetBeatDuration())) {
+                return;
+            }
 
+            beat.Elements.Add(element);
+
+            _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
+
+            int fakeNoteCount = 0; //TODO : calculer le nombre de notes en fonction des éléments présents dans les beats
+            int fakeGraceNoteCount = 0; //TODO : calculer le nombre d'appogiatures en fonction des éléments présents dans les beats
+            _noteOk = Pattern.IsCompatibleWithNoteCount(fakeNoteCount, fakeGraceNoteCount);
             PatternChanged?.Invoke(Pattern);
+        }
+
+        RhythmElement CreateElementFromUserChoice(RhythmRationalDuration remaining) {
+            // TEMPORAIRE : comportement simple pour tester
+
+            //if (remaining.Equals(new RhythmRationalDuration(1, 4, 0)) || IsGreaterThan(remaining, new RhythmRationalDuration(1, 4, 0))) {
+                //return new RhythmElement(new RhythmRationalDuration(1, 4, 0), false, new RhythmTuplet(1,1));
+            //}
+
+            if (remaining.Equals(new RhythmRationalDuration(1, 8, 0)) || IsGreaterThan(remaining, new RhythmRationalDuration(1, 8, 0))) {
+                return new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1,1));
+            }
+
+            if (remaining.Equals(new RhythmRationalDuration(1, 16, 0)) || IsGreaterThan(remaining, new RhythmRationalDuration(1, 16, 0))) {
+                return new RhythmElement(new RhythmRationalDuration(1, 16, 0), false, new RhythmTuplet(1,1));
+            }
+
+            return new RhythmElement(remaining, false, new RhythmTuplet(1, 1));
+        }
+
+        private static bool IsGreaterThan(RhythmRationalDuration a, RhythmRationalDuration b) {
+            // Compare les durées en les ramenant à un dénominateur commun
+            int left = a.Numerator * b.Denominator;
+            int right = b.Numerator * a.Denominator;
+            if (left > right) {
+                return true;
+            }
+            if (left == right) {
+                // Si les valeurs sont égales, comparer les points (dots)
+                return a.Dots > b.Dots;
+            }
+            return false;
         }
 
         public event Action<MeasureRhythmPattern>? PatternChanged;
@@ -166,18 +237,15 @@ namespace EZSong.UI.Widgets {
                 return;
             }
 
-            bool durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-            bool noteOk = Pattern.IsCompatibleWithNoteCount(NoteCount, GraceNoteCount);
-
-            if (!durationOk) {
+            if (!_durationOk) {
                 cr.SetSourceRGB(0.8, 0.2, 0.2); // rouge
-            } else if (!noteOk) {
+            } else if (!_noteOk) {
                 cr.SetSourceRGB(0.8, 0.6, 0.2); // orange
             } else {
                 cr.SetSourceRGB(0.2, 0.8, 0.2); // vert
             }
 
-            cr.Rectangle(0, 0, Allocation.Width, 5);
+            cr.Rectangle(0, 0, Allocation.Width, _statusAreaHeight);
             cr.Fill();
         }
 
