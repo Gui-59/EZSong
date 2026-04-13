@@ -27,7 +27,7 @@ namespace EZSong.Model
             get; 
             set; 
         }      
-        public MeasureMelody Melody { 
+        public MeasureGlobalMelody GlobalMelody { //TODO : Gérer des groupes de mélodies
             get; 
             set; 
         }
@@ -35,29 +35,24 @@ namespace EZSong.Model
             get; 
             set; 
         }
-        public MeasureRhythmPattern RhythmPattern {
-            get; 
-            set;
-        }
+
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public MeasureData() { 
             TimeSignature = new TimeSignature();
             KeySignature = new KeySignature();
             ChordSequence = new ChordSequence();
-            Melody = new MeasureMelody();
+            GlobalMelody = new MeasureGlobalMelody();
             Lyrics = string.Empty;
-            RhythmPattern = new MeasureRhythmPattern();
         }
 
-        public MeasureData(int index, TimeSignature timeSignature, KeySignature keySignature, ChordSequence chordSequence, MeasureMelody melody, string lyrics, MeasureRhythmPattern rhythmPattern) {
+        public MeasureData(int index, TimeSignature timeSignature, KeySignature keySignature, ChordSequence chordSequence, MeasureGlobalMelody globalMelody, string lyrics) {
             Index = index;
             TimeSignature = timeSignature;
             KeySignature = keySignature;
             ChordSequence = chordSequence;
-            Melody = melody;
+            GlobalMelody = globalMelody;
             Lyrics = lyrics;
-            RhythmPattern = rhythmPattern;
         }
 
         public MeasureDataDto ToDto() {
@@ -68,9 +63,7 @@ namespace EZSong.Model
 
             ChordSequenceDto chordSequence = ChordSequence.ToDto();
 
-            MeasureMelodyDto melody = Melody.ToDto();
-
-            MeasureRhythmPatternDto rhythm = RhythmPattern.ToDto();
+            MeasureGlobalMelodyDto globalMelody = GlobalMelody.ToDto();
 
             String lyrics = Lyrics ?? string.Empty;
 
@@ -79,24 +72,20 @@ namespace EZSong.Model
                 TimeSignature = timeSignature,
                 KeySignature = keySignature,
                 ChordSequence = chordSequence,
-                Melody = melody,
-                Lyrics = lyrics,
-                Rhythm = rhythm              
+                GlobalMelody = globalMelody,
+                Lyrics = lyrics,          
             };
         }
 
         public static MeasureData FromDto(MeasureDataDto dto) {
-            TimeSignature ts = new(dto.TimeSignature.Beats, dto.TimeSignature.BeatUnit);
-
             MeasureData measure = 
                 new(
                     dto.Index, 
                     TimeSignature.FromDto(dto.TimeSignature), 
                     KeySignature.FromDto(dto.KeySignature),
                     ChordSequence.FromDto(dto.ChordSequence),
-                    MeasureMelody.FromDto(dto.Melody), 
-                    dto.Lyrics,
-                    MeasureRhythmPattern.FromDto(dto.Rhythm, ts)
+                    MeasureGlobalMelody.FromDto(dto.GlobalMelody), 
+                    dto.Lyrics
                 );               
 
             return measure;

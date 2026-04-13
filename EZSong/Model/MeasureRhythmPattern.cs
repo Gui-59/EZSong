@@ -164,9 +164,9 @@ namespace EZSong.Model {
             return measureRhythmPatternDto;
         }
        
-        public static MeasureRhythmPattern FromDto(MeasureRhythmPatternDto dto, TimeSignature ts) {
+        public static MeasureRhythmPattern FromDto(MeasureRhythmPatternDto dto) {
 
-            MeasureRhythmPattern pattern = new(ts) {};
+            MeasureRhythmPattern pattern = new(dto.TimeSignature) {};
 
             int i = 0;
             foreach (BeatPatternDto beat in dto.Beats) {

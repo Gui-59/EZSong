@@ -28,10 +28,10 @@ namespace EZSong.Model {
 
         private bool HasCadency(MeasureData measureData) {
           
-            if (measureData.RhythmPattern is null) {
+            if (measureData.GlobalMelody.Pattern is null) {
                 return false;
             } else {
-                if (measureData.RhythmPattern.IsDurationValid()) {
+                if (measureData.GlobalMelody.Pattern.IsDurationValid()) {
                     return true;
                 }
             }
@@ -43,7 +43,7 @@ namespace EZSong.Model {
 
             string lilyPondString = string.Empty;
 
-            if (!HasCadency(measureData) || !measureData.RhythmPattern.IsDurationValid()) { //TODO
+            if (!HasCadency(measureData) || !measureData.GlobalMelody.Pattern.IsDurationValid()) { //TODO
                 //Si pas de cadence, on considère que toutes les notes ont la même durée
 
                 if (MelodyChords.Count == 0) {
@@ -90,7 +90,7 @@ namespace EZSong.Model {
 
                 int melodyChordIndex = 0;
 
-                foreach (BeatPattern beat in measureData.RhythmPattern.Beats) {
+                foreach (BeatPattern beat in measureData.GlobalMelody.Pattern.Beats) {
                 
                     foreach (RhythmElement rhythmEvent in beat.Elements) {
 

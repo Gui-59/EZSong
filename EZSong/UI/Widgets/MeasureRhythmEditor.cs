@@ -14,6 +14,12 @@ namespace EZSong.UI.Widgets {
 
         bool _durationOk = false;
         bool _noteOk = false;
+        
+        public int CurrentMelodyChordsCount {
+            get; set;
+        }
+
+        int _currentGraceNoteCount = 0; //TODO
 
         private string _dotGlyph = string.Empty;
 
@@ -159,9 +165,7 @@ namespace EZSong.UI.Widgets {
 
             _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
 
-            int fakeNoteCount = 0; //TODO : calculer le nombre de notes en fonction des éléments présents dans les beats
-            int fakeGraceNoteCount = 0; //TODO : calculer le nombre d'appogiatures en fonction des éléments présents dans les beats
-            _noteOk = Pattern.IsCompatibleWithNoteCount(fakeNoteCount, fakeGraceNoteCount);
+            _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
             PatternChanged?.Invoke(Pattern);
         }
 
@@ -191,9 +195,7 @@ namespace EZSong.UI.Widgets {
 
             _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
 
-            int fakeNoteCount = 0; //TODO : calculer le nombre de notes en fonction des éléments présents dans les beats
-            int fakeGraceNoteCount = 0; //TODO : calculer le nombre d'appogiatures en fonction des éléments présents dans les beats
-            _noteOk = Pattern.IsCompatibleWithNoteCount(fakeNoteCount, fakeGraceNoteCount);
+            _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
             PatternChanged?.Invoke(Pattern);
         }
 
@@ -240,7 +242,7 @@ namespace EZSong.UI.Widgets {
             if (!_durationOk) {
                 cr.SetSourceRGB(0.8, 0.2, 0.2); // rouge
             } else if (!_noteOk) {
-                cr.SetSourceRGB(0.8, 0.6, 0.2); // orange
+                cr.SetSourceRGB(0.8, 0.6, 1); 
             } else {
                 cr.SetSourceRGB(0.2, 0.8, 0.2); // vert
             }

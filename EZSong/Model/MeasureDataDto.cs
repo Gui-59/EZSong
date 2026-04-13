@@ -35,7 +35,7 @@ namespace EZSong.Model {
             set;
         }
 
-        public MeasureMelodyDto Melody {
+        public MeasureGlobalMelodyDto GlobalMelody { //TODO : Gérer des groupes de mélodies
             get; 
             set;
         }
@@ -45,19 +45,15 @@ namespace EZSong.Model {
             set;
         }
 
-        public MeasureRhythmPatternDto Rhythm {
-            get; 
-            set;
-        }
+        
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public MeasureDataDto() {
             TimeSignature = new TimeSignatureDto();
             KeySignature = new KeySignatureDto();
             ChordSequence = new ChordSequenceDto();
-            Melody = new MeasureMelodyDto();
+            GlobalMelody = new MeasureGlobalMelodyDto();
             Lyrics = string.Empty;
-            Rhythm = new MeasureRhythmPatternDto();
         }
     }
 }

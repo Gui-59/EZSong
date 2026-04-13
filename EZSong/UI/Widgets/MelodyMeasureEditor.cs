@@ -52,11 +52,33 @@ namespace EZSong.UI.Widgets {
         // Events
         public event EventHandler? ContentChanged; // raised when chords/cadency change
         public event EventHandler<int>? CursorChanged; // cursor index changed
+        public event EventHandler<int>? NoteCountChanged;
 
         // Map note index to label (C D E F G A B)
         private static readonly string[] _noteNames = new[] { "C", "D", "E", "F", "G", "A", "B" };
 
         private EmbeddedMidiSynth _embeddedMidiSynth; //Pour echo MIDI
+
+        private void AddMelodyChord(WidgetMelodyChord chord) {
+            _melodyChords.Add(chord);
+            PropagateMelodyChordsCountChange();
+
+        }
+
+        private void ReplaceMelodyChord(int cursorIndex, WidgetMelodyChord chord) {
+            _melodyChords[cursorIndex] = chord;
+            PropagateMelodyChordsCountChange();
+        }
+
+        private void RemoveMelodyChord(int cursorIndex) {
+            _melodyChords.RemoveAt(cursorIndex);
+            PropagateMelodyChordsCountChange();
+        }
+
+        private void PropagateMelodyChordsCountChange() {
+            int count = _melodyChords.Count;
+            NoteCountChanged?.Invoke(this, count);
+        }
 
         public MelodyMeasureEditor() {
 
@@ -328,9 +350,12 @@ namespace EZSong.UI.Widgets {
         // PUBLIC API: load external model into widget
         public void LoadFromModel(IEnumerable<WidgetMelodyChord> chords, int initialCursor = 0) {
             //todo : éviter le Select (lent)
-            _melodyChords = chords != null ? new List<WidgetMelodyChord>(chords.Select(c => DeepCopyChord(c))) : new List<WidgetMelodyChord>();            _cursorIndex = Math.Max(0, Math.Min(_melodyChords.Count, initialCursor));
+            _melodyChords = chords != null ? new List<WidgetMelodyChord>(chords.Select(c => DeepCopyChord(c))) : new List<WidgetMelodyChord>();            
+            _cursorIndex = Math.Max(0, Math.Min(_melodyChords.Count, initialCursor));
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);
+
+            PropagateMelodyChordsCountChange();
         }
 
         private WidgetMelodyChord DeepCopyChord(WidgetMelodyChord s) {
@@ -417,7 +442,7 @@ namespace EZSong.UI.Widgets {
                 // S'il n'existe pas encore de colonne à cet endroit, on l’ajoute
                 if (col >= _melodyChords.Count) {
                     while (_melodyChords.Count <= col) {
-                        _melodyChords.Add(new WidgetMelodyChord());
+                        AddMelodyChord(new WidgetMelodyChord());
                     }
                 }
 
@@ -614,14 +639,15 @@ namespace EZSong.UI.Widgets {
             } else if (key == Gdk.Key.Delete) {
                 // delete next element at cursor
                 if (_cursorIndex < _melodyChords.Count) {
-                    _melodyChords.RemoveAt(_cursorIndex);
+                    RemoveMelodyChord(_cursorIndex);
+              
                     ContentChanged?.Invoke(this, EventArgs.Empty);
                 }
                 handled = true;
             } else if (key == Gdk.Key.BackSpace) {
                 // delete previous element
                 if (_cursorIndex > 0) {
-                    _melodyChords.RemoveAt(_cursorIndex - 1);
+                    RemoveMelodyChord(_cursorIndex - 1);
                     _cursorIndex--;
                     ContentChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -636,7 +662,7 @@ namespace EZSong.UI.Widgets {
             } else if (key == Gdk.Key.space) {
                 // crée nouvelle position uniquement à l’espace
                 if (_cursorIndex == _melodyChords.Count || _melodyChords.Count == 0) {
-                    _melodyChords.Add(new WidgetMelodyChord());
+                    AddMelodyChord(new WidgetMelodyChord());
                 }
                 _cursorIndex = Math.Min(_melodyChords.Count, _cursorIndex + 1);
                 handled = true;
@@ -650,6 +676,8 @@ namespace EZSong.UI.Widgets {
                 args.RetVal = false;
             }
         }
+
+
 
         private async Task EchoChord(int index) {
             List<int> notes = new();
@@ -743,13 +771,15 @@ namespace EZSong.UI.Widgets {
 
             // insert or replace
             if (_cursorIndex >= 0 && _cursorIndex < _melodyChords.Count) {
-                _melodyChords[_cursorIndex] = chord;
+                ReplaceMelodyChord(_cursorIndex, chord);
             } else {
-                _melodyChords.Add(chord);
+                AddMelodyChord(chord);
             }
             _cursorIndex = Math.Min(_melodyChords.Count, _cursorIndex + 1);
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);
         }
+
+
     }
 }

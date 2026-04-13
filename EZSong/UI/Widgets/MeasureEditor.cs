@@ -11,7 +11,10 @@ namespace EZSong.UI.Widgets {
     public class MeasureEditorWidget : Frame {
         private MeasureData _measure;
 
-        public MelodyMeasureEditor MelodyMeasureEditor;
+        public GlobalMelodyEditor GlobalMelodyEditor { 
+            get; 
+            private set;
+        }
 
         public event System.Action? MeasureChanged;
         public event System.Action? InsertBeforeRequested;
@@ -22,7 +25,7 @@ namespace EZSong.UI.Widgets {
 
         public MeasureEditorWidget() {
             _measure = new MeasureData();
-            MelodyMeasureEditor = new MelodyMeasureEditor();
+             GlobalMelodyEditor = new(); 
         }
 
         public void SetMeasure(MeasureData measure) {
@@ -145,40 +148,17 @@ namespace EZSong.UI.Widgets {
             row.PackStart(new Label("Accords :") { Xalign = 0f }, false, false, 0);
             row.PackStart(chordEntry, true, true, 0);
 
-            // Editeur de mélodie/cadence
-            MelodyMeasureEditor = new();
-            MelodyMeasureEditor.LoadFromModel(_measure.Melody.ToWidgetChords(), initialCursor: 0);
-
-            // Handler local : met à jour la measure associée (capture 'measure' et 'editor')
-            MelodyMeasureEditor.ContentChanged += (s, e) => {
-                MeasureMelody newMeasureMelody = _measure.Melody;
-                newMeasureMelody.MelodyChords = new List<MelodyChord>();
-                foreach (WidgetMelodyChord widgetChord in MelodyMeasureEditor.ExportToModel()) {
-                    newMeasureMelody.MelodyChords.Add(widgetChord.ToMelodyChord());
-                }
-                _measure.Melody = newMeasureMelody;
-            };
-
-
-
-            MelodyMeasureEditor.WidthRequest = 250;
-            row.PackStart(MelodyMeasureEditor, true, false, 0);
-
-            MelodyMeasureEditor.ShowAll();
-
-            MeasureRhythmEditor rhythmEditor = new();
-            rhythmEditor.PatternChanged += pattern => {
-                _measure.RhythmPattern = pattern;
-                QueueDraw();
-            };
-            
-
-            TimeSignature ts = new(4, 4); //TODO : faire en sorte que ce soit défini par la mesure et que ça puisse être modifié via l'interface 
-            //rhythmEditor.SetPattern(_measure.RhythmPattern);
-            rhythmEditor.LoadFromModel(_measure.RhythmPattern);
-
-
-            row.PackStart(rhythmEditor, true, false, 0);
+            GlobalMelodyEditor = new();
+            GlobalMelodyEditor.LoadFromModel(_measure.GlobalMelody);
+            GlobalMelodyEditor.MelodyChanged += melody => {
+                    _measure.GlobalMelody.Melody = melody;
+                    MeasureChanged?.Invoke();
+                };
+            GlobalMelodyEditor.PatternChanged += pattern => {
+                        _measure.GlobalMelody.Pattern = pattern;
+                        MeasureChanged?.Invoke();
+                    };
+            row.PackStart(GlobalMelodyEditor, true, true, 0);
 
             // Paroles (une saisie texte ; mots/syllabes séparés par espaces)
             Entry lyricsEntry = new() {

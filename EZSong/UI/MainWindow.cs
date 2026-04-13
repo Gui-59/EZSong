@@ -118,7 +118,7 @@ namespace EZSong.UI {
             _midiManager.NotesPlayed += notes =>
             {
                 // Trouve l'éditeur de mesure actuellement focus
-                MelodyMeasureEditor? focusedEditor = _measuresEditor.GetFocusedMelodyEditor();
+                MelodyMeasureEditor? focusedEditor = _measuresEditor.GetFocusedGlobalMelodyEditor();
                 if (focusedEditor != null) {
                     Gtk.Application.Invoke((s, e) =>  // nécessaire car le callback MIDI n’est pas sur le thread GTK
                     {

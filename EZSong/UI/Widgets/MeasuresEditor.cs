@@ -12,13 +12,13 @@ namespace EZSong.UI.Widgets {
         private Box _container;
         private Song _song;
 
-        public event System.Action? MeasuresChanged;
+        public event System.Action? MeasuresChanged; //TODO : Pas consommé ?
 
-        private List<MelodyMeasureEditor> _melodyMeasureEditorWidgets;
+        private List<GlobalMelodyEditor> _globalMelodyEditorWidgets;
 
         public MeasuresEditor() {
             _song = new Song();
-            _melodyMeasureEditorWidgets = new();
+            _globalMelodyEditorWidgets = new();
             _container = new Box(Orientation.Horizontal, 4);
             Add(_container);
         }
@@ -50,7 +50,7 @@ namespace EZSong.UI.Widgets {
             widget.WidthRequest = 200;
 
             widget.SetMeasure(measure);
-            _melodyMeasureEditorWidgets.Add(widget.MelodyMeasureEditor);
+            _globalMelodyEditorWidgets.Add(widget.GlobalMelodyEditor);
 
             widget.MeasureChanged += () => {
                 MeasuresChanged?.Invoke();
@@ -132,16 +132,15 @@ namespace EZSong.UI.Widgets {
                 ts,
                 new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major),
                 new ChordSequence(""),
-                new MeasureMelody(new List<MelodyChord>()),
-                "",
-                new MeasureRhythmPattern(ts)
+                new MeasureGlobalMelody(),
+                ""
             );
         }
 
-        public MelodyMeasureEditor? GetFocusedMelodyEditor() {
-            foreach (MelodyMeasureEditor melodyMeasureEditorWidget in _melodyMeasureEditorWidgets) {
-                if (melodyMeasureEditorWidget.HasFocus) {
-                    return melodyMeasureEditorWidget;
+        public MelodyMeasureEditor? GetFocusedGlobalMelodyEditor() {
+            foreach (GlobalMelodyEditor globalMelodyEditorWidget in _globalMelodyEditorWidgets) {
+                if (globalMelodyEditorWidget.HasFocus) {
+                    return globalMelodyEditorWidget.MelodyMeasureEditor; 
                 }
             }
 
