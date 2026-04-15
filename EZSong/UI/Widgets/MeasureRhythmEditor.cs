@@ -15,8 +15,20 @@ namespace EZSong.UI.Widgets {
         bool _durationOk = false;
         bool _noteOk = false;
         
+        private int _currentMelodyChordsCount = 0;
         public int CurrentMelodyChordsCount {
-            get; set;
+            get {
+                return _currentMelodyChordsCount;
+            }
+            set {
+                _currentMelodyChordsCount = value;
+
+                if (Pattern == null) {
+                    return;
+                }
+                _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
+                QueueDraw();
+            }
         }
 
         int _currentGraceNoteCount = 0; //TODO
