@@ -26,16 +26,19 @@ namespace EZSong.Model {
             MelodyChords = melodyChords;
         }
 
-        private bool HasCadency(MeasureData measureData) {
+        private bool HasValidCadency(MeasureData measureData) {
           
             if (measureData.GlobalMelody.Pattern is null) {
                 return false;
             } else {
-                if (measureData.GlobalMelody.Pattern.IsDurationValid()) {
-                    return true;
+                if (!measureData.GlobalMelody.Pattern.IsDurationValid()) {
+                    return false;
+                }
+                if (measureData.GlobalMelody.Pattern.Beats.Count != MelodyChords.Count) {
+                    return false;
                 }
             }
-            return false;
+            return true;
             
         }
 
@@ -43,7 +46,9 @@ namespace EZSong.Model {
 
             string lilyPondString = string.Empty;
 
-            if (!HasCadency(measureData) || !measureData.GlobalMelody.Pattern.IsDurationValid()) { //TODO
+            bool hasValidCadency = HasValidCadency(measureData);
+ 
+            if (!hasValidCadency) { 
                 //Si pas de cadence, on considère que toutes les notes ont la même durée
 
                 if (MelodyChords.Count == 0) {
