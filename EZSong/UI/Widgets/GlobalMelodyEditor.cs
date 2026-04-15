@@ -30,7 +30,7 @@ namespace EZSong.UI.Widgets {
 
         public void LoadFromModel(MeasureGlobalMelody globalMelody) {
             MelodyMeasureEditor.LoadFromModel(globalMelody.Melody.ToWidgetChords(), initialCursor: 0);
-            _rhythmEditor.LoadFromModel(globalMelody.Pattern);
+            _rhythmEditor.LoadFromModel(globalMelody);
         }
 
         private void BuildUI() {

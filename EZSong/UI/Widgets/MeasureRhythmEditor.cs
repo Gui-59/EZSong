@@ -48,11 +48,6 @@ namespace EZSong.UI.Widgets {
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
         }
 
-        public void SetPattern(MeasureRhythmPattern pattern) {
-            Pattern = pattern;
-            QueueDraw();
-        }
-
         protected override bool OnDrawn(Context cr) {
             if (Pattern == null) {
                 return true;
@@ -296,15 +291,18 @@ namespace EZSong.UI.Widgets {
         }
 
         // PUBLIC API: load external model into widget
-        public void LoadFromModel(MeasureRhythmPattern rhythmPattern) {
+        public void LoadFromModel(MeasureGlobalMelody measureGlobalMelody) {
             
-            Pattern = rhythmPattern;
+            Pattern = measureGlobalMelody.Pattern;
+                       
+            _currentMelodyChordsCount = measureGlobalMelody.Melody.MelodyChords.Count;
+
+            _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
+            _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
 
             QueueDraw();
 
             //PatternChanged?.Invoke(Pattern);
-
-            SetPattern(Pattern);
         }
     }
 }
