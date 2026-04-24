@@ -3,6 +3,8 @@ using EZSong.Model;
 using EZSong.UI.Widgets.WidgetsData;
 using Gdk;
 using Gtk;
+using System;
+using System.Runtime.CompilerServices;
 
 namespace EZSong.UI.Widgets {
     public class MeasureRhythmEditor : DrawingArea {
@@ -48,19 +50,20 @@ namespace EZSong.UI.Widgets {
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
         }
 
-        protected override bool OnDrawn(Context cr) {
+        protected override bool OnDrawn(Cairo.Context cr) {
             if (Pattern == null) {
                 return true;
             }
 
             DrawBackground(cr);
-            DrawBeats(cr);
             DrawStatus(cr);
+            DrawBeats(cr);
+            
 
             return true;
         }
 
-        private void DrawBackground(Context cr) {
+        private void DrawBackground(Cairo.Context cr) {
             cr.SetSourceRGB(1, 1, 1);
             cr.Paint();
         }
@@ -85,12 +88,6 @@ namespace EZSong.UI.Widgets {
                 double x = i * beatWidth;
 
                 DrawBeat(cr, Pattern.Beats[i], x, beatWidth, height);
-
-                // séparation visuelle
-                cr.SetSourceRGB(0.3, 0.3, 0.3);
-                cr.MoveTo(x, 0);
-                cr.LineTo(x, height);
-                cr.Stroke();
             }
         }
 
@@ -130,7 +127,13 @@ namespace EZSong.UI.Widgets {
             cr.ShowText(text);
         }
 
+       
+       
+
         protected override bool OnButtonPressEvent(Gdk.EventButton ev) {
+
+    
+
             if (Pattern == null) {
                 return false;
             }
@@ -147,9 +150,14 @@ namespace EZSong.UI.Widgets {
             }
 
             if (IsInStatusZone(ev.Y)) {
-                ClearBeat(index);
-            } else {
-                EditBeat(index);
+
+                if (ev.Button == 3) {
+                    EditBeat(index);
+                }
+
+                if (ev.Button == 1 && ev.State == ModifierType.ShiftMask) { //TODO : permettre aussi le double click
+                    ClearBeat(index);
+                }                    
             }
 
             return true;
@@ -181,47 +189,57 @@ namespace EZSong.UI.Widgets {
                 return;
             }
 
+            
+
+            CreateElementFromUserChoice(index);
+
+            
+        }
+
+        void CreateElementFromUserChoice(int index) {
+
+            if (Pattern == null) {
+                return;
+            }
+
             BeatPattern beat = Pattern.Beats[index];
+
+            RhythmElementPickerPopover popover = new(this);
+
+            
 
             RhythmRationalDuration remaining = beat.GetRemainingDuration(Pattern.TimeSignature.GetBeatDuration());
 
-            RhythmElement element = CreateElementFromUserChoice(remaining);
+            popover.ElementSelected += element =>
+            {
 
-            if (element == null) {
-                return;
-            }
-            if (element.Duration.Numerator == 0) {
-                return;
-            }
+                BeatPattern beat = Pattern.Beats[index];
 
-            if (!beat.CanAdd(element, Pattern.TimeSignature.GetBeatDuration())) {
-                return;
-            }
 
-            beat.Elements.Add(element);
+                if (element == null) {
+                    return;
+                } else {
+                    if (element == null) {
+                        return;
+                    }
+                    if (element.Duration.Numerator == 0) {
+                        return;
+                    }
 
-            _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
+                    if (!beat.CanAdd(element, Pattern.TimeSignature.GetBeatDuration())) {
+                        return;
+                    }
 
-            _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
-            PatternChanged?.Invoke(Pattern);
-        }
+                    beat.Elements.Add(element);
 
-        RhythmElement CreateElementFromUserChoice(RhythmRationalDuration remaining) {
-            // TEMPORAIRE : comportement simple pour tester
+                    _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
 
-            //if (remaining.Equals(new RhythmRationalDuration(1, 4, 0)) || IsGreaterThan(remaining, new RhythmRationalDuration(1, 4, 0))) {
-                //return new RhythmElement(new RhythmRationalDuration(1, 4, 0), false, new RhythmTuplet(1,1));
-            //}
+                    _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
+                    PatternChanged?.Invoke(Pattern);
+                }
+            };
 
-            if (remaining.Equals(new RhythmRationalDuration(1, 8, 0)) || IsGreaterThan(remaining, new RhythmRationalDuration(1, 8, 0))) {
-                return new RhythmElement(new RhythmRationalDuration(1, 8, 0), false, new RhythmTuplet(1,1));
-            }
-
-            if (remaining.Equals(new RhythmRationalDuration(1, 16, 0)) || IsGreaterThan(remaining, new RhythmRationalDuration(1, 16, 0))) {
-                return new RhythmElement(new RhythmRationalDuration(1, 16, 0), false, new RhythmTuplet(1,1));
-            }
-
-            return new RhythmElement(remaining, false, new RhythmTuplet(1, 1));
+            popover.Open(remaining);
         }
 
         private static bool IsGreaterThan(RhythmRationalDuration a, RhythmRationalDuration b) {
@@ -256,6 +274,21 @@ namespace EZSong.UI.Widgets {
 
             cr.Rectangle(0, 0, Allocation.Width, _statusAreaHeight);
             cr.Fill();
+
+            double width = Allocation.Width;
+            int beatCount = Pattern.TimeSignature.GetBeatCount();
+
+            double beatWidth = width / beatCount;
+
+            for (int i = 0; i < beatCount; i++) {
+                double x = i * beatWidth;
+
+                // séparation visuelle
+                cr.SetSourceRGB(1, 1, 1);
+                cr.MoveTo(x, 0);
+                cr.LineTo(x, _statusAreaHeight);
+                cr.Stroke();
+            }
         }
 
         private string GetMusicGlyph(RhythmElement e) {

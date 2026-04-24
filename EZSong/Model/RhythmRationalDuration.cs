@@ -93,6 +93,19 @@
                 a.Denominator == b.Denominator;
         }
 
+        public bool IsGreaterOrEqual(RhythmRationalDuration other) {
+
+            if (other.Numerator == 0 && other.Denominator == 0) {
+                throw new InvalidOperationException("Cannot compare a duration with zero numerator and denominator.");
+            }
+
+            RhythmRationalDuration a = ApplyDots().Normalize();
+            RhythmRationalDuration b = other.ApplyDots().Normalize();
+
+            return a.Numerator * b.Denominator >= b.Numerator * a.Denominator;
+
+        }
+
         public string ToLilyPondString() {
             string s = Denominator.ToString();
 
