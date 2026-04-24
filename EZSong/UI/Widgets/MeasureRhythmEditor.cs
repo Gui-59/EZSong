@@ -206,7 +206,18 @@ namespace EZSong.UI.Widgets {
 
             RhythmElementPickerPopover popover = new(this);
 
-            
+            double width = Allocation.Width;
+            int beatCount = Pattern.Beats.Count;
+            double beatWidth = width / beatCount;
+
+            int beatX = (int)(index * beatWidth);
+
+            popover.PointingTo = new Gdk.Rectangle(
+                (int)beatX,
+                0,
+                (int)beatWidth,
+                _statusAreaHeight
+            );
 
             RhythmRationalDuration remaining = beat.GetRemainingDuration(Pattern.TimeSignature.GetBeatDuration());
 
