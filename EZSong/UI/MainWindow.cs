@@ -261,8 +261,13 @@ namespace EZSong.UI {
                     box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
                 }
 
+                button.glyph {
+                    font-family: 'Bravura'; 
+                    font-size: 20px;
+                }
+
                 
-                ";
+                "; //TODO : rendre la police de glyph dynamique en fonction des paramètres utilisateur
             CssProvider cssProvider = new();
             _ = cssProvider.LoadFromData(css);
             StyleContext.AddProviderForScreen(Gdk.Screen.Default, cssProvider, uint.MaxValue);

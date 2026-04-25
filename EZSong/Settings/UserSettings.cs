@@ -5,8 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EZSong.MIDI {
+namespace EZSong.Settings {
     internal class UserSettings {
+
+        string _musicalFontFamily = "Bravura";
+        public string MusicalFontFamily {
+            get {
+                return _musicalFontFamily;
+            }
+            set {
+                _musicalFontFamily = value;
+            }
+        }
 
         GMVoice _midiInputEchoVoice = GMVoice.PIPE_PanFlute;
         public GMVoice MidiInputEchoVoice {

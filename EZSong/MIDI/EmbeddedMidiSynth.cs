@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace EZSong.MIDI {
     public class EmbeddedMidiSynth : IDisposable {
 
-        private readonly Settings _settings;
+        private readonly NFluidsynth.Settings _settings;
         private readonly Synth _synth;
         private readonly AudioDriver _driver;
 
@@ -21,7 +21,7 @@ namespace EZSong.MIDI {
 
         public EmbeddedMidiSynth(string soundFontPath, uint voiceBank, GMVoice gmVoice) {
 
-            _settings = new Settings();
+            _settings = new NFluidsynth.Settings();
             _synth = new Synth(_settings);
             uint sfId = _synth.LoadSoundFont(soundFontPath, true);          
             _synth.ProgramSelect(_channel, sfId, voiceBank, (uint)gmVoice);

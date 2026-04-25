@@ -1,5 +1,6 @@
 ﻿using Cairo;
 using EZSong.Model;
+using EZSong.UI.Widgets.Helpers;
 using EZSong.UI.Widgets.WidgetsData;
 using Gdk;
 using Gtk;
@@ -12,11 +13,11 @@ namespace EZSong.UI.Widgets {
             get; private set;
         }
 
-        private static readonly String _musicalFontFamily = "Bravura";
-
         bool _durationOk = false;
         bool _noteOk = false;
-        
+
+        private string _musicalFontFamily = new Settings.UserSettings().MusicalFontFamily;
+
         private int _currentMelodyChordsCount = 0;
         public int CurrentMelodyChordsCount {
             get {
@@ -35,17 +36,9 @@ namespace EZSong.UI.Widgets {
 
         int _currentGraceNoteCount = 0; //TODO
 
-        private string _dotGlyph = string.Empty;
-
         int _statusAreaHeight = 15;
 
         public MeasureRhythmEditor() {
-
-            if (_musicalFontFamily != "Bravura") {
-                throw new NotSupportedException("Only Bravura font is supported for music glyphs");
-            }
-            _dotGlyph = "\uE1E7";
-
             HeightRequest = 50; //Taille fixe pour éviter les problèmes de redimensionnement
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
         }
@@ -91,25 +84,43 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        private Helpers.UICompositeGlyph BuildBeatElementCompositeGlyph(RhythmElement e) {
+
+            Helpers.UICompositeGlyph beatElementCompositeGlyph = new();
+
+            if (e.IsRest) {
+                beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.Duration, true));
+            } else {
+                beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.Duration, false));
+            }
+
+            if (e.Duration.Dots > 0) {
+
+                for (int i = 0; i < e.Duration.Dots; i++) {
+                    beatElementCompositeGlyph.AddGlyph(UIGlyph.DotGlyph());
+                }
+            }
+
+            if (e.TieToNext) {
+                beatElementCompositeGlyph.AddGlyph(UIGlyph.TiefromGlyph());
+            }
+
+            return beatElementCompositeGlyph;
+        }
+
+        private Helpers.UICompositeGlyph BuildBeatCompositeGlyph(BeatPattern beat) {
+            Helpers.UICompositeGlyph beatCompositeGlyph = new();
+
+            foreach (RhythmElement e in beat.Elements) {
+                beatCompositeGlyph.AddCompositeGlyph(BuildBeatElementCompositeGlyph(e));
+            }
+
+            return beatCompositeGlyph;
+        }
+
         private void DrawBeat(Context cr, BeatPattern beat, double x, double width, double height) {
-            
-            //todo : éviter le Select (lent)
-            string text = string.Join(" ",
-                beat.Elements.Select(e => {
-                    string glyph = e.IsRest
-                        ? GetRestGlyph(e)
-                        : GetMusicGlyph(e);
 
-                    if (e.Duration.Dots > 0) {
-                        glyph += new string('\uE1E7', e.Duration.Dots);
-                    }
-
-                    if (e.TieToNext) {
-                        glyph += "\uE1FD"; // tie
-                    }
-
-                    return glyph;
-                }));
+            Helpers.UICompositeGlyph compositeGlyph = BuildBeatCompositeGlyph(beat);
 
             cr.SetSourceRGB(0, 0, 0);
 
@@ -117,14 +128,14 @@ namespace EZSong.UI.Widgets {
             cr.SelectFontFace(_musicalFontFamily, FontSlant.Normal, FontWeight.Normal);
             cr.SetFontSize(20);
 
-            TextExtents ext = cr.TextExtents(text);
+            TextExtents ext = cr.TextExtents(compositeGlyph.ToString());
 
             double tx = x + (width - ext.Width) / 2;
             double ty = height / 2;
             ty += _statusAreaHeight;
 
             cr.MoveTo(tx, ty);
-            cr.ShowText(text);
+            cr.ShowText(compositeGlyph.ToString());
         }
 
        
@@ -302,37 +313,9 @@ namespace EZSong.UI.Widgets {
             }
         }
 
-        private string GetMusicGlyph(RhythmElement e) {
 
-            if (_musicalFontFamily != "Bravura") {
-                throw new NotSupportedException("Only Bravura font is supported for music glyphs");
-            }
 
-            return e.Duration.Denominator switch {
-                1 => "\uE1D2", // ronde
-                2 => "\uE1D3", // blanche
-                4 => "\uE1D5", // noire
-                8 => "\uE1D7", // croche
-                16 => "\uE1D9", // double croche
-                _ => "?"
-            };
-        }
 
-        private string GetRestGlyph(RhythmElement e) {
-
-            if (_musicalFontFamily != "Bravura") {
-                throw new NotSupportedException("Only Bravura font is supported for music glyphs");
-            }
-
-            return e.Duration.Denominator switch {
-                1 => "\uE4E3",
-                2 => "\uE4E4",
-                4 => "\uE4E5",
-                8 => "\uE4E6",
-                16 => "\uE4E7",
-                _ => "?"
-            };
-        }
 
         // PUBLIC API: load external model into widget
         public void LoadFromModel(MeasureGlobalMelody measureGlobalMelody) {

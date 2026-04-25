@@ -1,4 +1,5 @@
 ﻿using EZSong.Model;
+using EZSong.UI.Widgets.Helpers;
 using Gtk;
 using System;
 using System.Collections.Generic;
@@ -95,9 +96,16 @@ namespace EZSong.UI.Widgets {
             FlowBox flow = CreateFlow();
 
             foreach (RhythmRationalDuration d in durations) {
-                string label = GetSymbol(d, isRest);
+                UICompositeGlyph compositeGlyph = GetCompositeGlyph(d, isRest);
 
+                if (compositeGlyph is null) {
+                    continue; // Skip unsupported durations
+                }
+
+                string label = compositeGlyph.ToString(); 
                 Button btn = CreateButton(label);
+                
+                //TODO : changer la police pour les symboles musicaux
 
                 btn.Clicked += (s, e) =>
                 {
@@ -126,10 +134,14 @@ namespace EZSong.UI.Widgets {
         }
 
         private Button CreateButton(string label) {
-            return new Button(label) {
+            Button btn = new(label) {
                 WidthRequest = 60,
-                HeightRequest = 40
+                HeightRequest = 40,
             };
+
+            btn.StyleContext.AddClass("glyph");
+
+            return btn;
         }
 
         // =========================================================
@@ -140,8 +152,7 @@ namespace EZSong.UI.Widgets {
             List<RhythmRationalDuration> all = new() {
                 new RhythmRationalDuration(1, 4, 0),
                 new RhythmRationalDuration(1, 8, 0),
-                new RhythmRationalDuration(1, 16, 0),
-                new RhythmRationalDuration(1, 32, 0)
+                new RhythmRationalDuration(1, 16, 0)
             };
 
             return all.FindAll(d => _maxDuration.IsGreaterOrEqual(d));
@@ -151,11 +162,11 @@ namespace EZSong.UI.Widgets {
             List<Helpers.TupletOption> list = new();
 
             // Correction : utiliser la méthode CompareTo ou une méthode utilitaire pour comparer les durées
-            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 1, 0))) {
+            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 1, 0))) { //TODO : C'est faux
                 list.Add(new Helpers.TupletOption("Triolet ♩", 3, 1));
             }
 
-            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 1, 0))) {
+            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 1, 0))) { //TODO : C'est faux
                 list.Add(new Helpers.TupletOption("Triolet ♪", 3, 1));
             }
 
@@ -167,25 +178,12 @@ namespace EZSong.UI.Widgets {
         // SYMBOLS
         // =========================================================
 
-        private string GetSymbol(RhythmRationalDuration duration, bool isRest) {
+        private Helpers.UICompositeGlyph GetCompositeGlyph(RhythmRationalDuration duration, bool isRest) {
 
-            if (duration.Equals(new RhythmRationalDuration(1, 4, 0))) {
-                return isRest ? "𝄽" : "♩";
-            }
-
-            if (duration.Equals(new RhythmRationalDuration(1, 8, 0))) {
-                return isRest ? "𝄾" : "♪";
-            }
-
-            if (duration.Equals(new RhythmRationalDuration(1, 16, 0))) {
-                return isRest ? "𝄿" : "♬";
-            }
-
-            if (duration.Equals(new RhythmRationalDuration(1, 32, 0))) {
-                return isRest ? "rest" : "♬♬";
-            }
-
-            return "?";
+            UIGlyph glyph = UIGlyph.FromDescriptor(duration, isRest);
+            UICompositeGlyph compositeGlyph = new();
+            compositeGlyph.AddGlyph(glyph);
+            return compositeGlyph;
         }
     }
 }
