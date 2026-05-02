@@ -9,39 +9,38 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
-    public class RhythmTupletDto {
-        public int Count {
+    public class RhythmTupletDto:RhythmSimpleElementDto {
+        public List<RhythmRationalDuration> Subdivisions {
             get;
-            set;
         }
-        public int InTimeOf {
+        public RhythmRationalDuration GlobalDuration {
             get; 
-            set;
         }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public RhythmTupletDto() {
+            Subdivisions = new List<RhythmRationalDuration>();
+            GlobalDuration = new RhythmRationalDuration(1, 1, 0);
+        }
+        
+        public RhythmTupletDto(List<RhythmRationalDuration> subdivisions, RhythmRationalDuration globalDuration) {
+                Subdivisions = subdivisions;
+                GlobalDuration = globalDuration;
         }
 
         public static RhythmTuplet FromDto(RhythmTupletDto tuplet) {
             if (tuplet == null) {
                 return new RhythmTuplet();
             }
-            return new RhythmTuplet(tuplet.Count, tuplet.InTimeOf);
+            return new RhythmTuplet(tuplet.Subdivisions, tuplet.GlobalDuration);
 
         }
 
         internal static RhythmTupletDto ToDto(RhythmTuplet tuplet) {
             if (tuplet == null) {
-                return new RhythmTupletDto() {
-                        Count = 1,
-                        InTimeOf = 1
-                };
+                return new RhythmTupletDto(new List<RhythmRationalDuration>(), new RhythmRationalDuration(1, 1, 0));
             }
-            return new RhythmTupletDto() {
-                Count = tuplet.Count,
-                InTimeOf = tuplet.InTimeOf
-            };
+            return new RhythmTupletDto(tuplet.Subdivisions, tuplet.GetEffectiveDuration());
         }
     }
 }

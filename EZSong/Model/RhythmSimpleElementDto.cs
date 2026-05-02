@@ -13,7 +13,7 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
-    public class RhythmElementDto {
+    public class RhythmSimpleElementDto {
         public int Numerator {
             get; 
             set;
@@ -36,22 +36,13 @@ namespace EZSong.Model {
             set;
         }
 
-        public RhythmTupletDto Tuplet {
-            get; 
-            set;
-        }
-
         //Constructeur vide (requis pour la sérialisation JSON)
-        public RhythmElementDto() {
-                Numerator = 1;
-                Denominator = 4;
-                Dots = 0;
-                IsRest = true;
-                TieToNext = false;
-                Tuplet = new RhythmTupletDto() {
-                    Count = 1,
-                    InTimeOf = 1
-                };
+        public RhythmSimpleElementDto() {
+            Numerator = 1;
+            Denominator = 4;
+            Dots = 0;
+            IsRest = true;
+            TieToNext = false;
         }
 
     }

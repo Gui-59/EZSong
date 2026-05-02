@@ -1,28 +1,36 @@
 ﻿namespace EZSong.Model {
 
-    public class RhythmTuplet {
-        public int Count {
+    public class RhythmTuplet: IRhythmElement {
+        public List<RhythmRationalDuration> Subdivisions {
             get;
         }
-        public int InTimeOf {
-            get;
-        }
+        private RhythmRationalDuration _globalDuration;
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public RhythmTuplet() {
-            Count = 1;
-            InTimeOf = 1;
+            Subdivisions = new List<RhythmRationalDuration>();
+            _globalDuration = new RhythmRationalDuration(1, 1, 0);
         }
 
-        public RhythmTuplet(int count, int inTimeOf) {
-            Count = count;
-            InTimeOf = inTimeOf;
+        public RhythmTuplet(List<RhythmRationalDuration> subdivisions, RhythmRationalDuration globalDuration) {
+            Subdivisions = subdivisions;
+            _globalDuration = globalDuration;
         }
 
-        public double Ratio {
-            get {
-                return (double)InTimeOf / Count;
-            }
+        public RhythmRationalDuration GetEffectiveDuration() {
+            return _globalDuration;
+        }
+
+        public int DotCount() {
+            return 0;
+        }
+
+        public bool IsTiedToNext() {
+            return false;
+        }
+
+        public bool IsRest() {
+            return false;
         }
     }
 

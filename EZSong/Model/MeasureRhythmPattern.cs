@@ -99,14 +99,17 @@ namespace EZSong.Model {
             return symbol;
         }
 
-        private string ElementToString(RhythmElement e) {
-            string s = DurationToSymbol(e.Duration);
+        private string ElementToString(IRhythmElement e) {
 
-            if (e.IsRest) {
+            //TODO : tuplet !
+
+            string s = DurationToSymbol(e.GetEffectiveDuration());
+
+            if (e.IsRest()) {
                 s = "r" + s;
             }
 
-            if (e.TieToNext) {
+            if (e.IsTiedToNext()) {
                 s += "~";
             }
 
@@ -119,7 +122,7 @@ namespace EZSong.Model {
             foreach (BeatPattern beat in Beats) {
                 List<string> elements = new();
 
-                foreach (RhythmElement e in beat.Elements) {
+                foreach (RhythmSimpleElement e in beat.Elements) {
                     elements.Add(ElementToString(e));
                 }
 
@@ -136,11 +139,10 @@ namespace EZSong.Model {
             RhythmRationalDuration beatDuration = ts.GetBeatDuration();
 
             for (int i = 0; i < beatCount; i++) {
-                List<RhythmElement> elements = new() {
-                    new RhythmElement(
+                List<IRhythmElement> elements = new() {
+                    new RhythmSimpleElement(
                         beatDuration,
-                        true,
-                        new RhythmTuplet(1, 1)
+                        true
                     )
                 };
                 _beats.Add(new BeatPattern (

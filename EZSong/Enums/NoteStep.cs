@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace EZSong.Enums {
     public enum NoteStep {
-        C='c',
-        D='d',
-        E='e',
-        F='f',
-        G='g',
-        A='a',
-        B='b'
+        C,
+        D,
+        E,
+        F,
+        G,
+        A,
+        B
     }
 }

@@ -10,12 +10,13 @@ namespace EZSong.UI.Widgets {
 
         private RhythmRationalDuration _maxDuration;
 
-        public event Action<RhythmElement?>? ElementSelected;
+        public event Action<IRhythmElement?>? ElementSelected;
 
         private Notebook _notebook;
 
         public RhythmElementPickerPopover(Widget relativeTo) : base(relativeTo) {
             BorderWidth = 6;
+            WidthRequest = 300;
 
             _notebook = new Notebook {
                 ShowTabs = true
@@ -78,7 +79,7 @@ namespace EZSong.UI.Widgets {
             FlowBox flow = CreateFlow();
 
             foreach (Helpers.TupletOption t in GetAllowedTuplets()) {
-                Button btn = CreateButton(t.Label);
+                Button btn = CreateButton("Un tuplet"); //TODO : afficher une représentation graphique du tuplet (ex: 3 croches avec un "3" au-dessus)
 
                 btn.Clicked += (s, e) =>
                 {
@@ -105,14 +106,9 @@ namespace EZSong.UI.Widgets {
                 string label = compositeGlyph.ToString(); 
                 Button btn = CreateButton(label);
                 
-                //TODO : changer la police pour les symboles musicaux
-
                 btn.Clicked += (s, e) =>
                 {
-                    RhythmElement element = new() {
-                        Duration = d,
-                        IsRest = isRest
-                    };
+                    RhythmSimpleElement element = new(d, isRest);
 
                     ElementSelected?.Invoke(element);
                     Popdown();
@@ -162,13 +158,19 @@ namespace EZSong.UI.Widgets {
             List<Helpers.TupletOption> list = new();
 
             // Correction : utiliser la méthode CompareTo ou une méthode utilitaire pour comparer les durées
-            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 1, 0))) { //TODO : C'est faux
-                list.Add(new Helpers.TupletOption("Triolet ♩", 3, 1));
+            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 1, 0))) {
+
+                List<RhythmRationalDuration> subdivisions = new() {
+                    new RhythmRationalDuration(1, 8, 0),
+                    new RhythmRationalDuration(1, 8, 0),
+                    new RhythmRationalDuration(1, 8, 0)
+                };
+
+                RhythmTuplet rhythmTuplet = new(subdivisions, new RhythmRationalDuration(1, 1, 0));
+                list.Add(new Helpers.TupletOption(rhythmTuplet));
             }
 
-            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 1, 0))) { //TODO : C'est faux
-                list.Add(new Helpers.TupletOption("Triolet ♪", 3, 1));
-            }
+            //TODO : ajouter d'autres tuplets (ex: quintuplet, septuplet, etc.) en fonction de la durée maximale autorisée
 
             return list;
         }

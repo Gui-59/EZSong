@@ -84,24 +84,24 @@ namespace EZSong.UI.Widgets {
             }
         }
 
-        private Helpers.UICompositeGlyph BuildBeatElementCompositeGlyph(RhythmElement e) {
+        private Helpers.UICompositeGlyph BuildBeatElementCompositeGlyph(IRhythmElement e) {
 
             Helpers.UICompositeGlyph beatElementCompositeGlyph = new();
 
-            if (e.IsRest) {
-                beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.Duration, true));
+            if (e.IsRest()) {
+                beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.GetEffectiveDuration(), true));
             } else {
-                beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.Duration, false));
+                beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.GetEffectiveDuration(), false));
             }
 
-            if (e.Duration.Dots > 0) {
+            if (e.DotCount() > 0) {
 
-                for (int i = 0; i < e.Duration.Dots; i++) {
+                for (int i = 0; i < e.DotCount(); i++) {
                     beatElementCompositeGlyph.AddGlyph(UIGlyph.DotGlyph());
                 }
             }
 
-            if (e.TieToNext) {
+            if (e.IsTiedToNext()) {
                 beatElementCompositeGlyph.AddGlyph(UIGlyph.TiefromGlyph());
             }
 
@@ -111,7 +111,7 @@ namespace EZSong.UI.Widgets {
         private Helpers.UICompositeGlyph BuildBeatCompositeGlyph(BeatPattern beat) {
             Helpers.UICompositeGlyph beatCompositeGlyph = new();
 
-            foreach (RhythmElement e in beat.Elements) {
+            foreach (RhythmSimpleElement e in beat.Elements) {
                 beatCompositeGlyph.AddCompositeGlyph(BuildBeatElementCompositeGlyph(e));
             }
 
@@ -244,9 +244,10 @@ namespace EZSong.UI.Widgets {
                     if (element == null) {
                         return;
                     }
-                    if (element.Duration.Numerator == 0) {
-                        return;
-                    }
+                    
+                    //if (element.Duration.Numerator == 0) {
+                      //  return;
+                    //}
 
                     if (!beat.CanAdd(element, Pattern.TimeSignature.GetBeatDuration())) {
                         return;

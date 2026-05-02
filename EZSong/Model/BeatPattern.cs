@@ -2,23 +2,23 @@
 
     public class BeatPattern {
 
-        public List<RhythmElement> Elements { 
+        public List<IRhythmElement> Elements { 
             get; 
             set; 
         }
 
         public int AttackCount {
             get {
-                return Elements.Count(e => !e.IsRest);
+                return Elements.Count(e => !e.IsRest());
             }
         }
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public BeatPattern() {
-            Elements = new List<RhythmElement>();
+            Elements = new List<IRhythmElement>();
         }
 
-        public BeatPattern(List<RhythmElement> elements) { 
+        public BeatPattern(List<IRhythmElement> elements) { 
             Elements = elements;      
         }
 
@@ -26,7 +26,7 @@
 
             RhythmRationalDuration total = new(0, 1, 0);
 
-            foreach (RhythmElement e in Elements) {
+            foreach (IRhythmElement e in Elements) {
                 total += e.GetEffectiveDuration();
             }
 
@@ -34,9 +34,9 @@
         }
 
         internal static BeatPattern FromDto(BeatPatternDto beat) {
-            List<RhythmElement> elements = new();
-            foreach (RhythmElementDto elementDto in beat.Elements) {
-                elements.Add(RhythmElement.FromDto(elementDto));
+            List<IRhythmElement> elements = new();
+            foreach (RhythmSimpleElementDto elementDto in beat.Elements) {
+                elements.Add(RhythmSimpleElement.FromDto(elementDto));
             }
 
             return new BeatPattern (
@@ -46,9 +46,9 @@
         }
 
         internal static BeatPatternDto ToDto(BeatPattern beat) {
-            List<RhythmElementDto> elements = new();
-            foreach (RhythmElement element in beat.Elements) {
-                elements.Add(RhythmElement.ToDto(element));
+            List<RhythmSimpleElementDto> elements = new();
+            foreach (RhythmSimpleElement element in beat.Elements) {
+                elements.Add(RhythmSimpleElement.ToDto(element));
             }
             return new BeatPatternDto() {
                 Elements = elements
@@ -64,7 +64,7 @@
             return beatDuration - GetTotalDuration();
         }
 
-        internal bool CanAdd(RhythmElement element, RhythmRationalDuration beatDuration) {
+        internal bool CanAdd(IRhythmElement element, RhythmRationalDuration beatDuration) {
             RhythmRationalDuration eltDuration = element.GetEffectiveDuration();
             if (eltDuration.Numerator <= 0) {
                 return false;

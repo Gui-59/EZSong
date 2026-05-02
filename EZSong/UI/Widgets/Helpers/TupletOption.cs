@@ -7,20 +7,18 @@ using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets.Helpers {
     public class TupletOption {
-        public string Label;
-        public int InTimeOf;
-        public int Count;
 
-        public TupletOption(string label, int count, int intTimeOf) { //TODO : gérer la notion de durée globale du tuplet (ex: 3 croches dans le temps de 2)
-            Label = label;
-
-            Count = count;
-            InTimeOf = intTimeOf;
+        RhythmTuplet RhythmTuplet {
+            get;
         }
 
-        public RhythmElement Create() {
+        public TupletOption(RhythmTuplet rhythmTuplet) { //TODO : gérer la notion de durée globale du tuplet (ex: 3 croches dans le temps de 2)
+            RhythmTuplet = rhythmTuplet;
+        }
 
-            return new RhythmElement(new RhythmRationalDuration(1, Count, 0), false, new RhythmTuplet());
+        public IRhythmElement Create() {
+
+            return new RhythmTuplet();
 
         }
     }

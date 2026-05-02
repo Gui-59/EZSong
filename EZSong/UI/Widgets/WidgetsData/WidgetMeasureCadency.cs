@@ -3,13 +3,13 @@
 namespace EZSong.UI.Widgets.WidgetsData {
     public class WidgetMeasureCadency {
 
-        public List<RhythmElement> CadencyElements;
+        public List<RhythmSimpleElement> CadencyElements;
 
         public WidgetMeasureCadency() {
-            CadencyElements = new List<RhythmElement>();
+            CadencyElements = new List<RhythmSimpleElement>();
         }
 
-        public WidgetMeasureCadency(List<RhythmElement> cadency) {
+        public WidgetMeasureCadency(List<RhythmSimpleElement> cadency) {
             CadencyElements = cadency;
         }
     }

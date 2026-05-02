@@ -12,8 +12,6 @@ namespace EZSong.UI.Widgets {
         private Box _container;
         private Song _song;
 
-        public event System.Action? MeasuresChanged; //TODO : Pas consommé ?
-
         private List<GlobalMelodyEditor> _globalMelodyEditorWidgets;
 
         public MeasuresEditor() {
@@ -51,10 +49,6 @@ namespace EZSong.UI.Widgets {
 
             widget.SetMeasure(measure);
             _globalMelodyEditorWidgets.Add(widget.GlobalMelodyEditor);
-
-            widget.MeasureChanged += () => {
-                MeasuresChanged?.Invoke();
-            };
 
             widget.InsertAfterRequested += () => {
                 InsertAfter(measure);

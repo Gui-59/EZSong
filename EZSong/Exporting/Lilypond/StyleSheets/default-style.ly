@@ -12,9 +12,9 @@
   oddFooterMarkup = \markup {
     \fill-line {
       \center-column {
-        \with-color #darkblue
+        \with-color #black
           \bold \fontsize #1 \fromproperty #'header:title
-        \with-color #darkblue
+        \with-color #black
           \fontsize #-1 "Page" \fromproperty #'page:page-number-string
       }
     }
@@ -36,9 +36,9 @@
     \Staff
 	\override StaffSymbol.thickness = #1.5
 	\override TimeSignature.style = #'numbered
-	\override TimeSignature.font-name = "Comic Sans MS"
+	\override TimeSignature.font-name = "Arial"
 	\override TimeSignature.font-size = #3
-	\override TimeSignature.color = #(x11-color 'darkblue)
+	\override TimeSignature.color = #(x11-color 'black)
   }
   \context {
     \ChordNames
@@ -48,9 +48,9 @@
 	\override VerticalAxisGroup.nonstaff-relatedstaff-spacing.minimum-distance = #6
 	
 	
-	\override ChordName.font-name = "Comic Sans MS"
+	\override ChordName.font-name = "Arial"
     \override ChordName.font-size = #3
-    \override ChordName.color = #(x11-color 'darkblue)
+    \override ChordName.color = #(x11-color 'black)
     \override ChordName.font-series = #'bold
 	
 	
