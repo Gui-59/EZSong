@@ -10,7 +10,7 @@ namespace EZSong.Model {
      * - aucune logique
      */
     public class RhythmTupletDto:RhythmSimpleElementDto,IRhythmElementDto {
-        public List<RhythmRationalDuration> Subdivisions {
+        public List<RhythmSimpleElement> Subdivisions {
             get; set; //Set nécessaire pour la sérialisation JSON
         }
         public RhythmRationalDuration GlobalDuration {
@@ -19,11 +19,11 @@ namespace EZSong.Model {
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public RhythmTupletDto() {
-            Subdivisions = new List<RhythmRationalDuration>();
+            Subdivisions = new List<RhythmSimpleElement>();
             GlobalDuration = new RhythmRationalDuration(1, 1, 0);
         }
         
-        public RhythmTupletDto(List<RhythmRationalDuration> subdivisions, RhythmRationalDuration globalDuration) {
+        public RhythmTupletDto(List<RhythmSimpleElement> subdivisions, RhythmRationalDuration globalDuration) {
                 Subdivisions = subdivisions;
                 GlobalDuration = globalDuration;
         }
@@ -38,7 +38,7 @@ namespace EZSong.Model {
 
         internal static RhythmTupletDto ToDto(RhythmTuplet tuplet) {
             if (tuplet == null) {
-                return new RhythmTupletDto(new List<RhythmRationalDuration>(), new RhythmRationalDuration(1, 1, 0));
+                return new RhythmTupletDto(new List<RhythmSimpleElement>(), new RhythmRationalDuration(1, 1, 0));
             }
             return new RhythmTupletDto(tuplet.Subdivisions, tuplet.GetEffectiveDuration());
         }

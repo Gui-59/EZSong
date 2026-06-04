@@ -99,13 +99,8 @@ namespace EZSong.UI.Widgets {
             } else {
 
                 //Cas d'un element rythmique simples
-
-                if (e.IsRest()) {
-                    beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.GetEffectiveDuration(), true));
-                } else {
-                    beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.GetEffectiveDuration(), false));
-                }
-
+                beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor((RhythmSimpleElement)e));
+                
                 if (e.DotCount() > 0) {
 
                     for (int i = 0; i < e.DotCount(); i++) {

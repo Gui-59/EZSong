@@ -103,11 +103,11 @@ namespace EZSong.UI.Widgets {
             return flow;
         }
 
-        private Widget BuildGrid(List<RhythmRationalDuration> durations, bool isRest) {
+        private Widget BuildGrid(List<RhythmRationalDuration> maxAllowedDuration, bool isRest) {
             FlowBox flow = CreateFlow();
 
-            foreach (RhythmRationalDuration d in durations) {
-                UICompositeGlyph compositeGlyph = GetCompositeGlyph(d, isRest);
+            foreach (RhythmRationalDuration d in maxAllowedDuration) {
+                UICompositeGlyph compositeGlyph = GetCompositeGlyph(new RhythmSimpleElement(d, isRest));
 
                 if (compositeGlyph is null) {
                     continue; // Skip unsupported durations
@@ -170,13 +170,43 @@ namespace EZSong.UI.Widgets {
             // Correction : utiliser la méthode CompareTo ou une méthode utilitaire pour comparer les durées
             if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 4, 0))) {
 
-                List<RhythmRationalDuration> subdivisions = new() {
-                    new RhythmRationalDuration(1, 8, 0),
-                    new RhythmRationalDuration(1, 8, 0),
-                    new RhythmRationalDuration(1, 8, 0)
+                //3 croches dans la durée d'une noire
+                List<RhythmSimpleElement> subdivisions = new() {
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false),
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false),
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false)
                 };
-
                 RhythmTuplet rhythmTuplet = new(subdivisions, new RhythmRationalDuration(1, 4, 0));
+                list.Add(new Helpers.TupletOption(rhythmTuplet));
+
+                //Un soupir + 2 croches dans la durée d'une noire
+                subdivisions = new() {
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), true),
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false),
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false)
+                };
+                rhythmTuplet = new(subdivisions, new RhythmRationalDuration(1, 4, 0));
+                list.Add(new Helpers.TupletOption(rhythmTuplet));
+
+                //1 croche + 1 noire + 1 croche dans la durée d'une noire
+                subdivisions = new() {
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false),
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 4, 0), false),
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false)
+                };
+                rhythmTuplet = new(subdivisions, new RhythmRationalDuration(1, 4, 0));
+                list.Add(new Helpers.TupletOption(rhythmTuplet));
+            }
+
+            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 8, 0))) {
+
+                //3 croches dans la durée d'une croche
+                List<RhythmSimpleElement> subdivisions = new() {
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false),
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false),
+                    new RhythmSimpleElement(new RhythmRationalDuration(1, 8, 0), false)
+                };
+                RhythmTuplet rhythmTuplet = new(subdivisions, new RhythmRationalDuration(1, 8, 0));
                 list.Add(new Helpers.TupletOption(rhythmTuplet));
             }
 
@@ -190,9 +220,9 @@ namespace EZSong.UI.Widgets {
         // SYMBOLS
         // =========================================================
 
-        private Helpers.UICompositeGlyph GetCompositeGlyph(RhythmRationalDuration duration, bool isRest) {
+        private Helpers.UICompositeGlyph GetCompositeGlyph(RhythmSimpleElement element) {
 
-            UIGlyph glyph = UIGlyph.FromDescriptor(duration, isRest);
+            UIGlyph glyph = UIGlyph.FromDescriptor(element);
             UICompositeGlyph compositeGlyph = new();
             compositeGlyph.AddGlyph(glyph);
             return compositeGlyph;

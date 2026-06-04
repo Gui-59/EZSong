@@ -36,8 +36,8 @@ namespace EZSong.UI.Widgets.Helpers {
         internal static UICompositeGlyph FromTupletDescriptor(RhythmTuplet te) {
             UICompositeGlyph uICompositeGlyph = new();
             uICompositeGlyph.AddGlyph(new UIGlyph(Enums.Glyph.tupletStart));
-            foreach (RhythmRationalDuration subdivision in te.Subdivisions) {
-                uICompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(subdivision, false));
+            foreach (RhythmSimpleElement subdivision in te.Subdivisions) {
+                uICompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(subdivision));
             }
             uICompositeGlyph.AddGlyph(new UIGlyph(Enums.Glyph.tupletEnd));
             return uICompositeGlyph;

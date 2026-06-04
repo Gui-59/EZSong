@@ -27,12 +27,12 @@ namespace EZSong.UI.Widgets.Helpers {
             return new UIGlyph(Enums.Glyph.TieFrom);
         }
 
-        public static UIGlyph FromDescriptor(RhythmRationalDuration duration, bool isRest) {
+        public static UIGlyph FromDescriptor(RhythmSimpleElement element) {
 
             UIGlyph? glyph;
-            if (isRest) {
+            if (element.IsRest()) {
 
-                switch (duration.Denominator) {
+                switch (element.GetEffectiveDuration().Denominator) {
                     case 1:
                         glyph = new UIGlyph(Enums.Glyph.WholeRest); // ronde 
                         break;
@@ -56,7 +56,7 @@ namespace EZSong.UI.Widgets.Helpers {
  
             } else {
 
-                switch (duration.Denominator) {
+                switch (element.GetEffectiveDuration().Denominator) {
                     case 1:
                         glyph = new UIGlyph(Enums.Glyph.WholeNote); // ronde
                         break;
