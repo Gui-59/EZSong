@@ -1,6 +1,7 @@
 ﻿using EZSong.Model;
 using EZSong.UI.Widgets.Helpers;
 using Gtk;
+using Melanchall.DryWetMidi.Interaction;
 using System;
 using System.Collections.Generic;
 
@@ -79,11 +80,20 @@ namespace EZSong.UI.Widgets {
             FlowBox flow = CreateFlow();
 
             foreach (Helpers.TupletOption t in GetAllowedTuplets()) {
-                Button btn = CreateButton("Un tuplet"); //TODO : afficher une représentation graphique du tuplet (ex: 3 croches avec un "3" au-dessus)
+
+                UICompositeGlyph compositeGlyph = UICompositeGlyph.FromTupletDescriptor(t.RhythmTuplet);
+
+                if (compositeGlyph is null) {
+                    continue; // Skip unsupported durations
+                }
+
+
+                string label = compositeGlyph.ToString();
+                Button btn = CreateButton(label); //TODO : afficher une représentation graphique du tuplet (ex: 3 croches avec un "3" au-dessus)
 
                 btn.Clicked += (s, e) =>
                 {
-                    ElementSelected?.Invoke(t.Create());
+                    ElementSelected?.Invoke(t.RhythmTuplet);
                     Popdown();
                 };
 
@@ -158,7 +168,7 @@ namespace EZSong.UI.Widgets {
             List<Helpers.TupletOption> list = new();
 
             // Correction : utiliser la méthode CompareTo ou une méthode utilitaire pour comparer les durées
-            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 1, 0))) {
+            if (_maxDuration.IsGreaterOrEqual(new RhythmRationalDuration(1, 4, 0))) {
 
                 List<RhythmRationalDuration> subdivisions = new() {
                     new RhythmRationalDuration(1, 8, 0),
@@ -166,7 +176,7 @@ namespace EZSong.UI.Widgets {
                     new RhythmRationalDuration(1, 8, 0)
                 };
 
-                RhythmTuplet rhythmTuplet = new(subdivisions, new RhythmRationalDuration(1, 1, 0));
+                RhythmTuplet rhythmTuplet = new(subdivisions, new RhythmRationalDuration(1, 4, 0));
                 list.Add(new Helpers.TupletOption(rhythmTuplet));
             }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EZSong.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,16 @@ namespace EZSong.UI.Widgets.Helpers {
                 _ = sb.Append(glyph.ToString());
             }
             return sb.ToString();
+        }
+
+        internal static UICompositeGlyph FromTupletDescriptor(RhythmTuplet te) {
+            UICompositeGlyph uICompositeGlyph = new();
+            uICompositeGlyph.AddGlyph(new UIGlyph(Enums.Glyph.tupletStart));
+            foreach (RhythmRationalDuration subdivision in te.Subdivisions) {
+                uICompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(subdivision, false));
+            }
+            uICompositeGlyph.AddGlyph(new UIGlyph(Enums.Glyph.tupletEnd));
+            return uICompositeGlyph;
         }
     }
 }

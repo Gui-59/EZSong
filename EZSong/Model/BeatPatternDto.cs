@@ -15,14 +15,14 @@ namespace EZSong.Model {
      */
 
     public class BeatPatternDto {
-        public List<RhythmSimpleElementDto> Elements { 
+        public List<IRhythmElementDto> Elements { 
             get; 
             set; 
         }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public BeatPatternDto() { 
-            Elements = new List<RhythmSimpleElementDto>();
+            Elements = new List<IRhythmElementDto>();
         }
     }
 }

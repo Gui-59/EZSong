@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets.Helpers {
     public class TupletOption {
 
-        RhythmTuplet RhythmTuplet {
+        public RhythmTuplet RhythmTuplet {
             get;
         }
 
@@ -21,5 +21,6 @@ namespace EZSong.UI.Widgets.Helpers {
             return new RhythmTuplet();
 
         }
+
     }
 }

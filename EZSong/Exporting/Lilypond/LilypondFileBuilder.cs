@@ -61,7 +61,7 @@ namespace EZSong.Exporting.Lilypond {
             // On exécute une commande de génération sur le modèle : 
             // C:\path\to\lilypond.exe -I "C:\temp\dir\path" -I "C:\path\to\stylesheets\directory" -o "C:\output\file\path" "tempFileName.ly"   
 
-            string lilypondExe = @"C:\Users\Guillaume\Desktop\lilypond\bin\lilypond.exe"; //TODO : paramétrer
+            string lilypondExe = @"C:\lilypond\bin\lilypond.exe"; //TODO : paramétrer
 
             string exeDir = AppContext.BaseDirectory;
             string stylesheetDir = Path.Combine(exeDir, "Exporting", "Lilypond", "Stylesheets");

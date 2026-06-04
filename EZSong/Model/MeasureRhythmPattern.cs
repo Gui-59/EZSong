@@ -122,7 +122,7 @@ namespace EZSong.Model {
             foreach (BeatPattern beat in Beats) {
                 List<string> elements = new();
 
-                foreach (RhythmSimpleElement e in beat.Elements) {
+                foreach (IRhythmElement e in beat.Elements) {
                     elements.Add(ElementToString(e));
                 }
 

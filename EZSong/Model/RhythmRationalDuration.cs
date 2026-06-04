@@ -2,13 +2,13 @@
 
     public struct RhythmRationalDuration : IEquatable<RhythmRationalDuration> {
         public int Numerator {
-            get;
+            get; set; //Set requis pour la sérialisation JSON
         }
         public int Denominator {
-            get;
+            get; set; //Set requis pour la sérialisation JSON
         }
         public int Dots {
-            get;
+            get; set; //Set requis pour la sérialisation JSON
         }
 
         public RhythmRationalDuration(int numerator, int denominator, int dots) {

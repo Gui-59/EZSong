@@ -32,6 +32,22 @@
         public bool IsRest() {
             return false;
         }
+
+
+        public static RhythmTuplet FromDto(RhythmTupletDto rhythmTypletDto) {
+            if (rhythmTypletDto == null) {
+                return new RhythmTuplet();
+            }
+            return new RhythmTuplet(rhythmTypletDto.Subdivisions, rhythmTypletDto.GlobalDuration);
+        }
+
+        internal static RhythmTupletDto ToDto(RhythmTuplet rhythmTuplet) {
+            if (rhythmTuplet == null) {
+                return new RhythmTupletDto(new List<RhythmRationalDuration>(), new RhythmRationalDuration(1, 1, 0));
+            }
+            return new RhythmTupletDto(rhythmTuplet.Subdivisions, rhythmTuplet.GetEffectiveDuration());
+
+        }
     }
 
 }

@@ -82,26 +82,40 @@ namespace EZSong.UI.Widgets.Helpers {
         }
 
         public override string ToString() {
+
+            //https://w3c-cg.github.io/smufl/latest/tables/function-theory-symbols.html
+
+            //https://w3c-cg.github.io/smufl/latest/tables/metronome-marks.html
+
+            //https://w3c-cg.github.io/smufl/latest/tables/tuplets.html
+
             string _musicalFontFamily = "Bravura"; //TODO: make this dynamic based on settings
             if (_musicalFontFamily == "") {
                 return "Glyph not loaded";
             }
             return Glyph switch {
-                Enums.Glyph.Dot => "\uE1E7", //OK
-                Enums.Glyph.TieFrom => "\uE006", //OK
-                Enums.Glyph.TieTo => "\uE004", //OK
-                Enums.Glyph.WholeNote => "\uE1D2", //OK
-                Enums.Glyph.HalfNote => "\uE1D3", //OK
-                Enums.Glyph.QuarterNote => "\uE1D5", //OK
-                Enums.Glyph.EighthNote => "\uE1D7", //OK
-                Enums.Glyph.SixteenthNote => "\uE1D9", //OK
+                Enums.Glyph.Dot => "\uECB7", //OK
+                Enums.Glyph.TieFrom => "\uE551",
+                Enums.Glyph.TieTo => "\uE551",
+                Enums.Glyph.WholeNote => "\uECA2", //OK
+                Enums.Glyph.HalfNote => "\uECA3", //OK
+                Enums.Glyph.QuarterNote => "\uECA5", //OK
+                Enums.Glyph.EighthNote => "\uECA7", //OK
+                Enums.Glyph.SixteenthNote => "\uECA9", //OK
+
                 Enums.Glyph.WholeRest => "\uE4E3", //OK
                 Enums.Glyph.HalfRest => "\uE4E4", //OK
                 Enums.Glyph.QuarterRest => "\uE4E5", //OK
                 Enums.Glyph.EighthRest => "\uE4E6", //OK
                 Enums.Glyph.SixteenthRest => "\uE4E7", //OK
+
+                Enums.Glyph.tupletStart => "\uEA7A",
+                Enums.Glyph.tupletEnd => "\uEA7C", 
+
                 _ => "\uE120" //OK
             };
         }
+
+
     }
 }

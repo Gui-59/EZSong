@@ -10,6 +10,8 @@ namespace EZSong.Enums {
         Dot,
         TieFrom,
         TieTo,
+        tupletStart,
+        tupletEnd,
         WholeNote, //Ronde
         HalfNote, //Blanche
         QuarterNote, //Noire

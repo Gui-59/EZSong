@@ -97,20 +97,20 @@ namespace EZSong.Model {
 
                 foreach (BeatPattern beat in measureData.GlobalMelody.Pattern.Beats) {
                 
-                    foreach (RhythmSimpleElement rhythmEvent in beat.Elements) {
+                    foreach (IRhythmElement rhythmElement in beat.Elements) {
 
 
                         //TODO : Tuplets
 
-                        if (rhythmEvent.IsRest()) {
+                        if (rhythmElement.IsRest()) {
                             lilyPondString += "r";
-                            lilyPondString += rhythmEvent.GetEffectiveDuration().ToLilyPondString();
+                            lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
 
                         } else {
 
                             if (MelodyChords[melodyChordIndex].Pitches.Count == 1) {
                                 lilyPondString += MelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
-                                lilyPondString += rhythmEvent.GetEffectiveDuration().ToLilyPondString();
+                                lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
                                 lilyPondString += " ";
                             } else {
                                 //Dans Lilypond les notes d'un accords sont entre chevrons
@@ -121,7 +121,7 @@ namespace EZSong.Model {
                                     lilyPondString += " ";
                                 }
                                 lilyPondString += " > ";
-                                lilyPondString += rhythmEvent.GetEffectiveDuration().ToLilyPondString();
+                                lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
                                 lilyPondString += " ";
                             }
 

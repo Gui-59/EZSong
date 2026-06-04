@@ -13,7 +13,7 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
-    public class RhythmSimpleElementDto {
+    public class RhythmSimpleElementDto:IRhythmElementDto {
         public int Numerator {
             get; 
             set;

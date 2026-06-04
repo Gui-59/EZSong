@@ -88,21 +88,34 @@ namespace EZSong.UI.Widgets {
 
             Helpers.UICompositeGlyph beatElementCompositeGlyph = new();
 
-            if (e.IsRest()) {
-                beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.GetEffectiveDuration(), true));
+            
+            if (e.GetType() == typeof(RhythmTuplet)) {
+
+                //Cas du tuplet
+
+                RhythmTuplet te = (RhythmTuplet)e;
+                UICompositeGlyph uICompositeGlyph = UICompositeGlyph.FromTupletDescriptor(te);
+                beatElementCompositeGlyph.AddCompositeGlyph(uICompositeGlyph);
             } else {
-                beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.GetEffectiveDuration(), false));
-            }
 
-            if (e.DotCount() > 0) {
+                //Cas d'un element rythmique simples
 
-                for (int i = 0; i < e.DotCount(); i++) {
-                    beatElementCompositeGlyph.AddGlyph(UIGlyph.DotGlyph());
+                if (e.IsRest()) {
+                    beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.GetEffectiveDuration(), true));
+                } else {
+                    beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor(e.GetEffectiveDuration(), false));
                 }
-            }
 
-            if (e.IsTiedToNext()) {
-                beatElementCompositeGlyph.AddGlyph(UIGlyph.TiefromGlyph());
+                if (e.DotCount() > 0) {
+
+                    for (int i = 0; i < e.DotCount(); i++) {
+                        beatElementCompositeGlyph.AddGlyph(UIGlyph.DotGlyph());
+                    }
+                }
+
+                if (e.IsTiedToNext()) {
+                    beatElementCompositeGlyph.AddGlyph(UIGlyph.TiefromGlyph());
+                }
             }
 
             return beatElementCompositeGlyph;
@@ -111,7 +124,7 @@ namespace EZSong.UI.Widgets {
         private Helpers.UICompositeGlyph BuildBeatCompositeGlyph(BeatPattern beat) {
             Helpers.UICompositeGlyph beatCompositeGlyph = new();
 
-            foreach (RhythmSimpleElement e in beat.Elements) {
+            foreach (IRhythmElement e in beat.Elements) {
                 beatCompositeGlyph.AddCompositeGlyph(BuildBeatElementCompositeGlyph(e));
             }
 

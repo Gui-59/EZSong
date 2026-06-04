@@ -9,7 +9,20 @@
 
         public int AttackCount {
             get {
-                return Elements.Count(e => !e.IsRest());
+                int count = 0;
+                foreach (IRhythmElement e in Elements) {
+                    if (e.IsRest()) {
+                        continue;
+                    }
+                    if (e.GetType() == typeof(RhythmTuplet)) {
+                        RhythmTuplet tuplet = (RhythmTuplet)e;
+                        count += tuplet.Subdivisions.Count;
+                    } else {
+                        count++;
+                    }
+                        
+                }
+                return count;
             }
         }
 
@@ -35,8 +48,15 @@
 
         internal static BeatPattern FromDto(BeatPatternDto beat) {
             List<IRhythmElement> elements = new();
-            foreach (RhythmSimpleElementDto elementDto in beat.Elements) {
-                elements.Add(RhythmSimpleElement.FromDto(elementDto));
+            foreach (IRhythmElementDto element in beat.Elements) {
+
+                if (element.GetType() == typeof(RhythmSimpleElementDto)) {
+                    RhythmSimpleElementDto simpleElementDto = (RhythmSimpleElementDto)element;
+                    elements.Add(RhythmSimpleElement.FromDto(simpleElementDto));
+                } else if (element.GetType() == typeof(RhythmTupletDto)) {
+                    RhythmTupletDto tupletDto = (RhythmTupletDto)element;
+                    elements.Add(RhythmTuplet.FromDto(tupletDto));
+                }
             }
 
             return new BeatPattern (
@@ -46,9 +66,16 @@
         }
 
         internal static BeatPatternDto ToDto(BeatPattern beat) {
-            List<RhythmSimpleElementDto> elements = new();
-            foreach (RhythmSimpleElement element in beat.Elements) {
-                elements.Add(RhythmSimpleElement.ToDto(element));
+            List<IRhythmElementDto> elements = new();
+            foreach (IRhythmElement element in beat.Elements) {
+
+                if (element.GetType() == typeof(RhythmSimpleElement)) {
+                    RhythmSimpleElement simpleElement = (RhythmSimpleElement)element;
+                    elements.Add(RhythmSimpleElement.ToDto(simpleElement));
+                } else if (element.GetType() == typeof(RhythmTuplet)) {
+                    RhythmTuplet tuplet = (RhythmTuplet)element;
+                    elements.Add(RhythmTuplet.ToDto(tuplet));
+                } 
             }
             return new BeatPatternDto() {
                 Elements = elements

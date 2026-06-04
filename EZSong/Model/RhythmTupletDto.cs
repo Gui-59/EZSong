@@ -9,12 +9,12 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
-    public class RhythmTupletDto:RhythmSimpleElementDto {
+    public class RhythmTupletDto:RhythmSimpleElementDto,IRhythmElementDto {
         public List<RhythmRationalDuration> Subdivisions {
-            get;
+            get; set; //Set nécessaire pour la sérialisation JSON
         }
         public RhythmRationalDuration GlobalDuration {
-            get; 
+            get; set; //Set nécessaire pour la sérialisation JSON
         }
 
         //Constructeur vide (requis pour la sérialisation JSON)
