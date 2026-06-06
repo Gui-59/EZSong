@@ -156,9 +156,11 @@ namespace EZSong.UI.Widgets {
 
         private List<RhythmRationalDuration> GetAllowedDurations() {
             List<RhythmRationalDuration> all = new() {
-                new RhythmRationalDuration(1, 4, 0),
-                new RhythmRationalDuration(1, 8, 0),
-                new RhythmRationalDuration(1, 16, 0)
+                new RhythmRationalDuration(1, 1, 0), // ronde
+                new RhythmRationalDuration(1, 2, 0), // blanche
+                new RhythmRationalDuration(1, 4, 0), // noire
+                new RhythmRationalDuration(1, 8, 0), // croche
+                new RhythmRationalDuration(1, 16, 0) // double croche
             };
 
             return all.FindAll(d => _maxDuration.IsGreaterOrEqual(d));
