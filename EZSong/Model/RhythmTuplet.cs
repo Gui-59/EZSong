@@ -1,4 +1,5 @@
-﻿namespace EZSong.Model {
+﻿
+namespace EZSong.Model {
 
     public class RhythmTuplet: IRhythmElement {
         public List<RhythmSimpleElement> Subdivisions {
@@ -47,6 +48,16 @@
             }
             return new RhythmTupletDto(rhythmTuplet.Subdivisions, rhythmTuplet.GetEffectiveDuration());
 
+        }
+
+        internal int AttackCount() {
+            int attacks = 0;
+            foreach (RhythmSimpleElement e in Subdivisions) {
+                if (!e.IsRest()) {
+                    attacks++;
+                }
+            }
+            return attacks;
         }
     }
 

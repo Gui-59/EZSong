@@ -16,7 +16,7 @@
                     }
                     if (e.GetType() == typeof(RhythmTuplet)) {
                         RhythmTuplet tuplet = (RhythmTuplet)e;
-                        count += tuplet.Subdivisions.Count;
+                        count += tuplet.AttackCount();
                     } else {
                         count++;
                     }
