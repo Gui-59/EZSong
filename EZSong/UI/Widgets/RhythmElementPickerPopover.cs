@@ -66,14 +66,15 @@ namespace EZSong.UI.Widgets {
             _ = _notebook.AppendPage(BuildNotesPage(), new Label("Notes"));
             _ = _notebook.AppendPage(BuildRestsPage(), new Label("Silences"));
             _ = _notebook.AppendPage(BuildTupletsPage(), new Label("Tuplets"));
+            _ = _notebook.AppendPage(BuildOtherElementsPage(), new Label("Autres"));
         }
 
         private Widget BuildNotesPage() {
-            return BuildGrid(GetAllowedDurations(), isRest: false);
+            return BuildGrid(isRest: false);
         }
 
         private Widget BuildRestsPage() {
-            return BuildGrid(GetAllowedDurations(), isRest: true);
+            return BuildGrid(isRest: true);
         }
 
         private Widget BuildTupletsPage() {
@@ -103,10 +104,20 @@ namespace EZSong.UI.Widgets {
             return flow;
         }
 
-        private Widget BuildGrid(List<RhythmRationalDuration> maxAllowedDuration, bool isRest) {
+        private Widget BuildOtherElementsPage() {
             FlowBox flow = CreateFlow();
 
-            foreach (RhythmRationalDuration d in maxAllowedDuration) {
+            //TODO : Ajouter symbole de liaison avec la note/mesure suivante
+
+            //TODO : Ajouter symboles de début/fin de phrase
+
+            return flow;
+        }
+
+        private Widget BuildGrid(bool isRest) {
+            FlowBox flow = CreateFlow();
+
+            foreach (RhythmRationalDuration d in GetAllowedDurations()) {
                 UICompositeGlyph compositeGlyph = GetCompositeGlyph(new RhythmSimpleElement(d, isRest));
 
                 if (compositeGlyph is null) {
@@ -157,10 +168,20 @@ namespace EZSong.UI.Widgets {
         private List<RhythmRationalDuration> GetAllowedDurations() {
             List<RhythmRationalDuration> all = new() {
                 new RhythmRationalDuration(1, 1, 0), // ronde
+                new RhythmRationalDuration(1, 1, 1), // ronde
+                new RhythmRationalDuration(1, 1, 2), // ronde
                 new RhythmRationalDuration(1, 2, 0), // blanche
+                new RhythmRationalDuration(1, 2, 1), // blanche
+                new RhythmRationalDuration(1, 2, 2), // blanche
                 new RhythmRationalDuration(1, 4, 0), // noire
+                new RhythmRationalDuration(1, 4, 1), // noire
+                new RhythmRationalDuration(1, 4, 2), // noire
                 new RhythmRationalDuration(1, 8, 0), // croche
-                new RhythmRationalDuration(1, 16, 0) // double croche
+                new RhythmRationalDuration(1, 8, 1), // croche
+                new RhythmRationalDuration(1, 8, 2), // croche
+                new RhythmRationalDuration(1, 16, 0), // double croche
+                new RhythmRationalDuration(1, 16, 1), // double croche
+                new RhythmRationalDuration(1, 16, 2) // double croche
             };
 
             return all.FindAll(d => _maxDuration.IsGreaterOrEqual(d));
@@ -227,6 +248,9 @@ namespace EZSong.UI.Widgets {
             UIGlyph glyph = UIGlyph.FromDescriptor(element);
             UICompositeGlyph compositeGlyph = new();
             compositeGlyph.AddGlyph(glyph);
+            for (int i = 0; i < element.DotCount(); i++) {
+                compositeGlyph.AddGlyph(UIGlyph.DotGlyph());
+            }
             return compositeGlyph;
         }
     }
