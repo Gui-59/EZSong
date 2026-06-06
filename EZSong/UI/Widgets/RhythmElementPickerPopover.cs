@@ -11,7 +11,7 @@ namespace EZSong.UI.Widgets {
 
         private RhythmRationalDuration _maxDuration;
 
-        public event Action<IRhythmElement?>? ElementSelected;
+        public event Action<Object?>? ElementSelected;
 
         private Notebook _notebook;
 
@@ -108,6 +108,18 @@ namespace EZSong.UI.Widgets {
             FlowBox flow = CreateFlow();
 
             //TODO : Ajouter symbole de liaison avec la note/mesure suivante
+            UICompositeGlyph compositeGlyph = new();
+            UIGlyph tieGlyph = new(Enums.Glyph.TieFrom);
+            compositeGlyph.AddGlyph(tieGlyph);
+            string label = compositeGlyph.ToString();
+            Button btn = CreateButton(label);
+            btn.Clicked += (s, e) =>
+            {
+                //TODO : gérer la liaison avec la note/mesure suivante
+                ElementSelected?.Invoke(new RhythmTieFrom());
+                Popdown();
+            };
+            flow.Add(btn);
 
             //TODO : Ajouter symboles de début/fin de phrase
 

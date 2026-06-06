@@ -11,16 +11,21 @@
             get {
                 int count = 0;
                 foreach (IRhythmElement e in Elements) {
-                    if (e.IsRest()) {
-                        continue;
-                    }
-                    if (e.GetType() == typeof(RhythmTuplet)) {
+
+                    if (e.GetType() == typeof(RhythmSimpleElement)) {
+
+                        RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)e;
+                        if (rhythmSimpleElement.IsRest()) {
+                            continue;
+                        }                        
+                        count++;
+                       
+                    } else if (e.GetType() == typeof(RhythmTuplet)) {
+                        
                         RhythmTuplet tuplet = (RhythmTuplet)e;
                         count += tuplet.AttackCount();
-                    } else {
-                        count++;
                     }
-                        
+
                 }
                 return count;
             }
@@ -50,7 +55,14 @@
             RhythmRationalDuration total = new(0, 1, 0);
 
             foreach (IRhythmElement e in Elements) {
-                total += e.GetEffectiveDuration();
+                if (e.GetType() == typeof(RhythmTuplet)) {
+                    RhythmTuplet rhythmTuplet = (RhythmTuplet)e;
+                    total += rhythmTuplet.GetEffectiveDuration();
+                } else if (e.GetType() == typeof(RhythmSimpleElement)) {
+                    RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)e;
+                    total += rhythmSimpleElement.GetEffectiveDuration();
+
+                }
             }
 
             return total;
@@ -102,12 +114,27 @@
         }
 
         internal bool CanAdd(IRhythmElement element, RhythmRationalDuration beatDuration) {
-            RhythmRationalDuration eltDuration = element.GetEffectiveDuration();
-            if (eltDuration.Numerator <= 0) {
-                return false;
+
+            if (element.GetType() == typeof(RhythmTuplet)) {
+                RhythmTuplet rhythmTuplet = (RhythmTuplet)element;
+                RhythmRationalDuration eltDuration = rhythmTuplet.GetEffectiveDuration();
+                if (eltDuration.Numerator <= 0) {
+                    return false;
+                }
+                RhythmRationalDuration remaining = beatDuration - GetTotalDuration();
+                return (remaining - eltDuration).Numerator >= 0;
+            } else if (element.GetType() == typeof(RhythmSimpleElement)) {
+                RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)element;
+                RhythmRationalDuration eltDuration = rhythmSimpleElement.GetEffectiveDuration();
+                if (eltDuration.Numerator <= 0) {
+                    return false;
+                }
+                RhythmRationalDuration remaining = beatDuration - GetTotalDuration();
+                return (remaining - eltDuration).Numerator >= 0;
             }
-            RhythmRationalDuration remaining = beatDuration - GetTotalDuration();
-            return (remaining - eltDuration).Numerator >= 0;
+
+            return true;
+
         }
     }
 

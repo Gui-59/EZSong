@@ -7,14 +7,13 @@ using System.Threading.Tasks;
 
 namespace EZSong.Model {
 
-
+    //Un élement de rythme peut être
+    // - une note simple (noire, croche, etc.) éventuellement pointée
+    // - une silence éventuellement pointée
+    // - un tuplet
+    // - une liaison,
+    // - un symbole de début/fin de phrase,
+    // ...
     public interface IRhythmElement {
-        RhythmRationalDuration GetEffectiveDuration();
-
-        int DotCount();
-
-        bool IsTiedToNext();
-
-        bool IsRest();
     }
 }

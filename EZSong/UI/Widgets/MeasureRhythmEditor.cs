@@ -96,19 +96,23 @@ namespace EZSong.UI.Widgets {
                 RhythmTuplet te = (RhythmTuplet)e;
                 UICompositeGlyph uICompositeGlyph = UICompositeGlyph.FromTupletDescriptor(te);
                 beatElementCompositeGlyph.AddCompositeGlyph(uICompositeGlyph);
-            } else {
+            } else if (e.GetType() == typeof(RhythmSimpleElement)) {
 
                 //Cas d'un element rythmique simples
+
+                RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)e;
+
                 beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor((RhythmSimpleElement)e));
                 
-                if (e.DotCount() > 0) {
 
-                    for (int i = 0; i < e.DotCount(); i++) {
+                if (rhythmSimpleElement.DotCount() > 0) {
+
+                    for (int i = 0; i < rhythmSimpleElement.DotCount(); i++) {
                         beatElementCompositeGlyph.AddGlyph(UIGlyph.DotGlyph());
                     }
                 }
 
-                if (e.IsTiedToNext()) {
+                if (rhythmSimpleElement.IsTiedToNext()) {
                     beatElementCompositeGlyph.AddGlyph(UIGlyph.TiefromGlyph());
                 }
             }
@@ -252,20 +256,29 @@ namespace EZSong.UI.Widgets {
                     if (element == null) {
                         return;
                     }
-                    
-                    //if (element.Duration.Numerator == 0) {
-                      //  return;
-                    //}
 
-                    if (!beat.CanAdd(element, Pattern.TimeSignature.GetBeatDuration())) {
-                        return;
+                    if (element.GetType() == typeof(RhythmTieFrom)) {
+                        //Cas des elements rythmiques spéciaux (liaisons, ...)
+                        //TODO
+                    } else if (element.GetType() == typeof(RhythmSimpleElement) || element.GetType() == typeof(RhythmTuplet)) {
+
+                        IRhythmElement rhythmElement = (IRhythmElement)element;
+
+                        //if (element.Duration.Numerator == 0) {
+                        //  return;
+                        //}
+
+                        if (!beat.CanAdd(rhythmElement, Pattern.TimeSignature.GetBeatDuration())) {
+                            return;
+                        }
+
+                        beat.Elements.Add(rhythmElement);
+
+                        _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
+
+                        _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
                     }
 
-                    beat.Elements.Add(element);
-
-                    _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-
-                    _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
                     PatternChanged?.Invoke(Pattern);
                 }
             };

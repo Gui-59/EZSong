@@ -96,7 +96,7 @@ namespace EZSong.Model {
                 int melodyChordIndex = 0;
 
                 foreach (BeatPattern beat in measureData.GlobalMelody.Pattern.Beats) {
-                
+
                     foreach (IRhythmElement rhythmElement in beat.Elements) {
 
                         if (rhythmElement.GetType() == typeof(RhythmTuplet)) {
@@ -128,18 +128,19 @@ namespace EZSong.Model {
                             }
                             lilyPondString += "}";
 
-                        } else {
+                        } else if (rhythmElement.GetType() == typeof(RhythmSimpleElement)) {
+                            RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)rhythmElement;
 
 
-                            if (rhythmElement.IsRest()) {
+                            if (rhythmSimpleElement.IsRest()) {
                                 lilyPondString += "r";
-                                lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
+                                lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
 
                             } else {
 
                                 if (MelodyChords[melodyChordIndex].Pitches.Count == 1) {
                                     lilyPondString += MelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
-                                    lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
+                                    lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
                                     lilyPondString += " ";
                                 } else {
                                     //Dans Lilypond les notes d'un accords sont entre chevrons
@@ -150,12 +151,14 @@ namespace EZSong.Model {
                                         lilyPondString += " ";
                                     }
                                     lilyPondString += " > ";
-                                    lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
+                                    lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
                                     lilyPondString += " ";
                                 }
 
                                 melodyChordIndex++;
                             }
+                        } else if (rhythmElement.GetType() == typeof(RhythmTieFrom)) {
+                            //TODO
                         }
                     }
                 }

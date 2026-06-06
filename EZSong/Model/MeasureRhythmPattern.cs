@@ -131,18 +131,23 @@ namespace EZSong.Model {
                 }
                 s += ">";
 
-            } else {
-                if (e.IsRest()) {
+                if (tuplet.IsTiedToNext()) {
+                    s += "~";
+                }
+
+            } else if (e.GetType() == typeof(RhythmSimpleElement)) {
+                RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)e;
+                if (rhythmSimpleElement.IsRest()) {
                     s += "r" + s;
                 }
-                s += DurationToSymbol(e.GetEffectiveDuration());
+                s += DurationToSymbol(rhythmSimpleElement.GetEffectiveDuration());
 
-                
+                if (rhythmSimpleElement.IsTiedToNext()) {
+                    s += "~";
+                }
             }
 
-            if (e.IsTiedToNext()) {
-                s += "~";
-            }
+            
 
             return s;
         }
