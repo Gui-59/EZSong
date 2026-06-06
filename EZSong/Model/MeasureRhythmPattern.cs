@@ -12,19 +12,34 @@ namespace EZSong.Model {
             }
         }
 
+        private TimeSignature _timeSignature;
         public TimeSignature TimeSignature {
-            get; 
-            set;
+            get {
+                return _timeSignature;
+            }
+            set {
+                _timeSignature = value;
+                //On doit s'assurer de garder le bon nombre de beats
+                if (_beats.Count > TimeSignature.GetBeatCount()) {
+                    // Supprimer les beats excédentaires
+                    _beats.RemoveRange(TimeSignature.GetBeatCount(), _beats.Count - TimeSignature.GetBeatCount());
+                } else if (_beats.Count < TimeSignature.GetBeatCount()) {
+                    // Ajouter des beats manquants
+                    for (int i = _beats.Count; i < TimeSignature.GetBeatCount(); i++) {
+                        _beats.Add(new BeatPattern(TimeSignature.GetBeatDuration()));
+                    }
+                }
+            }
         }
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public MeasureRhythmPattern() {
-            TimeSignature = new TimeSignature();
+            _timeSignature = new TimeSignature();
             InitializeFromTimeSignature(TimeSignature);
         }
 
         public MeasureRhythmPattern(TimeSignature ts) {
-            TimeSignature = ts;
+            _timeSignature = ts;
             InitializeFromTimeSignature(ts);
         }
 

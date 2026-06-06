@@ -82,5 +82,9 @@ namespace EZSong.UI.Widgets {
         private void MelodyMeasureEditor_NoteCountChanged(object? sender, int chordCount) {
             _rhythmEditor.CurrentMelodyChordsCount = chordCount;
         }
+
+        internal void UpdateTimeSignature(TimeSignature timeSignature) {
+            _rhythmEditor.UpdateTimeSignature(timeSignature);
+        }
     }
 }

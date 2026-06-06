@@ -97,7 +97,8 @@ namespace EZSong.UI.Widgets {
                 if (!string.IsNullOrEmpty(upperTimeSigCombo.ActiveId)) {
                     _measure.TimeSignature.Beats = Int32.Parse(upperTimeSigCombo.ActiveId);
 
-                    // TODO ? : Mettre à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
+                    //Mise à jour de la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
+                    GlobalMelodyEditor.UpdateTimeSignature(_measure.TimeSignature);
                 }
             };
             row.PackStart(new Label("Time Sig. (Upper) :") { Xalign = 0f }, false, false, 0);
@@ -114,7 +115,8 @@ namespace EZSong.UI.Widgets {
             lowerTimeSigCombo.Changed += (o, args) => {
                 if (!string.IsNullOrEmpty(lowerTimeSigCombo.ActiveId)) {
                     _measure.TimeSignature.BeatUnit = Int32.Parse(lowerTimeSigCombo.ActiveId);
-                    //TODO ? : Mettre à jour la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
+                    //Mise à jour de la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
+                    GlobalMelodyEditor.UpdateTimeSignature(_measure.TimeSignature);
                 }
             };
             row.PackStart(new Label("Time Sig. (Lower) :") { Xalign = 0f }, false, false, 0);

@@ -28,7 +28,17 @@
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public BeatPattern() {
+            Elements = new List<IRhythmElement>();          
+        }
+
+        public BeatPattern(RhythmRationalDuration beatDuration) {
             Elements = new List<IRhythmElement>();
+            Elements.Add(
+                new RhythmSimpleElement(
+                    beatDuration,
+                    true
+                )
+            );
         }
 
         public BeatPattern(List<IRhythmElement> elements) { 

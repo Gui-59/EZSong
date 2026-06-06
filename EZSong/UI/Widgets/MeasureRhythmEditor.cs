@@ -340,5 +340,16 @@ namespace EZSong.UI.Widgets {
 
             //PatternChanged?.Invoke(Pattern);
         }
+
+        internal void UpdateTimeSignature(TimeSignature timeSignature) {
+            if (Pattern != null) {
+                Pattern.TimeSignature = timeSignature;
+
+                _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
+                _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
+
+                QueueDraw();
+            }
+        }
     }
 }
