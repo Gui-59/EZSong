@@ -32,7 +32,7 @@ namespace EZSong.Model {
             _beats[index] = beat;
         }
 
-        public RhythmRationalDuration GetTotalDuration() { //TODO : ne calcul pas correctement !!!
+        public RhythmRationalDuration GetTotalDuration() {
 
             RhythmRationalDuration total = new(0, 1, 0);
 
@@ -101,12 +101,28 @@ namespace EZSong.Model {
 
         private string ElementToString(IRhythmElement e) {
 
-            //TODO : tuplet !
+            string s = string.Empty;
 
-            string s = DurationToSymbol(e.GetEffectiveDuration());
+            if (e.GetType() == typeof(RhythmTuplet)) {
 
-            if (e.IsRest()) {
-                s = "r" + s;
+                RhythmTuplet tuplet = (RhythmTuplet)e;
+
+                s += "<"; 
+                foreach (RhythmSimpleElement subdivision in tuplet.Subdivisions) {
+                    if (subdivision.IsRest()) {
+                        s += "r";
+                    }
+                    s += DurationToSymbol(subdivision.GetEffectiveDuration()) + " ";
+                }
+                s += ">";
+
+            } else {
+                if (e.IsRest()) {
+                    s += "r" + s;
+                }
+                s += DurationToSymbol(e.GetEffectiveDuration());
+
+                
             }
 
             if (e.IsTiedToNext()) {

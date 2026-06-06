@@ -34,7 +34,7 @@ namespace EZSong.Model {
                 if (!measureData.GlobalMelody.Pattern.IsDurationValid()) {
                     return false;
                 }
-                if (measureData.GlobalMelody.Pattern.Beats.Count != MelodyChords.Count) {
+                if (measureData.GlobalMelody.Pattern.AttackCount != MelodyChords.Count) {
                     return false;
                 }
             }
@@ -99,33 +99,63 @@ namespace EZSong.Model {
                 
                     foreach (IRhythmElement rhythmElement in beat.Elements) {
 
+                        if (rhythmElement.GetType() == typeof(RhythmTuplet)) {
 
-                        //TODO : Tuplets
-
-                        if (rhythmElement.IsRest()) {
-                            lilyPondString += "r";
-                            lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
+                            RhythmTuplet rhythmTuplet = (RhythmTuplet)rhythmElement;
+                            lilyPondString += "\\tuplet " + rhythmTuplet.Subdivisions.Count + "/1 { ";
+                            foreach (RhythmSimpleElement rhythmSimpleElement in rhythmTuplet.Subdivisions) {
+                                if (rhythmSimpleElement.IsRest()) {
+                                    lilyPondString += "r";
+                                    lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
+                                } else {
+                                    if (MelodyChords[melodyChordIndex].Pitches.Count == 1) {
+                                        lilyPondString += MelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
+                                        lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
+                                        lilyPondString += " ";
+                                    } else {
+                                        //Dans Lilypond les notes d'un accords sont entre chevrons
+                                        lilyPondString += " < ";
+                                        foreach (Pitch pitch in MelodyChords[melodyChordIndex].Pitches) {
+                                            lilyPondString += pitch.ToLilyPondString();
+                                            lilyPondString += " ";
+                                        }
+                                        lilyPondString += " > ";
+                                        lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
+                                        lilyPondString += " ";
+                                    }
+                                    melodyChordIndex++;
+                                }
+                            }
+                            lilyPondString += "}";
 
                         } else {
 
-                            if (MelodyChords[melodyChordIndex].Pitches.Count == 1) {
-                                lilyPondString += MelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
-                                lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
-                                lilyPondString += " ";
-                            } else {
-                                //Dans Lilypond les notes d'un accords sont entre chevrons
-                                lilyPondString += " < ";
-                                foreach (Pitch pitch in MelodyChords[melodyChordIndex].Pitches) {
-                                    lilyPondString += pitch.ToLilyPondString();
 
+                            if (rhythmElement.IsRest()) {
+                                lilyPondString += "r";
+                                lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
+
+                            } else {
+
+                                if (MelodyChords[melodyChordIndex].Pitches.Count == 1) {
+                                    lilyPondString += MelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
+                                    lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
+                                    lilyPondString += " ";
+                                } else {
+                                    //Dans Lilypond les notes d'un accords sont entre chevrons
+                                    lilyPondString += " < ";
+                                    foreach (Pitch pitch in MelodyChords[melodyChordIndex].Pitches) {
+                                        lilyPondString += pitch.ToLilyPondString();
+
+                                        lilyPondString += " ";
+                                    }
+                                    lilyPondString += " > ";
+                                    lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
                                     lilyPondString += " ";
                                 }
-                                lilyPondString += " > ";
-                                lilyPondString += rhythmElement.GetEffectiveDuration().ToLilyPondString();
-                                lilyPondString += " ";
-                            }
 
-                            melodyChordIndex++;
+                                melodyChordIndex++;
+                            }
                         }
                     }
                 }

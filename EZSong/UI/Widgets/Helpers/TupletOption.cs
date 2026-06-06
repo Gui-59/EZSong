@@ -12,7 +12,7 @@ namespace EZSong.UI.Widgets.Helpers {
             get;
         }
 
-        public TupletOption(RhythmTuplet rhythmTuplet) { //TODO : gérer la notion de durée globale du tuplet (ex: 3 croches dans le temps de 2)
+        public TupletOption(RhythmTuplet rhythmTuplet) {
             RhythmTuplet = rhythmTuplet;
         }
 
