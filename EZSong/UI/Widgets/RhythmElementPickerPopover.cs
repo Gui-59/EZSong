@@ -89,7 +89,7 @@ namespace EZSong.UI.Widgets {
 
 
                 string label = compositeGlyph.ToString();
-                Button btn = CreateButton(label); //TODO : afficher une représentation graphique du tuplet (ex: 3 croches avec un "3" au-dessus)
+                Button btn = CreateButton(label);
 
                 btn.Clicked += (s, e) =>
                 {
