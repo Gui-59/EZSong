@@ -9,6 +9,7 @@ using System.Collections.Generic;
 namespace EZSong.UI.Widgets {
     public class RhythmElementPickerPopover : Popover {
 
+        private BeatPattern? _beatPattern;
         private RhythmRationalDuration _maxDuration;
 
         public event Action<Object?>? ElementSelected;
@@ -38,8 +39,9 @@ namespace EZSong.UI.Widgets {
         // PUBLIC
         // =========================================================
 
-        public void Open(RhythmRationalDuration maxDuration) {
+        public void Open(BeatPattern beatPattern, RhythmRationalDuration maxDuration) {
             _maxDuration = maxDuration;
+            _beatPattern = beatPattern;
 
             Rebuild();
 
@@ -107,19 +109,20 @@ namespace EZSong.UI.Widgets {
         private Widget BuildOtherElementsPage() {
             FlowBox flow = CreateFlow();
 
-            //TODO : Ajouter symbole de liaison avec la note/mesure suivante
-            UICompositeGlyph compositeGlyph = new();
-            UIGlyph tieGlyph = new(Enums.Glyph.TieFrom);
-            compositeGlyph.AddGlyph(tieGlyph);
-            string label = compositeGlyph.ToString();
-            Button btn = CreateButton(label);
-            btn.Clicked += (s, e) =>
-            {
-                //TODO : gérer la liaison avec la note/mesure suivante
-                ElementSelected?.Invoke(new RhythmTieFrom());
-                Popdown();
-            };
-            flow.Add(btn);
+            //Symbole de liaison avec la note/mesure suivante
+            if (_beatPattern != null && _beatPattern.CanAddTieFrom()) {
+                UICompositeGlyph compositeGlyph = new();
+                UIGlyph tieGlyph = new(Enums.Glyph.TieFrom);
+                compositeGlyph.AddGlyph(tieGlyph);
+                string label = compositeGlyph.ToString();
+                Button btn = CreateButton(label);
+                btn.Clicked += (s, e) => {
+                    //Ajout de la liaison avec la note/mesure suivante
+                    ElementSelected?.Invoke(new RhythmTieFrom());
+                    Popdown();
+                };
+                flow.Add(btn);
+            }
 
             //TODO : Ajouter symboles de début/fin de phrase
 

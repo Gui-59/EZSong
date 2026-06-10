@@ -88,8 +88,12 @@ namespace EZSong.UI.Widgets {
 
             Helpers.UICompositeGlyph beatElementCompositeGlyph = new();
 
-            
-            if (e.GetType() == typeof(RhythmTuplet)) {
+
+            if (e.GetType() == typeof(RhythmTieFrom)) {
+                //Cas des liaisons
+                //RhythmTieFrom rhythmTieFrom = (RhythmTieFrom)e;
+                beatElementCompositeGlyph.AddGlyph(UIGlyph.TiefromGlyph());
+            } else if (e.GetType() == typeof(RhythmTuplet)) {
 
                 //Cas du tuplet
 
@@ -103,7 +107,7 @@ namespace EZSong.UI.Widgets {
                 RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)e;
 
                 beatElementCompositeGlyph.AddGlyph(UIGlyph.FromDescriptor((RhythmSimpleElement)e));
-                
+
 
                 if (rhythmSimpleElement.DotCount() > 0) {
 
@@ -112,9 +116,8 @@ namespace EZSong.UI.Widgets {
                     }
                 }
 
-                if (rhythmSimpleElement.IsTiedToNext()) {
-                    beatElementCompositeGlyph.AddGlyph(UIGlyph.TiefromGlyph());
-                }
+            } else if (e.GetType() == typeof(RhythmTieFrom)) {
+                beatElementCompositeGlyph.AddGlyph(UIGlyph.TiefromGlyph());
             }
 
             return beatElementCompositeGlyph;
@@ -258,11 +261,19 @@ namespace EZSong.UI.Widgets {
                     }
 
                     if (element.GetType() == typeof(RhythmTieFrom)) {
-                        //Cas des elements rythmiques spéciaux (liaisons, ...)
-                        //TODO
-                    } else if (element.GetType() == typeof(RhythmSimpleElement) || element.GetType() == typeof(RhythmTuplet)) {
+                        //Cas des liaisons
 
-                        IRhythmElement rhythmElement = (IRhythmElement)element;
+                        RhythmTieFrom rhythmTieFrom = (RhythmTieFrom)element;
+
+                        if (!beat.CanAddTieFrom()) {
+                            return;
+                        }
+
+                        beat.Elements.Add(rhythmTieFrom);
+
+                    } else if (element.GetType() == typeof(RhythmTuplet)) {
+
+                        RhythmTuplet rhythmElement = (RhythmTuplet)element;
 
                         //if (element.Duration.Numerator == 0) {
                         //  return;
@@ -274,16 +285,33 @@ namespace EZSong.UI.Widgets {
 
                         beat.Elements.Add(rhythmElement);
 
-                        _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
+                        
+                    } else if (element.GetType() == typeof(RhythmSimpleElement)) {
 
-                        _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
+                        RhythmSimpleElement rhythmElement = (RhythmSimpleElement)element;
+
+                        //if (element.Duration.Numerator == 0) {
+                        //  return;
+                        //}
+
+                        if (!beat.CanAdd(rhythmElement, Pattern.TimeSignature.GetBeatDuration())) {
+                            return;
+                        }
+
+                        beat.Elements.Add(rhythmElement);
+
+                        
                     }
+
+                    _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
+
+                    _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
 
                     PatternChanged?.Invoke(Pattern);
                 }
             };
 
-            popover.Open(remaining);
+            popover.Open(beat, remaining);
         }
 
         private static bool IsGreaterThan(RhythmRationalDuration a, RhythmRationalDuration b) {

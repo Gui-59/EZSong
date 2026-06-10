@@ -34,7 +34,7 @@ namespace EZSong.Model {
                 if (!measureData.GlobalMelody.Pattern.IsDurationValid()) {
                     return false;
                 }
-                if (measureData.GlobalMelody.Pattern.AttackCount != MelodyChords.Count) {
+                if (measureData.GlobalMelody.Pattern.GetAttackCount() != MelodyChords.Count) {
                     return false;
                 }
             }
@@ -158,7 +158,9 @@ namespace EZSong.Model {
                                 melodyChordIndex++;
                             }
                         } else if (rhythmElement.GetType() == typeof(RhythmTieFrom)) {
-                            //TODO
+                            //Pour créer une liaison de prolongation – parfois aussi appelée liaison de tenue –, on ajoute un tilde '~' à la première note liée. 
+                            lilyPondString += "~ ";
+
                         }
                     }
                 }

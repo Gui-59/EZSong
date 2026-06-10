@@ -1,7 +1,10 @@
 ﻿
+
+
 namespace EZSong.Model {
 
     public class RhythmTuplet: IRhythmElement {
+
         public List<RhythmSimpleElement> Subdivisions {
             get;
         }
@@ -24,10 +27,6 @@ namespace EZSong.Model {
 
         public int DotCount() {
             return 0;
-        }
-
-        public bool IsTiedToNext() {
-            return false;
         }
 
         public bool IsRest() {
@@ -58,6 +57,15 @@ namespace EZSong.Model {
                 }
             }
             return attacks;
+        }
+
+        internal bool IsFirstSubdivisionRest() {
+
+            if (Subdivisions.Count > 0) {
+                return Subdivisions[0].IsRest();
+            }
+            return false; 
+
         }
     }
 

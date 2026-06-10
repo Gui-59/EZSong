@@ -4,6 +4,13 @@ namespace EZSong.Model {
 
     public class MeasureRhythmPattern {
 
+        //Dans ce contexte, le voisinage est relatif à la mesure
+        private RhythmElementNeighborhood _neighborhood = new(); 
+        public void SetNeighborhood(RhythmElementNeighborhood neighborhood) {
+            //TODO: utiliser
+            _neighborhood = neighborhood;
+        }
+
         private readonly List<BeatPattern> _beats = new();
 
         public IReadOnlyList<BeatPattern> Beats {
@@ -58,18 +65,26 @@ namespace EZSong.Model {
             return total;
         }
 
-        public int AttackCount {
+        public int GetAttackCount() {
 
-            get {
+            int count = 0;
 
-                int count = 0;
+            
 
-                foreach (BeatPattern beat in Beats) {
-                    count += beat.AttackCount;
-                }
+            // On récupére le dernier beat de l'eventuelle mesure précédente pour gérer les liaisons correctement
+            BeatPattern? previousBeat = null;
 
-                return count;
+            if (_neighborhood.PrecedingBeats.Count > 0) {
+                previousBeat = _neighborhood.PrecedingBeats.Last();
             }
+
+            foreach (BeatPattern beat in Beats) {
+                count += beat.GetAttackCount(previousBeat); 
+                previousBeat = beat;
+            }
+
+            return count;
+           
         }
 
         public bool IsDurationValid() {
@@ -92,7 +107,7 @@ namespace EZSong.Model {
 
             int totalNotes = noteCount + graceNoteCount;
 
-            return totalNotes == AttackCount;
+            return totalNotes == GetAttackCount();
 
         }
 
@@ -114,15 +129,15 @@ namespace EZSong.Model {
             return symbol;
         }
 
-        private string ElementToString(IRhythmElement e) {
+        private string ElementToString(IRhythmElement rhythmElement) {
 
             string s = string.Empty;
 
-            if (e.GetType() == typeof(RhythmTuplet)) {
+            if (rhythmElement.GetType() == typeof(RhythmTuplet)) {
 
-                RhythmTuplet tuplet = (RhythmTuplet)e;
+                RhythmTuplet tuplet = (RhythmTuplet)rhythmElement;
 
-                s += "<"; 
+                s += "<";
                 foreach (RhythmSimpleElement subdivision in tuplet.Subdivisions) {
                     if (subdivision.IsRest()) {
                         s += "r";
@@ -131,25 +146,20 @@ namespace EZSong.Model {
                 }
                 s += ">";
 
-                if (tuplet.IsTiedToNext()) {
-                    s += "~";
-                }
-
-            } else if (e.GetType() == typeof(RhythmSimpleElement)) {
-                RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)e;
+            } else if (rhythmElement.GetType() == typeof(RhythmSimpleElement)) {
+                RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)rhythmElement;
                 if (rhythmSimpleElement.IsRest()) {
                     s += "r" + s;
                 }
                 s += DurationToSymbol(rhythmSimpleElement.GetEffectiveDuration());
 
-                if (rhythmSimpleElement.IsTiedToNext()) {
-                    s += "~";
-                }
+            } else if (rhythmElement.GetType() == typeof(RhythmTieFrom)) {
+                s += "~";
             }
 
-            
 
-            return s;
+
+                return s;
         }
 
         public override string ToString() {

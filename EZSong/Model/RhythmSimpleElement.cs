@@ -1,9 +1,10 @@
-﻿namespace EZSong.Model {
+﻿
+namespace EZSong.Model {
 
     public class RhythmSimpleElement:IRhythmElement {
+
         private RhythmRationalDuration _duration;
 
-        private bool _isTiedToNext;
 
         private bool _isRest;
 
@@ -25,9 +26,7 @@
             return new RhythmSimpleElement(
                 duration,
                 rhythmElementDto.IsRest
-            ) {
-                _isTiedToNext = rhythmElementDto.TieToNext
-            };
+            );
 
         }
 
@@ -37,7 +36,6 @@
                 Denominator = rhythmElement._duration.Denominator,
                 Dots = rhythmElement._duration.Dots,
                 IsRest = rhythmElement._isRest,
-                TieToNext = rhythmElement._isTiedToNext
             };
         }
 
@@ -49,9 +47,6 @@
             return _duration.Dots;
         }
 
-        public bool IsTiedToNext() {
-            return _isTiedToNext;
-        }
 
         public bool IsRest() {
             return _isRest;

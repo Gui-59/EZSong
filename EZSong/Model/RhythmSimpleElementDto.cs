@@ -31,10 +31,6 @@ namespace EZSong.Model {
             get; 
             set;
         }
-        public bool TieToNext {
-            get; 
-            set;
-        }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public RhythmSimpleElementDto() {
@@ -42,7 +38,6 @@ namespace EZSong.Model {
             Denominator = 4;
             Dots = 0;
             IsRest = true;
-            TieToNext = false;
         }
 
     }
