@@ -4,13 +4,6 @@ namespace EZSong.Model {
 
     public class MeasureRhythmPattern {
 
-        //Dans ce contexte, le voisinage est relatif à la mesure
-        private RhythmElementNeighborhood _neighborhood = new(); 
-        public void SetNeighborhood(RhythmElementNeighborhood neighborhood) {
-            //TODO: utiliser
-            _neighborhood = neighborhood;
-        }
-
         private readonly List<BeatPattern> _beats = new();
 
         public IReadOnlyList<BeatPattern> Beats {
@@ -65,17 +58,14 @@ namespace EZSong.Model {
             return total;
         }
 
-        public int GetAttackCount() {
+        // Il faut transmettre l'eventuelle mesure précédente pour gérer les liaisons correctement
+        public int GetAttackCount(MeasureData? previousMeasure) {
 
             int count = 0;
 
-            
-
-            // On récupére le dernier beat de l'eventuelle mesure précédente pour gérer les liaisons correctement
             BeatPattern? previousBeat = null;
-
-            if (_neighborhood.PrecedingBeats.Count > 0) {
-                previousBeat = _neighborhood.PrecedingBeats.Last();
+            if (previousMeasure != null) {
+                previousBeat = previousMeasure.GlobalMelody.Pattern.Beats.Last();
             }
 
             foreach (BeatPattern beat in Beats) {
@@ -103,11 +93,20 @@ namespace EZSong.Model {
             return true;
         }
 
-        public bool IsCompatibleWithNoteCount(int noteCount, int graceNoteCount) {
+        public bool IsCompatibleWithNoteCount(MeasureData? currentMeasure) {
+            
+            if (currentMeasure == null) {
+                return false;
+            }
+
+            int noteCount = currentMeasure.GlobalMelody.Melody.MelodyChords.Count();
+            int graceNoteCount = 0; //TODO : cas des appogiatures  
 
             int totalNotes = noteCount + graceNoteCount;
 
-            return totalNotes == GetAttackCount();
+            MeasureData? precedingMeasure = currentMeasure.PrecedingMeasure;
+
+            return totalNotes == GetAttackCount(precedingMeasure);
 
         }
 

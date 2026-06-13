@@ -16,21 +16,21 @@ namespace EZSong.UI.Widgets {
             private set;
         }
 
-        public event System.Action? MeasureChanged;
-        public event System.Action? InsertBeforeRequested;
-        public event System.Action? InsertAfterRequested;
-        public event System.Action? DeleteRequested;
+        public event System.Action<MeasureData>? MeasureChanged;
+        public event System.Action<MeasureData>? InsertBeforeRequested;
+        public event System.Action<MeasureData>? InsertAfterRequested;
+        public event System.Action<MeasureData>? DeleteRequested;
 
         private SelectableValues _selectableValues = new();
 
         public MeasureEditorWidget() {
             _measure = new MeasureData();
-             GlobalMelodyEditor = new(); 
+             GlobalMelodyEditor = new(_measure); 
         }
 
-        public void SetMeasure(MeasureData measure) {
+        public MeasureEditorWidget(MeasureData measure) {
             _measure = measure;
-
+            GlobalMelodyEditor = new(_measure);
             BuildUI();
         }
 
@@ -60,7 +60,7 @@ namespace EZSong.UI.Widgets {
             Button deleteSelf = new();
             deleteSelf.Label = "Supprimer";
             deleteSelf.Clicked += (o, args) => {
-                DeleteRequested?.Invoke();
+                DeleteRequested?.Invoke(_measure);
             };
             buttonsBox.PackStart(deleteSelf, false, false, 0);
 
@@ -68,7 +68,7 @@ namespace EZSong.UI.Widgets {
             Button addBefore = new();
             addBefore.Label = "Ajouter une mesure avant";
             addBefore.Clicked += (o, args) => {
-                InsertBeforeRequested?.Invoke();
+                InsertBeforeRequested?.Invoke(_measure);
             };
             buttonsBox.PackStart(addBefore, false, false, 0);
 
@@ -76,7 +76,7 @@ namespace EZSong.UI.Widgets {
             Button addAfter = new();
             addAfter.Label = "Ajouter une mesure après";
             addAfter.Clicked += (o, args) => {
-                InsertAfterRequested?.Invoke();
+                InsertAfterRequested?.Invoke(_measure);
             };
             buttonsBox.PackStart(addAfter, false, false, 0);
 
@@ -100,6 +100,7 @@ namespace EZSong.UI.Widgets {
                     //Mise à jour de la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
                     GlobalMelodyEditor.UpdateTimeSignature(_measure.TimeSignature);
                 }
+                MeasureChanged?.Invoke(_measure);
             };
             row.PackStart(new Label("Time Sig. (Upper) :") { Xalign = 0f }, false, false, 0);
             row.PackStart(upperTimeSigCombo, false, false, 0);
@@ -118,6 +119,7 @@ namespace EZSong.UI.Widgets {
                     //Mise à jour de la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
                     GlobalMelodyEditor.UpdateTimeSignature(_measure.TimeSignature);
                 }
+                MeasureChanged?.Invoke(_measure);
             };
             row.PackStart(new Label("Time Sig. (Lower) :") { Xalign = 0f }, false, false, 0);
             row.PackStart(lowerTimeSigCombo, false, false, 0);
@@ -132,6 +134,7 @@ namespace EZSong.UI.Widgets {
                 if (!string.IsNullOrEmpty(keyCombo.ActiveId) && _selectableValues.Tonalities.ContainsKey(keyCombo.ActiveId)) {
                     _measure.KeySignature = new(keyCombo.ActiveId);
                 }
+                MeasureChanged?.Invoke(_measure);
             };
 
             row.PackStart(new Label("Tonalité :") { Xalign = 0f }, false, false, 0);
@@ -145,21 +148,21 @@ namespace EZSong.UI.Widgets {
             };
             chordEntry.Changed += (o, args) => {
                 _measure.ChordSequence = new ChordSequence(chordEntry.Text ?? string.Empty);
-                MeasureChanged?.Invoke();
+                MeasureChanged?.Invoke(_measure);
             };
             row.PackStart(new Label("Accords :") { Xalign = 0f }, false, false, 0);
             row.PackStart(chordEntry, true, true, 0);
 
-            GlobalMelodyEditor = new();
-            GlobalMelodyEditor.LoadFromModel(_measure.GlobalMelody);
+            //GlobalMelodyEditor = new(_measure);
             GlobalMelodyEditor.MelodyChanged += melody => {
-                    _measure.GlobalMelody.Melody = melody;
-                    MeasureChanged?.Invoke();
-                };
+                _measure.GlobalMelody.Melody = melody;
+
+                MeasureChanged?.Invoke(_measure);
+            };
             GlobalMelodyEditor.PatternChanged += pattern => {
-                        _measure.GlobalMelody.Pattern = pattern;
-                        MeasureChanged?.Invoke();
-                    };
+                _measure.GlobalMelody.Pattern = pattern;
+                MeasureChanged?.Invoke(_measure);
+            };
             row.PackStart(GlobalMelodyEditor, true, true, 0);
 
             // Paroles (une saisie texte ; mots/syllabes séparés par espaces)
@@ -170,6 +173,7 @@ namespace EZSong.UI.Widgets {
             };
             lyricsEntry.Changed += (o, args) => {
                _measure.Lyrics = lyricsEntry.Text;
+                MeasureChanged?.Invoke(_measure);
             };
             row.PackStart(new Label("Paroles :") { Xalign = 0f }, false, false, 0);
             row.PackStart(lyricsEntry, true, true, 0);

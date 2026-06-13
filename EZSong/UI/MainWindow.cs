@@ -303,7 +303,7 @@ namespace EZSong.UI {
 
         private void RefreshUI() {
 
-            _measuresEditor.Refresh();
+            //_measuresEditor.Refresh();
 
             UpdateSongInfoUI();
         }

@@ -9,6 +9,9 @@ using System.Runtime.CompilerServices;
 
 namespace EZSong.UI.Widgets {
     public class MeasureRhythmEditor : DrawingArea {
+
+        private MeasureData? _measureData;
+
         public MeasureRhythmPattern? Pattern {
             get; private set;
         }
@@ -29,18 +32,23 @@ namespace EZSong.UI.Widgets {
                 if (Pattern == null) {
                     return;
                 }
-                _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
+                _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
                 QueueDraw();
             }
         }
-
-        int _currentGraceNoteCount = 0; //TODO
 
         int _statusAreaHeight = 15;
 
         public MeasureRhythmEditor() {
             HeightRequest = 50; //Taille fixe pour éviter les problèmes de redimensionnement
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
+            _measureData = new();
+        }
+
+        public MeasureRhythmEditor(MeasureData measureData) {
+            HeightRequest = 50; //Taille fixe pour éviter les problèmes de redimensionnement
+            AddEvents((int)Gdk.EventMask.ButtonPressMask);
+            _measureData = measureData;
         }
 
         protected override bool OnDrawn(Cairo.Context cr) {
@@ -206,7 +214,7 @@ namespace EZSong.UI.Widgets {
 
             _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
 
-            _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
+            _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
             PatternChanged?.Invoke(Pattern);
         }
 
@@ -305,7 +313,7 @@ namespace EZSong.UI.Widgets {
 
                     _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
 
-                    _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
+                    _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
 
                     PatternChanged?.Invoke(Pattern);
                 }
@@ -368,14 +376,16 @@ namespace EZSong.UI.Widgets {
 
 
         // PUBLIC API: load external model into widget
-        public void LoadFromModel(MeasureGlobalMelody measureGlobalMelody) {
-            
-            Pattern = measureGlobalMelody.Pattern;
+        public void LoadFromModel(MeasureData measureData) {
+
+            _measureData = measureData;
+
+            Pattern = measureData.GlobalMelody.Pattern;
                        
-            _currentMelodyChordsCount = measureGlobalMelody.Melody.MelodyChords.Count;
+            _currentMelodyChordsCount = measureData.GlobalMelody.Melody.MelodyChords.Count;
 
             _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-            _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
+            _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
 
             QueueDraw();
 
@@ -387,7 +397,7 @@ namespace EZSong.UI.Widgets {
                 Pattern.TimeSignature = timeSignature;
 
                 _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-                _noteOk = Pattern.IsCompatibleWithNoteCount(CurrentMelodyChordsCount, _currentGraceNoteCount);
+                _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
 
                 QueueDraw();
             }

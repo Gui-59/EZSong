@@ -22,10 +22,7 @@ namespace EZSong.Model
             get; 
             set; 
         }
-        public List<MeasureData> Measures { 
-            get; 
-            set; 
-        }
+        public List<MeasureData> Measures;
 
         //Constructeur vide (requis, entre autres, pour la (dé)sérialisation JSON)
         public Song() { 

@@ -29,8 +29,11 @@ namespace EZSong.UI.Widgets {
         public void Refresh() {
             Clear();
 
-            foreach (MeasureData measure in _song.Measures) {
-                AddMeasure(measure);
+            for (int i = 0; i < _song.Measures.Count; i++) {
+                if (_song.Measures[i] is null) {
+                    return;
+                }
+                AddMeasure(_song.Measures[i]);
             }
 
             ShowAll();
@@ -43,22 +46,26 @@ namespace EZSong.UI.Widgets {
         }
 
         public void AddMeasure(MeasureData measure) {
-            MeasureEditorWidget widget = new();
+            MeasureEditorWidget widget = new(measure);
 
             widget.WidthRequest = 200;
 
-            widget.SetMeasure(measure);
-            _globalMelodyEditorWidgets.Add(widget.GlobalMelodyEditor);
+            
+            //_globalMelodyEditorWidgets.Add(widget.GlobalMelodyEditor);
 
-            widget.InsertAfterRequested += () => {
+            widget.MeasureChanged += (MeasureData measure) => {
+                int index = _song.Measures.IndexOf(measure);
+            };
+
+            widget.InsertAfterRequested += (MeasureData measure) => {
                 InsertAfter(measure);
             };
 
-            widget.InsertBeforeRequested += () => {
+            widget.InsertBeforeRequested += (MeasureData measure) => {
                 InsertBefore(measure);
             };
 
-            widget.DeleteRequested += () => {
+            widget.DeleteRequested += (MeasureData measure) => {
                 Delete(measure);
             };
 

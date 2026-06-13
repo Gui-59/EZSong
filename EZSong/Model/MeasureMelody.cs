@@ -34,7 +34,13 @@ namespace EZSong.Model {
                 if (!measureData.GlobalMelody.Pattern.IsDurationValid()) {
                     return false;
                 }
-                if (measureData.GlobalMelody.Pattern.GetAttackCount() != MelodyChords.Count) {
+
+                MeasureData? precedingMeasure = null;
+                if (measureData.PrecedingMeasure is not null) {
+                    precedingMeasure = measureData.PrecedingMeasure;
+                }
+
+                if (measureData.GlobalMelody.Pattern.GetAttackCount(precedingMeasure) != MelodyChords.Count) {
                     return false;
                 }
             }
