@@ -35,19 +35,33 @@ namespace EZSong.Model {
             bool hasValidCadency = measureData.GlobalMelody.Pattern.HasValidCadency(this, measureData.PrecedingMeasure);
             bool hasValidNoteCount = measureData.GlobalMelody.Pattern.IsCompatibleWithNoteCount(this, measureData.PrecedingMeasure);
 
+            //Si la mesure précédente se terminait par une liaison,
+            //alors le premier "MelodyChord" de la mesure actuelle doit être
+            //le dernier "MelodyChord" de la mesure précédente
+            //(comme si on l'avais ressaisie dans la mesure actuelle).
+            List<MelodyChord> consideredMelodyChords = MelodyChords;
+            if (measureData.PrecedingMeasure != null && measureData.PrecedingMeasure.GlobalMelody.Pattern.EndsWithTie()) {
+
+                consideredMelodyChords = new();
+                consideredMelodyChords.Add(measureData.PrecedingMeasure.GlobalMelody.Melody.MelodyChords.Last());
+                foreach (MelodyChord melodyChord in MelodyChords) {
+                    consideredMelodyChords.Add(melodyChord);
+                }
+            }
+
             if (!hasValidCadency || !hasValidNoteCount) { 
                 //Si pas de cadence ou si le nombre de note est incompatible avec la cadence,
                 //alors on considère que toutes les notes ont la même durée
 
-                if (MelodyChords.Count == 0) {
+                if (consideredMelodyChords.Count == 0) {
                     //Silence de mesure complete
                     lilyPondString += "R1"; 
                 } else {
                 
 
-                    lilyPondString += "\\tuplet " + MelodyChords.Count + "/1 { ";
+                    lilyPondString += "\\tuplet " + consideredMelodyChords.Count + "/1 { ";
 
-                    foreach (MelodyChord melodyChord in MelodyChords) {
+                    foreach (MelodyChord melodyChord in consideredMelodyChords) {
 
                         //On force le style d'affichage pour la note (retour auto à la normale)
                         lilyPondString += Environment.NewLine + " \\once \\override NoteHead.style = #'harmonic-black ";
@@ -98,14 +112,14 @@ namespace EZSong.Model {
                                     lilyPondString += "r";
                                     lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
                                 } else {
-                                    if (MelodyChords[melodyChordIndex].Pitches.Count == 1) {
-                                        lilyPondString += MelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
+                                    if (consideredMelodyChords[melodyChordIndex].Pitches.Count == 1) {
+                                        lilyPondString += consideredMelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
                                         lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
                                         lilyPondString += " ";
                                     } else {
                                         //Dans Lilypond les notes d'un accords sont entre chevrons
                                         lilyPondString += " < ";
-                                        foreach (Pitch pitch in MelodyChords[melodyChordIndex].Pitches) {
+                                        foreach (Pitch pitch in consideredMelodyChords[melodyChordIndex].Pitches) {
                                             lilyPondString += pitch.ToLilyPondString();
                                             lilyPondString += " ";
                                         }
@@ -132,14 +146,14 @@ namespace EZSong.Model {
 
                             } else {
 
-                                if (MelodyChords[melodyChordIndex].Pitches.Count == 1) {
-                                    lilyPondString += MelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
+                                if (consideredMelodyChords[melodyChordIndex].Pitches.Count == 1) {
+                                    lilyPondString += consideredMelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
                                     lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
                                     lilyPondString += " ";
                                 } else {
                                     //Dans Lilypond les notes d'un accords sont entre chevrons
                                     lilyPondString += " < ";
-                                    foreach (Pitch pitch in MelodyChords[melodyChordIndex].Pitches) {
+                                    foreach (Pitch pitch in consideredMelodyChords[melodyChordIndex].Pitches) {
                                         lilyPondString += pitch.ToLilyPondString();
 
                                         lilyPondString += " ";

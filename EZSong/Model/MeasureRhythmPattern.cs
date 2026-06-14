@@ -240,5 +240,18 @@ namespace EZSong.Model {
             return pattern;
 
         }
+
+        internal bool EndsWithTie() {
+            
+            if (Beats.Count == 0) {
+                return false;
+            }
+            BeatPattern lastBeat = Beats.Last();
+            if (lastBeat.Elements.Count == 0) {
+                return false;
+            }
+            IRhythmElement lastElement = lastBeat.Elements.Last();
+            return lastElement is RhythmTieFrom;
+        }
     }
 }

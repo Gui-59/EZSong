@@ -29,6 +29,8 @@ namespace EZSong.UI.Widgets {
         public void Refresh() {
             Clear();
 
+            Reindex();
+
             for (int i = 0; i < _song.Measures.Count; i++) {
                 if (_song.Measures[i] is null) {
                     return;
