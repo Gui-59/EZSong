@@ -48,10 +48,6 @@ namespace EZSong.UI.Widgets {
                 
             };
 
-            MelodyMeasureEditor.NoteCountChanged += MelodyMeasureEditor_NoteCountChanged;
-
-
-
             MelodyMeasureEditor.WidthRequest = 250;
             row.PackStart(MelodyMeasureEditor, true, false, 0);
 
@@ -67,10 +63,6 @@ namespace EZSong.UI.Widgets {
             Add(row);
 
             ShowAll();
-        }
-
-        private void MelodyMeasureEditor_NoteCountChanged(object? sender, int chordCount) {
-            _rhythmEditor.CurrentMelodyChordsCount = chordCount;
         }
 
         internal void UpdateTimeSignature(TimeSignature timeSignature) {

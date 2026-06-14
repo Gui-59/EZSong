@@ -55,7 +55,6 @@ namespace EZSong.UI.Widgets {
         // Events
         public event EventHandler? ContentChanged; // raised when chords/cadency change
         public event EventHandler<int>? CursorChanged; // cursor index changed
-        public event EventHandler<int>? NoteCountChanged;
 
         // Map note index to label (C D E F G A B)
         private static readonly string[] _noteNames = new[] { "C", "D", "E", "F", "G", "A", "B" };
@@ -65,26 +64,16 @@ namespace EZSong.UI.Widgets {
         private void AddWidgetMelodyChord(WidgetMelodyChord widgetMelodyChord) {
             _widgetMelodyChords.Add(widgetMelodyChord);
             _measureData.GlobalMelody.Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
-            PropagateWidgetMelodyChordsCountChange();
-
         }
 
         private void ReplaceMelodyChord(int cursorIndex, WidgetMelodyChord chord) {
             _widgetMelodyChords[cursorIndex] = chord;
             _measureData.GlobalMelody.Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
-            PropagateWidgetMelodyChordsCountChange();
         }
 
         private void RemoveWidgetMelodyChord(int cursorIndex) {
             _widgetMelodyChords.RemoveAt(cursorIndex);
             _measureData.GlobalMelody.Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
-            PropagateWidgetMelodyChordsCountChange();
-        }
-
-        private void PropagateWidgetMelodyChordsCountChange() {
-            int count = _widgetMelodyChords.Count;
-            
-            NoteCountChanged?.Invoke(this, count);
         }
 
         public MelodyMeasureEditor() {
@@ -367,8 +356,6 @@ namespace EZSong.UI.Widgets {
             _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, initialCursor));
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);
-
-            PropagateWidgetMelodyChordsCountChange();
         }
 
         private WidgetMelodyChord DeepCopyChord(WidgetMelodyChord s) {

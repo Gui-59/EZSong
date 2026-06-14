@@ -12,34 +12,19 @@ namespace EZSong.UI.Widgets {
 
         private MeasureData? _measureData;
 
-        public MeasureRhythmPattern? Pattern {
-            get; private set;
-        }
-
-        bool _durationOk = false;
-        bool _noteOk = false;
 
         private string _musicalFontFamily = new Settings.UserSettings().MusicalFontFamily;
 
-        private int _currentMelodyChordsCount = 0;
-        public int CurrentMelodyChordsCount {
-            get {
-                return _currentMelodyChordsCount;
+        private bool NoteOK() {
+            if (_measureData == null) {
+                return false;
             }
-            set {
-                _currentMelodyChordsCount = value;
-                _noteOk = false;
-                if (Pattern == null) {
-                    return;
-                }
-                if (_measureData == null) {
-                    return;
-                }
-                _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
-                QueueDraw();
+            if (_measureData.GlobalMelody.Pattern == null) {
+                return false;
             }
+            return _measureData.GlobalMelody.Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
         }
-
+ 
         int _statusAreaHeight = 15;
 
         public MeasureRhythmEditor() {
@@ -55,7 +40,10 @@ namespace EZSong.UI.Widgets {
         }
 
         protected override bool OnDrawn(Cairo.Context cr) {
-            if (Pattern == null) {
+            if (_measureData == null) {
+                return true;
+            }
+            if (_measureData.GlobalMelody.Pattern == null) {
                 return true;
             }
 
@@ -73,14 +61,17 @@ namespace EZSong.UI.Widgets {
         }
 
         private void DrawBeats(Context cr) {
-            if (Pattern == null) {
+            if (_measureData == null) {
+                return;
+            }
+            if (_measureData.GlobalMelody.Pattern == null) {
                 return;
             }
 
             double width = Allocation.Width;
             double height = Allocation.Height;
 
-            int beatCount = Pattern.TimeSignature.GetBeatCount();
+            int beatCount = _measureData.GlobalMelody.Pattern.TimeSignature.GetBeatCount();
 
             if (beatCount == 0) {
                 return;
@@ -91,7 +82,7 @@ namespace EZSong.UI.Widgets {
             for (int i = 0; i < beatCount; i++) {
                 double x = i * beatWidth;
 
-                DrawBeat(cr, Pattern.Beats[i], x, beatWidth, height);
+                DrawBeat(cr, _measureData.GlobalMelody.Pattern.Beats[i], x, beatWidth, height);
             }
         }
 
@@ -169,14 +160,16 @@ namespace EZSong.UI.Widgets {
 
         protected override bool OnButtonPressEvent(Gdk.EventButton ev) {
 
-    
+            if (_measureData == null) {
+                return false;
+            }
 
-            if (Pattern == null) {
+            if (_measureData.GlobalMelody.Pattern == null) {
                 return false;
             }
 
             double width = Allocation.Width;
-            int beatCount = Pattern.Beats.Count;
+            int beatCount = _measureData.GlobalMelody.Pattern.Beats.Count;
 
             double beatWidth = width / beatCount;
 
@@ -208,26 +201,24 @@ namespace EZSong.UI.Widgets {
         }
 
         private void ClearBeat(int index) {
-            if (Pattern == null) {
-                return;
-            }
-
-            BeatPattern beat = Pattern.Beats[index];
-            beat.Elements.Clear();
-
-            _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-
-            _noteOk = false;
             if (_measureData == null) {
                 return;
             }
+            if (_measureData.GlobalMelody.Pattern == null) {
+                return;
+            }
 
-            _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
-            PatternChanged?.Invoke(Pattern);
+            BeatPattern beat = _measureData.GlobalMelody.Pattern.Beats[index];
+            beat.Elements.Clear();
+
+            PatternChanged?.Invoke(_measureData.GlobalMelody.Pattern);
         }
 
         private void EditBeat(int index) {
-            if (Pattern == null) {
+            if (_measureData == null) {
+                return;
+            }
+            if (_measureData.GlobalMelody.Pattern == null) {
                 return;
             }
 
@@ -239,17 +230,19 @@ namespace EZSong.UI.Widgets {
         }
 
         void CreateElementFromUserChoice(int index) {
-
-            if (Pattern == null) {
+            if (_measureData == null) {
+                return;
+            }
+            if (_measureData.GlobalMelody.Pattern == null) {
                 return;
             }
 
-            BeatPattern beat = Pattern.Beats[index];
+            BeatPattern beat = _measureData.GlobalMelody.Pattern.Beats[index];
 
             RhythmElementPickerPopover popover = new(this);
 
             double width = Allocation.Width;
-            int beatCount = Pattern.Beats.Count;
+            int beatCount = _measureData.GlobalMelody.Pattern.Beats.Count;
             double beatWidth = width / beatCount;
 
             int beatX = (int)(index * beatWidth);
@@ -261,12 +254,12 @@ namespace EZSong.UI.Widgets {
                 _statusAreaHeight
             );
 
-            RhythmRationalDuration remaining = beat.GetRemainingDuration(Pattern.TimeSignature.GetBeatDuration());
+            RhythmRationalDuration remaining = beat.GetRemainingDuration(_measureData.GlobalMelody.Pattern.TimeSignature.GetBeatDuration());
 
             popover.ElementSelected += element =>
             {
 
-                BeatPattern beat = Pattern.Beats[index];
+                BeatPattern beat = _measureData.GlobalMelody.Pattern.Beats[index];
 
 
                 if (element == null) {
@@ -295,7 +288,7 @@ namespace EZSong.UI.Widgets {
                         //  return;
                         //}
 
-                        if (!beat.CanAdd(rhythmElement, Pattern.TimeSignature.GetBeatDuration())) {
+                        if (!beat.CanAdd(rhythmElement, _measureData.GlobalMelody.Pattern.TimeSignature.GetBeatDuration())) {
                             return;
                         }
 
@@ -310,7 +303,7 @@ namespace EZSong.UI.Widgets {
                         //  return;
                         //}
 
-                        if (!beat.CanAdd(rhythmElement, Pattern.TimeSignature.GetBeatDuration())) {
+                        if (!beat.CanAdd(rhythmElement, _measureData.GlobalMelody.Pattern.TimeSignature.GetBeatDuration())) {
                             return;
                         }
 
@@ -319,16 +312,7 @@ namespace EZSong.UI.Widgets {
                         
                     }
 
-                    _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-
-                    _noteOk = false;
-                    if (_measureData == null) {
-                        return;
-                    }
-
-                    _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
-
-                    PatternChanged?.Invoke(Pattern);
+                    PatternChanged?.Invoke(_measureData.GlobalMelody.Pattern);
                 }
             };
 
@@ -353,13 +337,16 @@ namespace EZSong.UI.Widgets {
   
 
         private void DrawStatus(Context cr) {
-            if (Pattern == null) {
+            if (_measureData == null) {
+                return;
+            }
+            if (_measureData.GlobalMelody.Pattern == null) {
                 return;
             }
 
-            if (!_durationOk) {
+            if (!_measureData.GlobalMelody.Pattern.IsDurationValid() || !_measureData.GlobalMelody.Pattern.AreBeatsValid()) {
                 cr.SetSourceRGB(0.8, 0.2, 0.2); // rouge
-            } else if (!_noteOk) {
+            } else if (!NoteOK()) {
                 cr.SetSourceRGB(0.8, 0.6, 1); 
             } else {
                 cr.SetSourceRGB(0.2, 0.8, 0.2); // vert
@@ -369,7 +356,7 @@ namespace EZSong.UI.Widgets {
             cr.Fill();
 
             double width = Allocation.Width;
-            int beatCount = Pattern.TimeSignature.GetBeatCount();
+            int beatCount = _measureData.GlobalMelody.Pattern.TimeSignature.GetBeatCount();
 
             double beatWidth = width / beatCount;
 
@@ -392,31 +379,18 @@ namespace EZSong.UI.Widgets {
         public void LoadFromModel(MeasureData measureData) {
 
             _measureData = measureData;
-
-            Pattern = measureData.GlobalMelody.Pattern;
                        
-            _currentMelodyChordsCount = measureData.GlobalMelody.Melody.MelodyChords.Count;
-
-            _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-            _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
-
             QueueDraw();
 
             //PatternChanged?.Invoke(Pattern);
         }
 
         internal void UpdateTimeSignature(TimeSignature timeSignature) {
-            if (Pattern != null) {
-                Pattern.TimeSignature = timeSignature;
-
-                _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-
-                _noteOk = false;
-                if (_measureData == null) {
-                    return;
-                }
-
-                _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
+            if (_measureData == null) {
+                return;
+            }
+            if (_measureData.GlobalMelody.Pattern != null) {
+                _measureData.GlobalMelody.Pattern.TimeSignature = timeSignature;
 
                 QueueDraw();
             }
