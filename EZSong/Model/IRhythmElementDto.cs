@@ -10,6 +10,7 @@ namespace EZSong.Model {
 
     [JsonDerivedType(typeof(RhythmTupletDto), "RhythmTuplet")]
     [JsonDerivedType(typeof(RhythmSimpleElementDto), "RhythmSimpleElement")]
+    [JsonDerivedType(typeof(RhythmTieFromDto), "RhythmTieFrom")]
     public interface IRhythmElementDto {
 
     }

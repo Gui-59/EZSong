@@ -120,6 +120,8 @@ namespace EZSong.Model {
                 } else if (element.GetType() == typeof(RhythmTupletDto)) {
                     RhythmTupletDto tupletDto = (RhythmTupletDto)element;
                     elements.Add(RhythmTuplet.FromDto(tupletDto));
+                } else if (element.GetType() == typeof(RhythmTieFromDto)) {
+                    elements.Add(RhythmTieFrom.FromDto());
                 }
             }
 
@@ -139,7 +141,9 @@ namespace EZSong.Model {
                 } else if (element.GetType() == typeof(RhythmTuplet)) {
                     RhythmTuplet tuplet = (RhythmTuplet)element;
                     elements.Add(RhythmTuplet.ToDto(tuplet));
-                } 
+                } else if (element.GetType() == typeof(RhythmTieFrom)) {
+                    elements.Add(RhythmTieFrom.ToDto()); 
+                }
             }
             return new BeatPatternDto() {
                 Elements = elements

@@ -64,22 +64,26 @@ namespace EZSong.UI.Widgets {
 
         private void AddWidgetMelodyChord(WidgetMelodyChord widgetMelodyChord) {
             _widgetMelodyChords.Add(widgetMelodyChord);
+            _measureData.GlobalMelody.Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
             PropagateWidgetMelodyChordsCountChange();
 
         }
 
         private void ReplaceMelodyChord(int cursorIndex, WidgetMelodyChord chord) {
             _widgetMelodyChords[cursorIndex] = chord;
+            _measureData.GlobalMelody.Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
             PropagateWidgetMelodyChordsCountChange();
         }
 
         private void RemoveWidgetMelodyChord(int cursorIndex) {
             _widgetMelodyChords.RemoveAt(cursorIndex);
+            _measureData.GlobalMelody.Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
             PropagateWidgetMelodyChordsCountChange();
         }
 
         private void PropagateWidgetMelodyChordsCountChange() {
             int count = _widgetMelodyChords.Count;
+            
             NoteCountChanged?.Invoke(this, count);
         }
 

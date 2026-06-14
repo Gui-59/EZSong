@@ -28,7 +28,7 @@ namespace EZSong.UI.Widgets.WidgetsData {
             return logString; 
         }
 
-        internal MelodyChord ToMelodyChord() {
+        public MelodyChord ToMelodyChord() {
             
             List<Pitch> pitches = new();
             foreach (WidgetPitch widgetPitch in _pitches) {

@@ -100,9 +100,11 @@ namespace EZSong.Model {
             } else {
 
                 int melodyChordIndex = 0;
+                
 
                 foreach (BeatPattern beat in measureData.GlobalMelody.Pattern.Beats) {
 
+                    int rhythmElementIndex = 0;
                     foreach (IRhythmElement rhythmElement in beat.Elements) {
 
                         if (rhythmElement.GetType() == typeof(RhythmTuplet)) {
@@ -129,7 +131,11 @@ namespace EZSong.Model {
                                         lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
                                         lilyPondString += " ";
                                     }
-                                    melodyChordIndex++;
+                                    if (beat.Elements.Count() > rhythmElementIndex + 1 && beat.Elements[rhythmElementIndex+1].GetType() == typeof(RhythmTieFrom))                                    {
+                                        //On ne passe pas à la note suivante si la note est liée à la suivante
+                                    } else {
+                                        melodyChordIndex++;
+                                    }
                                 }
                             }
                             lilyPondString += "}";
@@ -161,13 +167,18 @@ namespace EZSong.Model {
                                     lilyPondString += " ";
                                 }
 
-                                melodyChordIndex++;
+                                if (beat.Elements.Count() > rhythmElementIndex + 1 && beat.Elements[rhythmElementIndex + 1].GetType() == typeof(RhythmTieFrom)) {
+                                    //On ne passe pas à la note suivante si la note est liée à la suivante
+                                } else {
+                                    melodyChordIndex++;
+                                }
                             }
                         } else if (rhythmElement.GetType() == typeof(RhythmTieFrom)) {
                             //Pour créer une liaison de prolongation – parfois aussi appelée liaison de tenue –, on ajoute un tilde '~' à la première note liée. 
                             lilyPondString += "~ ";
-
                         }
+
+                        rhythmElementIndex++;
                     }
                 }
             }
