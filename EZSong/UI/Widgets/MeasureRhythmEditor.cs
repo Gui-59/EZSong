@@ -28,11 +28,14 @@ namespace EZSong.UI.Widgets {
             }
             set {
                 _currentMelodyChordsCount = value;
-
+                _noteOk = false;
                 if (Pattern == null) {
                     return;
                 }
-                _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
+                if (_measureData == null) {
+                    return;
+                }
+                _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
                 QueueDraw();
             }
         }
@@ -214,7 +217,12 @@ namespace EZSong.UI.Widgets {
 
             _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
 
-            _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
+            _noteOk = false;
+            if (_measureData == null) {
+                return;
+            }
+
+            _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
             PatternChanged?.Invoke(Pattern);
         }
 
@@ -313,7 +321,12 @@ namespace EZSong.UI.Widgets {
 
                     _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
 
-                    _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
+                    _noteOk = false;
+                    if (_measureData == null) {
+                        return;
+                    }
+
+                    _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
 
                     PatternChanged?.Invoke(Pattern);
                 }
@@ -385,7 +398,7 @@ namespace EZSong.UI.Widgets {
             _currentMelodyChordsCount = measureData.GlobalMelody.Melody.MelodyChords.Count;
 
             _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-            _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
+            _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
 
             QueueDraw();
 
@@ -397,7 +410,13 @@ namespace EZSong.UI.Widgets {
                 Pattern.TimeSignature = timeSignature;
 
                 _durationOk = Pattern.IsDurationValid() && Pattern.AreBeatsValid();
-                _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData);
+
+                _noteOk = false;
+                if (_measureData == null) {
+                    return;
+                }
+
+                _noteOk = Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
 
                 QueueDraw();
             }

@@ -26,36 +26,18 @@ namespace EZSong.Model {
             MelodyChords = melodyChords;
         }
 
-        private bool HasValidCadency(MeasureData measureData) {
-          
-            if (measureData.GlobalMelody.Pattern is null) {
-                return false;
-            } else {
-                if (!measureData.GlobalMelody.Pattern.IsDurationValid()) {
-                    return false;
-                }
-
-                MeasureData? precedingMeasure = null;
-                if (measureData.PrecedingMeasure is not null) {
-                    precedingMeasure = measureData.PrecedingMeasure;
-                }
-
-                if (measureData.GlobalMelody.Pattern.GetAttackCount(precedingMeasure) != MelodyChords.Count) {
-                    return false;
-                }
-            }
-            return true;
-            
-        }
+        
 
         public string ToLilyPondString(MeasureData measureData) {
 
             string lilyPondString = string.Empty;
 
-            bool hasValidCadency = HasValidCadency(measureData);
- 
-            if (!hasValidCadency) { 
-                //Si pas de cadence, on considère que toutes les notes ont la même durée
+            bool hasValidCadency = measureData.GlobalMelody.Pattern.HasValidCadency(this, measureData.PrecedingMeasure);
+            bool hasValidNoteCount = measureData.GlobalMelody.Pattern.IsCompatibleWithNoteCount(this, measureData.PrecedingMeasure);
+
+            if (!hasValidCadency || !hasValidNoteCount) { 
+                //Si pas de cadence ou si le nombre de note est incompatible avec la cadence,
+                //alors on considère que toutes les notes ont la même durée
 
                 if (MelodyChords.Count == 0) {
                     //Silence de mesure complete

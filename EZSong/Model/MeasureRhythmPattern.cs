@@ -93,20 +93,32 @@ namespace EZSong.Model {
             return true;
         }
 
-        public bool IsCompatibleWithNoteCount(MeasureData? currentMeasure) {
+        // Il faut transmettre l'eventuelle mesure précédente pour gérer les liaisons correctement
+        public bool IsCompatibleWithNoteCount(MeasureMelody measureMelody,  MeasureData? precedingMeasure) {
             
-            if (currentMeasure == null) {
-                return false;
-            }
 
-            int noteCount = currentMeasure.GlobalMelody.Melody.MelodyChords.Count();
+            int noteCount = measureMelody.MelodyChords.Count();
             int graceNoteCount = 0; //TODO : cas des appogiatures  
 
             int totalNotes = noteCount + graceNoteCount;
 
-            MeasureData? precedingMeasure = currentMeasure.PrecedingMeasure;
 
             return totalNotes == GetAttackCount(precedingMeasure);
+
+        }
+
+        // Il faut transmettre l'eventuelle mesure précédente pour gérer les liaisons correctement
+        public bool HasValidCadency(MeasureMelody measureMelody, MeasureData? precedingMeasure) {
+
+            if (!IsDurationValid()) {
+                return false;
+            }
+
+            if (GetAttackCount(precedingMeasure) != measureMelody.MelodyChords.Count) {
+                return false;
+            }
+            
+            return true;
 
         }
 

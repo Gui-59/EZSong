@@ -124,6 +124,18 @@ namespace EZSong.UI.Widgets {
         private void Reindex() {
             for (int i = 0; i < _song.Measures.Count; i++) {
                 _song.Measures[i].Index = i + 1;
+
+                if (i > 0) {
+                    _song.Measures[i].PrecedingMeasure = _song.Measures[i - 1];
+                } else {
+                    _song.Measures[i].PrecedingMeasure = null;
+                }
+
+                if (i < _song.Measures.Count - 1) {
+                    _song.Measures[i].FollowingMeasure = _song.Measures[i + 1];
+                } else {
+                    _song.Measures[i].FollowingMeasure = null;
+                }
             }
         }
 

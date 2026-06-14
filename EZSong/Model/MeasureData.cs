@@ -16,12 +16,10 @@ namespace EZSong.Model
         }
 
         public MeasureData? PrecedingMeasure {
-            //TODO : Appeler cette propriété lors de la construction d'une mesure pour gérer les liaisons correctement
             get; 
             set;
         }
         public MeasureData? FollowingMeasure {
-            //TODO : Appeler cette propriété lors de la construction d'une mesure pour gérer les liaisons correctement
             get; 
             set;
         }
