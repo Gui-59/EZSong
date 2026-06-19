@@ -14,14 +14,10 @@ namespace EZSong.EnumsStringifier {
             switch (alteration) {
                 case Alteration.flat:
                     return "b";
-                case Alteration.flatflat:
-                    return "bb";
                 case Alteration.neutral:
                     return "";
                 case Alteration.sharp:
                     return "#";
-                case Alteration.sharpsharp:
-                    return "##";
             }
             return "?";
         }

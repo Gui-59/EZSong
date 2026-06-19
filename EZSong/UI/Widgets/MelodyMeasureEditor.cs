@@ -492,17 +492,11 @@ namespace EZSong.UI.Widgets {
             int ret = GetMidiCNoteFromOctave(midiOctave) + (noteNumberInFullOctave);
 
             switch (alteration) {
-                case Alteration.flatflat:
-                    ret -= 2;
-                    break;
                 case Alteration.flat:
                     ret -= 1;
                     break;
                 case Alteration.sharp:
                     ret += 1;
-                    break;
-                case Alteration.sharpsharp:
-                    ret += 2;
                     break;
             }
 

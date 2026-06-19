@@ -141,13 +141,7 @@ namespace EZSong.Model {
                 Duration = new(1, 4, 0); 
             }
 
-            if (firstHalfRest.ToLowerInvariant().EndsWith("isis")) {
-                RootNoteAlteration = Alteration.sharpsharp;
-                firstHalfRest = firstHalfRest.Remove(firstHalfRest.Length - 4);
-            } else if (firstHalfRest.ToLowerInvariant().EndsWith("eses")) {
-                RootNoteAlteration = Alteration.flat;
-                firstHalfRest = firstHalfRest.Remove(firstHalfRest.Length - 4);
-            } else if (firstHalfRest.ToLowerInvariant().EndsWith("is")) {
+            if (firstHalfRest.ToLowerInvariant().EndsWith("is")) {
                 RootNoteAlteration = Alteration.sharp;
                 firstHalfRest = firstHalfRest.Remove(firstHalfRest.Length - 2);
             } else if (firstHalfRest.ToLowerInvariant().EndsWith("es")) {

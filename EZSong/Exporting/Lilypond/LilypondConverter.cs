@@ -20,14 +20,10 @@ namespace EZSong.Exporting.Lilypond {
             switch (alteration) {
                 case Alteration.flat:
                     return "es";
-                case Alteration.flatflat:
-                    return "esee";
                 case Alteration.neutral:
                     return "";
                 case Alteration.sharp:
                     return "is";
-                case Alteration.sharpsharp:
-                    return "isis";
             }
             return "?";
         }
