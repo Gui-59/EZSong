@@ -20,7 +20,7 @@ namespace EZSong.Model {
             get;
             set;
         }
-        public int OctaveOffset {
+        public int MidiOctave {
             get;
             set;
         }
@@ -31,16 +31,21 @@ namespace EZSong.Model {
         public Pitch() {
             Note = NoteStep.C;
             Alteration = Alteration.neutral;
-            OctaveOffset = 0;
+            MidiOctave = 5; //Octave par défaut pour le pitch C4 (C5 en MIDI)
             _lilypondConverter = new LilypondConverter();
         }
 
-        public Pitch(NoteStep note, Alteration alteration, int octaveOffset = 0) {
+        public Pitch(NoteStep note, Alteration alteration, int midiOctave = 0) {
+
+            if (midiOctave < 0 || midiOctave > 10) {
+                throw new ArgumentOutOfRangeException("MidiOctave must be between 0 and 10.");
+            }
+
             _lilypondConverter = new LilypondConverter();
 
             Note = note;
             Alteration = alteration;
-            OctaveOffset = octaveOffset;
+            MidiOctave = midiOctave;
         }
 
         public string ToLilyPondString() {
@@ -49,7 +54,7 @@ namespace EZSong.Model {
             lilyPondString += _lilypondConverter.NoteStepToLilyPondString(Note);
             lilyPondString += _lilypondConverter.AlterationToLilyPondString(Alteration);
 
-            int sheetOctaveOffset = OctaveOffset + 1; //On augmente d'une octave se mettre naturellement dans la portée
+            int sheetOctaveOffset = 5 - MidiOctave; // 5 is the base octave for LilyPond (C4 in MIDI is C5 in LilyPond)
 
             if (sheetOctaveOffset > 0) {
 
@@ -69,44 +74,15 @@ namespace EZSong.Model {
         }
 
         internal WidgetPitch ToWidgetPitch() {
-
-            WidgetPitch widgetPitch = new();
-
-            switch (Note) {
-                case NoteStep.C:
-                    widgetPitch.NoteIndex = 0;
-                    break;
-                case NoteStep.D:
-                    widgetPitch.NoteIndex = 1;
-                    break;
-                case NoteStep.E:
-                    widgetPitch.NoteIndex = 2;
-                    break;
-                case NoteStep.F:
-                    widgetPitch.NoteIndex = 3;
-                    break;
-                case NoteStep.G:
-                    widgetPitch.NoteIndex = 4;
-                    break;
-                case NoteStep.A:
-                    widgetPitch.NoteIndex = 5;
-                    break;
-                case NoteStep.B:
-                    widgetPitch.NoteIndex = 6;
-                    break;
-            }
-
-            widgetPitch.Alteration = Alteration;
-            widgetPitch.OctaveOffset = OctaveOffset;
-
-            return widgetPitch;
+            int midiNoteNumber = (MidiOctave * 12) + ((int)Note) + ((int)Alteration * 7); //TODO : tester
+            return new WidgetPitch(midiNoteNumber);
         }
 
         internal PitchDto ToDto() {
             return new PitchDto {
                 Note = Note,
                 Alteration = Alteration,
-                OctaveOffset = OctaveOffset
+                MidiOctave = MidiOctave
              };
         }
     }

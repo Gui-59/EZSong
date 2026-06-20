@@ -21,7 +21,7 @@ namespace EZSong.Model {
         public static MelodyChord FromDto(MelodyChordDto melodyChordDto) {
             List<Pitch> pitches = new();
             foreach (PitchDto pitchDto in melodyChordDto.Pitches) {
-                pitches.Add(new Pitch(pitchDto.Note, pitchDto.Alteration, pitchDto.OctaveOffset));
+                pitches.Add(new Pitch(pitchDto.Note, pitchDto.Alteration, pitchDto.MidiOctave));
             }
             return new MelodyChord(pitches);
 

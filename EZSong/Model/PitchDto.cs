@@ -18,7 +18,7 @@ namespace EZSong.Model {
             get; 
             set;
         }
-        public int OctaveOffset {
+        public int MidiOctave {
             get; 
             set;
         }
