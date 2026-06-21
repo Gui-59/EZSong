@@ -31,9 +31,38 @@ namespace EZSong.UI.Widgets.WidgetsData {
         internal Pitch ToPitch() {
             int midiOctave = MidiNoteNumber / 12;
             int noteIndex = MidiNoteNumber % 12;
-            NoteStep noteStep = (NoteStep)(noteIndex % 7);
-            Alteration alteration = (Alteration)(noteIndex / 7); //TODO : A tester
-            return new Pitch(noteStep, alteration, midiOctave);
+
+            switch (noteIndex) {
+                case 0:
+                    return new Pitch(NoteStep.C, Alteration.neutral, midiOctave);
+                case 1:
+                    return new Pitch(NoteStep.C, Alteration.sharp, midiOctave);
+                case 2:
+                    return new Pitch(NoteStep.D, Alteration.neutral, midiOctave);
+                case 3:
+                    return new Pitch(NoteStep.D, Alteration.sharp, midiOctave);
+                case 4:
+                    return new Pitch(NoteStep.E, Alteration.neutral, midiOctave);
+                case 5:
+                    return new Pitch(NoteStep.F, Alteration.neutral, midiOctave);
+                case 6:
+                    return new Pitch(NoteStep.F, Alteration.sharp, midiOctave);
+                case 7:
+                    return new Pitch(NoteStep.G, Alteration.neutral, midiOctave);
+                case 8:
+                    return new Pitch(NoteStep.G, Alteration.sharp, midiOctave);
+                case 9:
+                    return new Pitch(NoteStep.A, Alteration.neutral, midiOctave);
+                case 10:
+                    return new Pitch(NoteStep.A, Alteration.sharp, midiOctave);
+                case 11:
+                    return new Pitch(NoteStep.B, Alteration.flat, midiOctave);
+                default:
+                    throw new Exception();
+            }
+
+            
+            
         }
     }
 }

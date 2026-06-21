@@ -28,7 +28,7 @@ namespace EZSong.UI.Widgets {
         // Public properties for configuration
         public int MinimumNoteHeight { get; set; } = 14;
         public int NoteWidth { get; set; } = 20; // width reserved per chord slot
-        public int OctaveCount { get; set; } = 3; // number of octaves to display
+        public int DisplayedOctaveCount { get; set; } = 3; // number of octaves to display
         public int BaseOctave { get; set; } = 5;  // visual reference (middle C octave)
         
 
@@ -82,7 +82,7 @@ namespace EZSong.UI.Widgets {
             ));
 
             // Set a minimum height
-            HeightRequest = (OctaveCount * _notesPerOctave) * MinimumNoteHeight;
+            HeightRequest = (DisplayedOctaveCount * _notesPerOctave) * MinimumNoteHeight;
 
             // Input handlers
             ButtonPressEvent += OnButtonPress;
@@ -104,7 +104,7 @@ namespace EZSong.UI.Widgets {
             cr.Paint();
 
             // Compute geometry
-            int rows = OctaveCount * _notesPerOctave;
+            int rows = DisplayedOctaveCount * _notesPerOctave;
             // draw staff-like grid (simple horizontal lines for notes)
             double totalHeight = rows * MinimumNoteHeight;
             _actualNoteHeight = totalHeight / rows;
@@ -195,19 +195,23 @@ namespace EZSong.UI.Widgets {
         }
 
         private int GetMidiNoteNumberFromClickedRow(int rowFromTop) {
-            int globalIndex = OctaveCount * _notesPerOctave - 1 - rowFromTop; //TODO
-            int midiNoteNumber = GetMidiCNoteFromOctave(BaseOctave) + globalIndex; //TODO
-            return midiNoteNumber;
+            int upperDisplayedMidiNoteNumber = GetUpperDisplayedMidiNoteNumber();
+            return upperDisplayedMidiNoteNumber - (rowFromTop);
         }
 
         private int GetRowFromTopFromMidiNoteNumber(int midiNoteNumber) {
-            int globalIndex = midiNoteNumber - GetMidiCNoteFromOctave(BaseOctave); //TODO
-            int rowFromTop = OctaveCount * _notesPerOctave - 1 - globalIndex; //TODO
-            return rowFromTop;
+            int upperDisplayedMidiNoteNumber = GetUpperDisplayedMidiNoteNumber();
+            return upperDisplayedMidiNoteNumber - midiNoteNumber;
+        }
+
+        private int GetUpperDisplayedMidiNoteNumber() {
+            //TODO : Simplifier (pour être plus efficace)
+            Pitch UpperDisplayedMidiNoteNumberPitch = new(NoteStep.B, Alteration.neutral, BaseOctave+1); 
+            return UpperDisplayedMidiNoteNumberPitch.ToWidgetPitch().MidiNoteNumber;
         }
 
         private void DrawChordAt(Context cr, WidgetMelodyChord chord, double center_x, double areaTop, double areaHeight) {
-            int rows = OctaveCount * _notesPerOctave;
+            int rows = DisplayedOctaveCount * _notesPerOctave;
             double rowHeight = areaHeight / rows;
 
             // For each pitch draw a circle at appropriate row
@@ -274,10 +278,8 @@ namespace EZSong.UI.Widgets {
         }
 
         // Return row index (0..rows-1 from top) and column (0..count)
-        private void HitTest(double x, double y, out int column, out int row) {
-            int rows = OctaveCount * _notesPerOctave;
-            double noteAreaHeight = rows * _actualNoteHeight;
-            double rowHeight = noteAreaHeight / rows;
+        private void HitTest(double x, double y, out int column, out int row) { //TODO : à revoir (si selon si on clique sur le haut ou bas d'une zone, ca ne renvoit pas le bonne ligne) 
+            
             column = (int)Math.Round((x - (NoteWidth / 2)) / NoteWidth);
             if (column < 0) {
                 column = 0;
@@ -286,19 +288,21 @@ namespace EZSong.UI.Widgets {
             if (column > Math.Max(0, _widgetMelodyChords.Count)) {
                 column = _widgetMelodyChords.Count;
             }
+
             // compute row from top
             if (y < 0) {
                 row = -1;
                 return;
             }
 
-            int r = (int)Math.Round(y / rowHeight);
+            int r = (int)Math.Floor(y / _actualNoteHeight);
             if (r < 0) {
                 r = 0;
             }
 
-            if (r >= rows) {
-                r = rows - 1;
+            int displayedRowCount = DisplayedOctaveCount * _notesPerOctave;
+            if (r >= displayedRowCount) {
+                r = displayedRowCount - 1;
             }
 
             row = r;
@@ -315,7 +319,7 @@ namespace EZSong.UI.Widgets {
             bool isRight = args.Event.Button == 3;
             bool isMiddle = args.Event.Button == 2;
 
-            if (y > (OctaveCount * _notesPerOctave) * _actualNoteHeight) {
+            if (y > (DisplayedOctaveCount * _notesPerOctave) * _actualNoteHeight) {
 
                 QueueDraw();
                 ContentChanged?.Invoke(this, EventArgs.Empty);

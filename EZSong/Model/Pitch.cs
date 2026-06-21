@@ -54,7 +54,7 @@ namespace EZSong.Model {
             lilyPondString += _lilypondConverter.NoteStepToLilyPondString(Note);
             lilyPondString += _lilypondConverter.AlterationToLilyPondString(Alteration);
 
-            int sheetOctaveOffset = 5 - MidiOctave; // 5 is the base octave for LilyPond (C4 in MIDI is C5 in LilyPond)
+            int sheetOctaveOffset = MidiOctave - 5; // 5 is the base octave for LilyPond (C4 in MIDI is C5 in LilyPond)
 
             if (sheetOctaveOffset > 0) {
 
@@ -74,7 +74,7 @@ namespace EZSong.Model {
         }
 
         internal WidgetPitch ToWidgetPitch() {
-            int midiNoteNumber = (MidiOctave * 12) + ((int)Note) + ((int)Alteration * 7); //TODO : tester
+            int midiNoteNumber = (MidiOctave * 12) + ((int)Note) + ((int)Alteration);
             return new WidgetPitch(midiNoteNumber);
         }
 
