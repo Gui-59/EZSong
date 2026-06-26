@@ -42,19 +42,18 @@ namespace EZSong.MIDI {
         IEnumerable<int> velocities,
         int durationMs) {
 
+            _ = _synth.AllNotesOff(_channel); // On force le silence d'abord
+
             int index = 0;
             foreach (int noteNumber in noteNumbers) {
-                Console.WriteLine("EchoChordAsync (NoteOn): note=" + noteNumber);
+                Console.WriteLine("EchoChordAsync : note=" + noteNumber);
                 _synth.NoteOn(_channel, noteNumber, velocities.ToArray()[index]);
                 index++;
             }
 
             await Task.Delay(durationMs);
 
-            foreach (int noteNumber in noteNumbers) {
-                Console.WriteLine("EchoChordAsync (NoteOff) : note=" + noteNumber);
-                _synth.NoteOff(_channel, noteNumber);
-            }
+            _ = _synth.AllNotesOff(_channel); // On stoppe toutes les notes
         }
 
         /// <summary>
