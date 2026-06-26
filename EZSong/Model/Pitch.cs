@@ -1,6 +1,7 @@
 ﻿using EZSong.Enums;
 using EZSong.EnumsStringifier;
 using EZSong.Exporting.Lilypond;
+using EZSong.Settings;
 using EZSong.UI.Widgets.WidgetsData;
 using System;
 using System.Collections.Generic;
@@ -31,11 +32,11 @@ namespace EZSong.Model {
         public Pitch() {
             Note = NoteStep.C;
             Alteration = Alteration.neutral;
-            MidiOctave = 5; //Octave par défaut pour le pitch C4 (C5 en MIDI)
+            MidiOctave = Constants.MelodyBaseOctave;
             _lilypondConverter = new LilypondConverter();
         }
 
-        public Pitch(NoteStep note, Alteration alteration, int midiOctave = 0) {
+        public Pitch(NoteStep note, Alteration alteration, int midiOctave) {
 
             if (midiOctave < 0 || midiOctave > 10) {
                 throw new ArgumentOutOfRangeException("MidiOctave must be between 0 and 10.");
@@ -54,7 +55,7 @@ namespace EZSong.Model {
             lilyPondString += _lilypondConverter.NoteStepToLilyPondString(Note);
             lilyPondString += _lilypondConverter.AlterationToLilyPondString(Alteration);
 
-            int sheetOctaveOffset = MidiOctave - 5; // 5 is the base octave for LilyPond (C4 in MIDI is C5 in LilyPond)
+            int sheetOctaveOffset = MidiOctave - Constants.MelodyBaseOctave;
 
             if (sheetOctaveOffset > 0) {
 

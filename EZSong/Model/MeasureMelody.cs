@@ -32,6 +32,26 @@ namespace EZSong.Model {
 
             string lilyPondString = string.Empty;
 
+            //Définition de l'octave de référence
+            int baseOctave = Settings.Constants.MelodyBaseOctave; //TODO : détecter si on est en mode mélodie ou basse
+            switch (baseOctave) {
+                case 6:
+                    lilyPondString += "\\fixed c'' {";
+                    break;
+                case 5:
+                    lilyPondString += "\\fixed c' {";
+                    break;
+                case 4:
+                    lilyPondString += "\\fixed c {";
+                    break;
+                case 3:
+                    lilyPondString += "\\fixed c, {";
+                    break;
+                case 2:
+                    lilyPondString += "\\fixed c,, {";
+                    break;
+            }
+
             bool hasValidCadency = measureData.GlobalMelody.Pattern.HasValidCadency(this, measureData.PrecedingMeasure);
             bool hasValidNoteCount = measureData.GlobalMelody.Pattern.IsCompatibleWithNoteCount(this, measureData.PrecedingMeasure);
 
@@ -178,6 +198,9 @@ namespace EZSong.Model {
                     }
                 }
             }
+
+            //Fin Définition de l'octave de référence
+            lilyPondString += "}";
 
             return lilyPondString;
         }

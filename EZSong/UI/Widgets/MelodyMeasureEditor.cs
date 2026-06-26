@@ -21,15 +21,14 @@ namespace EZSong.UI.Widgets {
         // Model: sequence of chords (positioned sequentially)
         private List<WidgetMelodyChord> _widgetMelodyChords = new();
 
-        const int _notesPerOctave = 12;   // 12 semitones in an octave (do not change this, as it is used for drawing and computing MIDI note numbers)
-
         private UserSettings _userSettings;
 
         // Public properties for configuration
         public int MinimumNoteHeight { get; set; } = 14;
         public int NoteWidth { get; set; } = 20; // width reserved per chord slot
-        public int DisplayedOctaveCount { get; set; } = 3; // number of octaves to display
-        public int BaseOctave { get; set; } = 5;  // visual reference (middle C octave)
+        public int DisplayedOctaveCount { get; set; } = 3; // number of octaves to display; must be even
+
+
         
 
         // Cursor index: insertion point between chords (0..Count)
@@ -82,7 +81,7 @@ namespace EZSong.UI.Widgets {
             ));
 
             // Set a minimum height
-            HeightRequest = (DisplayedOctaveCount * _notesPerOctave) * MinimumNoteHeight;
+            HeightRequest = (DisplayedOctaveCount * 12) * MinimumNoteHeight;
 
             // Input handlers
             ButtonPressEvent += OnButtonPress;
@@ -104,23 +103,33 @@ namespace EZSong.UI.Widgets {
             cr.Paint();
 
             // Compute geometry
-            int rows = DisplayedOctaveCount * _notesPerOctave;
+            int rows = DisplayedOctaveCount * 12;
             // draw staff-like grid (simple horizontal lines for notes)
             double totalHeight = rows * MinimumNoteHeight;
             _actualNoteHeight = totalHeight / rows;
 
-            int octaveOffset = 0; //TODO : à revoir, car actuellement on ne gère que 3 octaves, mais si on en met plus, il faudra gérer l'octaveOffset correctement
+            // Recherche de l'index d'octave la plus aigue actuellement affichée (point de départ)
+            int octavesAboveOrBelowBaseOctave = (DisplayedOctaveCount - 1) / 2;
+            int octaveOffset = 0 + octavesAboveOrBelowBaseOctave; //La ligne du haut est la plus aigue
+
+           
+            bool isUpperOctave = true;
 
             // Draw horizontal separators for each visible pitch
             for (int r = 0; r < rows; r++) {
-                
                 double y = (r * _actualNoteHeight) + (_actualNoteHeight / 2.0);
                 int noteIndex = rows - 1 - r; // top row = highest pitch
-                int noteIntexInOctave = noteIndex % _notesPerOctave;
-                if (noteIntexInOctave == _notesPerOctave - 1) {
-                    //A chaque fois qu'on retombe sur la note la plus haute d'une octave, on descend d'une octa
-                    octaveOffset--;
+                int noteIntexInOctave = noteIndex % 12;
+                if (noteIntexInOctave == 11) {
+                    //A chaque fois qu'on retombe sur la note la plus haute d'une octave, on descend d'une octave
+                    //Mais on ne tiens pas compte du 'si' le plus haut
+                    if (isUpperOctave) {
+                        isUpperOctave = false;
+                    } else {
+                        octaveOffset--;
+                    }   
                 }
+                
                 DrawPitchArea(cr, y, noteIntexInOctave, octaveOffset);
                 
             }
@@ -175,7 +184,9 @@ namespace EZSong.UI.Widgets {
 
             //Ligne pleine
             cr.LineWidth = _actualNoteHeight;
-            if (octaveOffset % 2 == 0) {
+            if (octaveOffset == 0) {
+                //Cas de l'octave "centrale"
+                //L'octave centrale est différente selon si on est sur une mélodie ou des basses
                 if (noteInOctave == 0 || noteInOctave == 2 || noteInOctave == 4 || noteInOctave == 5 || noteInOctave == 7 || noteInOctave == 9 || noteInOctave == 11) {
                     cr.SetSourceRGBA(0.8, 0.8, 1, 1.0); // clair pour les notes naturelles
                 } else {
@@ -206,12 +217,13 @@ namespace EZSong.UI.Widgets {
 
         private int GetUpperDisplayedMidiNoteNumber() {
             //TODO : Simplifier (pour être plus efficace)
-            Pitch UpperDisplayedMidiNoteNumberPitch = new(NoteStep.B, Alteration.neutral, BaseOctave+1); 
+            int octavesAboveOrBelowBaseOctave = (DisplayedOctaveCount - 1) / 2;
+            Pitch UpperDisplayedMidiNoteNumberPitch = new(NoteStep.B, Alteration.neutral, Constants.MelodyBaseOctave + octavesAboveOrBelowBaseOctave);
             return UpperDisplayedMidiNoteNumberPitch.ToWidgetPitch().MidiNoteNumber;
         }
 
         private void DrawChordAt(Context cr, WidgetMelodyChord chord, double center_x, double areaTop, double areaHeight) {
-            int rows = DisplayedOctaveCount * _notesPerOctave;
+            int rows = DisplayedOctaveCount * 12;
             double rowHeight = areaHeight / rows;
 
             // For each pitch draw a circle at appropriate row
@@ -300,7 +312,7 @@ namespace EZSong.UI.Widgets {
                 r = 0;
             }
 
-            int displayedRowCount = DisplayedOctaveCount * _notesPerOctave;
+            int displayedRowCount = DisplayedOctaveCount * 12;
             if (r >= displayedRowCount) {
                 r = displayedRowCount - 1;
             }
@@ -319,7 +331,7 @@ namespace EZSong.UI.Widgets {
             bool isRight = args.Event.Button == 3;
             bool isMiddle = args.Event.Button == 2;
 
-            if (y > (DisplayedOctaveCount * _notesPerOctave) * _actualNoteHeight) {
+            if (y > (DisplayedOctaveCount * 12) * _actualNoteHeight) {
 
                 QueueDraw();
                 ContentChanged?.Invoke(this, EventArgs.Empty);
