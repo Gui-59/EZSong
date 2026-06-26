@@ -1,4 +1,6 @@
 ﻿using EZSong.Model;
+using EZSong.Settings;
+using GLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,28 @@ namespace EZSong.UI.Widgets.WidgetsData {
                 _pitches = value;
             }
         }
+
+        public List<int> MidiNotes {
+            get {
+                List<int> notes = new();
+                foreach (WidgetPitch p in Pitches) {
+                    notes.Add(p.MidiNoteNumber);
+                }
+                return notes;
+            }
+        }
+
+        public IEnumerable<int> Velocities {
+            get {
+                UserSettings userSettings = new(); //TODO : Centraliser
+                List<int> velocities = new();
+                for (int i = 0; i < _pitches.Count; i++) {
+                    velocities.Add(userSettings.MidiInputEchoVeloctiy);
+                }
+                return velocities;
+            }
+        }
+
         internal string ToLogString() {
             string logString = "";
 

@@ -363,21 +363,21 @@ namespace EZSong.UI.Widgets {
                 return;
             }
 
-            WidgetMelodyChord existingChord = _widgetMelodyChords[cursorIndex];
+            WidgetMelodyChord editedChord = _widgetMelodyChords[cursorIndex];
 
             int clickedMidiNoteNumber = GetMidiNoteNumberFromClickedRow(clickedRowFromTop);
                         
-            WidgetPitch? existingPitch = existingChord.Pitches.FirstOrDefault(
+            WidgetPitch? existingPitch = editedChord.Pitches.FirstOrDefault(
                 p => p.MidiNoteNumber == clickedMidiNoteNumber);
             if (existingPitch != null) {
                 // remove it
-                _ = existingChord.Pitches.Remove(existingPitch);
+                _ = editedChord.Pitches.Remove(existingPitch);
                 // if chord becomes empty, keep it (empty chord allowed) — you can remove if desired
             } else {
-                existingChord.Pitches.Add(new WidgetPitch(clickedMidiNoteNumber));
+                editedChord.Pitches.Add(new WidgetPitch(clickedMidiNoteNumber));
                 
                 
-                await _embeddedMidiSynth.EchoChordAsync(new[] { clickedMidiNoteNumber }, new[] { _userSettings.MidiInputEchoVeloctiy }, _userSettings.MidiInputEchoDurationMs);
+                await _embeddedMidiSynth.EchoChordAsync(editedChord.MidiNotes, editedChord.Velocities, _userSettings.MidiInputEchoDurationMs);
             }
         }
 

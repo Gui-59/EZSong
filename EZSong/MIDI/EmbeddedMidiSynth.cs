@@ -44,7 +44,7 @@ namespace EZSong.MIDI {
 
             int index = 0;
             foreach (int noteNumber in noteNumbers) {
-                Console.WriteLine("EchoChordAsync : note=" + noteNumber);
+                Console.WriteLine("EchoChordAsync (NoteOn): note=" + noteNumber);
                 _synth.NoteOn(_channel, noteNumber, velocities.ToArray()[index]);
                 index++;
             }
@@ -52,6 +52,7 @@ namespace EZSong.MIDI {
             await Task.Delay(durationMs);
 
             foreach (int noteNumber in noteNumbers) {
+                Console.WriteLine("EchoChordAsync (NoteOff) : note=" + noteNumber);
                 _synth.NoteOff(_channel, noteNumber);
             }
         }
