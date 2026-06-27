@@ -10,18 +10,19 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class GlobalMelodyEditor : Frame {
 
-
+        private int _staffIndex;
         public MelodyMeasureEditor MelodyMeasureEditor {
             get; 
             private set;
         }
         private MeasureRhythmEditor _rhythmEditor;
 
-        public event Action<MeasureMelody>? MelodyChanged;
-        public event Action<MeasureRhythmPattern>? PatternChanged;
+        public event Action<int, MeasureMelody>? MelodyChanged; //Premier paramètre : l'index de la portée
+        public event Action<int, MeasureRhythmPattern>? PatternChanged; //Premier paramètre : l'index de la portée
 
 
         public GlobalMelodyEditor(int staffIndex, MeasureData measureData) {
+            _staffIndex = staffIndex;
             MelodyMeasureEditor = new();
             MelodyMeasureEditor.LoadFromModel(staffIndex, measureData, initialCursor: 0);
             _rhythmEditor = new();
@@ -44,7 +45,7 @@ namespace EZSong.UI.Widgets {
                 foreach (WidgetMelodyChord widgetChord in MelodyMeasureEditor.ExportToModel()) {
                     newMeasureMelody.MelodyChords.Add(widgetChord.ToMelodyChord());
                 }
-                MelodyChanged?.Invoke(newMeasureMelody);
+                MelodyChanged?.Invoke(_staffIndex, newMeasureMelody);
                 
             };
 
@@ -53,8 +54,8 @@ namespace EZSong.UI.Widgets {
 
             MelodyMeasureEditor.ShowAll();
 
-            _rhythmEditor.PatternChanged += pattern => {
-                PatternChanged?.Invoke(pattern);
+            _rhythmEditor.PatternChanged += (staffIndex, pattern) => {
+                PatternChanged?.Invoke(staffIndex, pattern);
                 QueueDraw();
             };
 

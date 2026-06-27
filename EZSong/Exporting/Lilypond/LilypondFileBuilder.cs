@@ -45,7 +45,7 @@ namespace EZSong.Exporting.Lilypond {
             fullScript += GenerateLilypondScriptHeader();
             fullScript += GenerateLilypondSheetHeader();
 
-            int staffIndex = 0;
+            int staffIndex = 0; //TODO : boucler sur les portées
             fullScript += GenerateLilypondSongmelodyVar(staffIndex);
 
             fullScript += GenerateLilypondSongchordsVar();

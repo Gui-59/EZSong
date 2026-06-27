@@ -214,7 +214,7 @@ namespace EZSong.UI.Widgets {
             BeatPattern beat = _measureData.Staffs[_staffIndex].Pattern.Beats[index];
             beat.Elements.Clear();
 
-            PatternChanged?.Invoke(_measureData.Staffs[_staffIndex].Pattern);
+            PatternChanged?.Invoke(_staffIndex, _measureData.Staffs[_staffIndex].Pattern);
         }
 
         private void EditBeat(int index) {
@@ -315,7 +315,7 @@ namespace EZSong.UI.Widgets {
                         
                     }
 
-                    PatternChanged?.Invoke(_measureData.Staffs[_staffIndex].Pattern);
+                    PatternChanged?.Invoke(_staffIndex, _measureData.Staffs[_staffIndex].Pattern);
                 }
             };
 
@@ -336,7 +336,7 @@ namespace EZSong.UI.Widgets {
             return false;
         }
 
-        public event Action<MeasureRhythmPattern>? PatternChanged;
+        public event Action<int, MeasureRhythmPattern>? PatternChanged; //Premier paramètre : l'index de la portée
   
 
         private void DrawStatus(Context cr) {

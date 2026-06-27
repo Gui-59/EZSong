@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class MeasureEditorWidget : Frame {
 
-        private int _staffIndex;
         private MeasureData _measure;
 
         public GlobalMelodyEditor GlobalMelodyEditor { 
@@ -25,10 +24,11 @@ namespace EZSong.UI.Widgets {
 
         private SelectableValues _selectableValues = new();
 
-        public MeasureEditorWidget(int staffIndex, MeasureData measure) {
-            _staffIndex = staffIndex;
+        public MeasureEditorWidget(MeasureData measure) {
             _measure = measure;
-            GlobalMelodyEditor = new(_staffIndex, _measure);
+
+            int staffIndex = 0; //TODO : Boucler sur les portées (ou choisir la portée à afficher)
+            GlobalMelodyEditor = new(staffIndex, _measure); 
             BuildUI();
         }
 
@@ -152,13 +152,13 @@ namespace EZSong.UI.Widgets {
             row.PackStart(chordEntry, true, true, 0);
 
             //GlobalMelodyEditor = new(_measure);
-            GlobalMelodyEditor.MelodyChanged += melody => {
-                _measure.Staffs[_staffIndex].Melody = melody;
+            GlobalMelodyEditor.MelodyChanged += (staffIndex, melody) => {
+                _measure.Staffs[staffIndex].Melody = melody;
 
                 MeasureChanged?.Invoke(_measure);
             };
-            GlobalMelodyEditor.PatternChanged += pattern => {
-                _measure.Staffs[_staffIndex].Pattern = pattern;
+            GlobalMelodyEditor.PatternChanged += (staffIndex, pattern) => {
+                _measure.Staffs[staffIndex].Pattern = pattern;
                 MeasureChanged?.Invoke(_measure);
             };
             row.PackStart(GlobalMelodyEditor, true, true, 0);
