@@ -35,7 +35,7 @@ namespace EZSong.Model {
             set;
         }
 
-        public MeasureGlobalMelodyDto GlobalMelody { //TODO : Gérer des groupes de mélodies
+        public List<MeasureGlobalMelodyDto> Staffs { //Groupe de portées
             get; 
             set;
         }
@@ -52,7 +52,7 @@ namespace EZSong.Model {
             TimeSignature = new TimeSignatureDto();
             KeySignature = new KeySignatureDto();
             ChordSequence = new ChordSequenceDto();
-            GlobalMelody = new MeasureGlobalMelodyDto();
+            Staffs = new List<MeasureGlobalMelodyDto>();
             Lyrics = string.Empty;
         }
     }

@@ -30,16 +30,18 @@ namespace EZSong.Model
             Title = string.Empty;
             Artist = string.Empty;
             Comment = string.Empty;
-            Measures = new List<MeasureData>();
             SongSettings = new(new StaffsSettings());
+            Measures = new List<MeasureData>();
+            
         }
 
         public Song(string title, string artist, string comment, List<MeasureData> measures, SongSettings songSettings) {
             Title = title;
             Artist = artist;    
-            Comment = comment;  
-            Measures = measures;
+            Comment = comment;
             SongSettings = songSettings;
+            Measures = measures;
+            
         }
 
         public SongDto ToDto() {

@@ -54,17 +54,17 @@ namespace EZSong.UI.Widgets {
 
         private void AddWidgetMelodyChord(WidgetMelodyChord widgetMelodyChord) {
             _widgetMelodyChords.Add(widgetMelodyChord);
-            _measureData.GlobalMelody.Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
+            _measureData.Staffs[_staffIndex].Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
         }
 
         private void ReplaceMelodyChord(int cursorIndex, WidgetMelodyChord chord) {
             _widgetMelodyChords[cursorIndex] = chord;
-            _measureData.GlobalMelody.Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
+            _measureData.Staffs[_staffIndex].Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
         }
 
         private void RemoveWidgetMelodyChord(int cursorIndex) {
             _widgetMelodyChords.RemoveAt(cursorIndex);
-            _measureData.GlobalMelody.Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
+            _measureData.Staffs[_staffIndex].Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
         }
 
         public MelodyMeasureEditor() {
@@ -264,8 +264,8 @@ namespace EZSong.UI.Widgets {
         public void LoadFromModel(int staffIndex, MeasureData measureData, int initialCursor = 0) {
             _staffIndex = staffIndex;
             _measureData = measureData;
-            _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.GlobalMelody.Melody.ToWidgetChords(); //TODO : Gérer plusieurs portées
-            _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _measureData.SongSettings.GetStaffVoice(0)); //TODO : gérer le cas où on a plus d'une portée
+            _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.Staffs[staffIndex].Melody.ToWidgetChords();
+            _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _measureData.SongSettings.GetStaffVoice(0));
             _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, initialCursor));
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);
@@ -297,7 +297,7 @@ namespace EZSong.UI.Widgets {
         }
 
         // Return row index (0..rows-1 from top) and column (0..count)
-        private void HitTest(double x, double y, out int column, out int row) { //TODO : à revoir (si selon si on clique sur le haut ou bas d'une zone, ca ne renvoit pas le bonne ligne) 
+        private void HitTest(double x, double y, out int column, out int row) {
             
             column = (int)Math.Round((x - (NoteWidth / 2)) / NoteWidth);
             if (column < 0) {

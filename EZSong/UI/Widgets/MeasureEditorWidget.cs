@@ -153,12 +153,12 @@ namespace EZSong.UI.Widgets {
 
             //GlobalMelodyEditor = new(_measure);
             GlobalMelodyEditor.MelodyChanged += melody => {
-                _measure.GlobalMelody.Melody = melody;
+                _measure.Staffs[_staffIndex].Melody = melody;
 
                 MeasureChanged?.Invoke(_measure);
             };
             GlobalMelodyEditor.PatternChanged += pattern => {
-                _measure.GlobalMelody.Pattern = pattern;
+                _measure.Staffs[_staffIndex].Pattern = pattern;
                 MeasureChanged?.Invoke(_measure);
             };
             row.PackStart(GlobalMelodyEditor, true, true, 0);

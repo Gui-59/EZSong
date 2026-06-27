@@ -11,6 +11,10 @@ namespace EZSong.Model {
 
     public class MeasureMelody {
 
+        public int StaffIndex {
+            get;
+            set;
+        }
         public List<MelodyChord> MelodyChords
         {
             get;
@@ -18,22 +22,24 @@ namespace EZSong.Model {
         }
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
-        public MeasureMelody() { 
+        public MeasureMelody() {
+            StaffIndex = 0; //Par défaut
             MelodyChords = new List<MelodyChord>();
         }
 
-        public MeasureMelody(List<MelodyChord> melodyChords) {
+        public MeasureMelody(int staffIndex, List<MelodyChord> melodyChords) {
+            StaffIndex = staffIndex;
             MelodyChords = melodyChords;
         }
 
         
 
-        public string ToLilyPondString(MeasureData measureData, int staffIndex) {
+        public string ToLilyPondString(MeasureData measureData) {
 
             string lilyPondString = string.Empty;
 
             //Définition de l'octave de référence (basé sur l'octave de base de la portée)
-            int baseOctave = measureData.SongSettings.StaffsSettings.GetStaffBaseOctave(staffIndex); 
+            int baseOctave = measureData.SongSettings.StaffsSettings.GetStaffBaseOctave(StaffIndex); 
             switch (baseOctave) {
                 case 6:
                     lilyPondString += "\\fixed c'' {";
@@ -52,18 +58,18 @@ namespace EZSong.Model {
                     break;
             }
 
-            bool hasValidCadency = measureData.GlobalMelody.Pattern.HasValidCadency(this, measureData.PrecedingMeasure);
-            bool hasValidNoteCount = measureData.GlobalMelody.Pattern.IsCompatibleWithNoteCount(this, measureData.PrecedingMeasure);
+            bool hasValidCadency = measureData.Staffs[StaffIndex].Pattern.HasValidCadency(this, measureData.PrecedingMeasure);
+            bool hasValidNoteCount = measureData.Staffs[StaffIndex].Pattern.IsCompatibleWithNoteCount(this, measureData.PrecedingMeasure);
 
             //Si la mesure précédente se terminait par une liaison,
             //alors le premier "MelodyChord" de la mesure actuelle doit être
             //le dernier "MelodyChord" de la mesure précédente
             //(comme si on l'avais ressaisie dans la mesure actuelle).
             List<MelodyChord> consideredMelodyChords = MelodyChords;
-            if (measureData.PrecedingMeasure != null && measureData.PrecedingMeasure.GlobalMelody.Pattern.EndsWithTie()) {
+            if (measureData.PrecedingMeasure != null && measureData.PrecedingMeasure.Staffs[StaffIndex].Pattern.EndsWithTie()) {
 
                 consideredMelodyChords = new();
-                consideredMelodyChords.Add(measureData.PrecedingMeasure.GlobalMelody.Melody.MelodyChords.Last());
+                consideredMelodyChords.Add(measureData.PrecedingMeasure.Staffs[StaffIndex].Melody.MelodyChords.Last());
                 foreach (MelodyChord melodyChord in MelodyChords) {
                     consideredMelodyChords.Add(melodyChord);
                 }
@@ -118,7 +124,7 @@ namespace EZSong.Model {
                 int melodyChordIndex = 0;
                 
 
-                foreach (BeatPattern beat in measureData.GlobalMelody.Pattern.Beats) {
+                foreach (BeatPattern beat in measureData.Staffs[StaffIndex].Pattern.Beats) {
 
                     int rhythmElementIndex = 0;
                     foreach (IRhythmElement rhythmElement in beat.Elements) {
@@ -222,9 +228,7 @@ namespace EZSong.Model {
                 melodyChords.Add(melodyChord.ToDto());
             }
 
-            MeasureMelodyDto dto = new() {
-                MelodyChords = melodyChords
-            };
+            MeasureMelodyDto dto = new(StaffIndex, melodyChords);
             return dto;
         }
 
@@ -237,6 +241,7 @@ namespace EZSong.Model {
 
             MeasureMelody measureMelody = 
                 new(
+                    melody.StaffIndex,
                     melodyChords
                 );
             return measureMelody;

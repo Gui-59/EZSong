@@ -171,7 +171,7 @@ namespace EZSong.Exporting.Lilypond {
                 TimeSignature timeSignature = new(m.TimeSignature.Beats, m.TimeSignature.BeatUnit);
                 _ = sw.AppendLine(GenerateLilypondTimeSignature(timeSignature));
 
-                _ = sw.AppendLine(_lilypondConverter.FormatMeasureMelody(m.GlobalMelody.Melody, m, staffIndex));
+                _ = sw.AppendLine(_lilypondConverter.FormatMeasureMelody(m.Staffs[staffIndex].Melody, m));
 
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
             }

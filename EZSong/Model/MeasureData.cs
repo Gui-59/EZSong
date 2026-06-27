@@ -40,7 +40,7 @@ namespace EZSong.Model
             get; 
             set; 
         }      
-        public MeasureGlobalMelody GlobalMelody { //TODO : Gérer des groupes de mélodies
+        public List<MeasureGlobalMelody> Staffs { //Groupes de portées
             get; 
             set; 
         }
@@ -57,17 +57,18 @@ namespace EZSong.Model
             TimeSignature = new TimeSignature();
             KeySignature = new KeySignature();
             ChordSequence = new ChordSequence();
-            GlobalMelody = new MeasureGlobalMelody();
+            Staffs = new List<MeasureGlobalMelody>();
+            Staffs.Add(new MeasureGlobalMelody()); // Toujours au moins une portée
             Lyrics = string.Empty;
         }
 
-        public MeasureData(int index, SongSettings songSettings, TimeSignature timeSignature, KeySignature keySignature, ChordSequence chordSequence, MeasureGlobalMelody globalMelody, string lyrics) {
+        public MeasureData(int index, SongSettings songSettings, TimeSignature timeSignature, KeySignature keySignature, ChordSequence chordSequence, List<MeasureGlobalMelody> staffs, string lyrics) {
             Index = index;
             SongSettings = songSettings;
             TimeSignature = timeSignature;
             KeySignature = keySignature;
             ChordSequence = chordSequence;
-            GlobalMelody = globalMelody;
+            Staffs = staffs;
             Lyrics = lyrics;
         }
 
@@ -79,7 +80,10 @@ namespace EZSong.Model
 
             ChordSequenceDto chordSequence = ChordSequence.ToDto();
 
-            MeasureGlobalMelodyDto globalMelody = GlobalMelody.ToDto();
+            List<MeasureGlobalMelodyDto> staffs = new();
+            foreach (MeasureGlobalMelody staff in Staffs) {
+                staffs.Add(staff.ToDto());            
+            }
 
             String lyrics = Lyrics ?? string.Empty;
 
@@ -88,12 +92,18 @@ namespace EZSong.Model
                 TimeSignature = timeSignature,
                 KeySignature = keySignature,
                 ChordSequence = chordSequence,
-                GlobalMelody = globalMelody,
+                Staffs = staffs,
                 Lyrics = lyrics,          
             };
         }
 
         public static MeasureData FromDto(MeasureDataDto dto, SongSettings songSettings) {
+
+            List<MeasureGlobalMelody> staffs = new();
+            foreach (MeasureGlobalMelodyDto staff in dto.Staffs) {
+                staffs.Add(MeasureGlobalMelody.FromDto(staff));
+            }
+
             MeasureData measure = 
                 new(
                     dto.Index,
@@ -101,7 +111,7 @@ namespace EZSong.Model
                     TimeSignature.FromDto(dto.TimeSignature), 
                     KeySignature.FromDto(dto.KeySignature),
                     ChordSequence.FromDto(dto.ChordSequence),
-                    MeasureGlobalMelody.FromDto(dto.GlobalMelody), 
+                    staffs, 
                     dto.Lyrics
                 );               
 

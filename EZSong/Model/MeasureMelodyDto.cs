@@ -14,19 +14,25 @@ namespace EZSong.Model {
      * - aucune logique
      */
     public class MeasureMelodyDto {
-        public List<MelodyChordDto> MelodyChords { 
-            get; 
-            set; 
+
+        public int StaffIndex {
+            get;
+            set;
         }
-        public MeasureRhythmPatternDto RhythmPattern { 
+        public List<MelodyChordDto> MelodyChords { 
             get; 
             set; 
         }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public MeasureMelodyDto() {
+            StaffIndex = 0; //Par défaut
             MelodyChords = new List<MelodyChordDto>();
-            RhythmPattern = new MeasureRhythmPatternDto();
+        }
+
+        public MeasureMelodyDto(int staffIndex, List<MelodyChordDto> melodyChords) {
+            StaffIndex = staffIndex;
+            MelodyChords = melodyChords;
         }
     }
 }

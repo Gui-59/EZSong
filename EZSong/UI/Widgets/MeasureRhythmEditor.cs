@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 namespace EZSong.UI.Widgets {
     public class MeasureRhythmEditor : DrawingArea {
 
+        private int _staffIndex;
         private MeasureData? _measureData;
 
 
@@ -19,10 +20,10 @@ namespace EZSong.UI.Widgets {
             if (_measureData == null) {
                 return false;
             }
-            if (_measureData.GlobalMelody.Pattern == null) {
+            if (_measureData.Staffs[_staffIndex].Pattern == null) {
                 return false;
             }
-            return _measureData.GlobalMelody.Pattern.IsCompatibleWithNoteCount(_measureData.GlobalMelody.Melody, _measureData.PrecedingMeasure);
+            return _measureData.Staffs[_staffIndex].Pattern.IsCompatibleWithNoteCount(_measureData.Staffs[_staffIndex].Melody, _measureData.PrecedingMeasure);
         }
  
         int _statusAreaHeight = 15;
@@ -30,12 +31,14 @@ namespace EZSong.UI.Widgets {
         public MeasureRhythmEditor() {
             HeightRequest = 50; //Taille fixe pour éviter les problèmes de redimensionnement
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
+            _staffIndex = 0; //Par défaut
             _measureData = new();
         }
 
-        public MeasureRhythmEditor(MeasureData measureData) {
+        public MeasureRhythmEditor(int staffIndex, MeasureData measureData) {
             HeightRequest = 50; //Taille fixe pour éviter les problèmes de redimensionnement
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
+            _staffIndex = staffIndex;
             _measureData = measureData;
         }
 
@@ -43,7 +46,7 @@ namespace EZSong.UI.Widgets {
             if (_measureData == null) {
                 return true;
             }
-            if (_measureData.GlobalMelody.Pattern == null) {
+            if (_measureData.Staffs[_staffIndex].Pattern == null) {
                 return true;
             }
 
@@ -64,14 +67,14 @@ namespace EZSong.UI.Widgets {
             if (_measureData == null) {
                 return;
             }
-            if (_measureData.GlobalMelody.Pattern == null) {
+            if (_measureData.Staffs[_staffIndex].Pattern == null) {
                 return;
             }
 
             double width = Allocation.Width;
             double height = Allocation.Height;
 
-            int beatCount = _measureData.GlobalMelody.Pattern.TimeSignature.GetBeatCount();
+            int beatCount = _measureData.Staffs[_staffIndex].Pattern.TimeSignature.GetBeatCount();
 
             if (beatCount == 0) {
                 return;
@@ -82,7 +85,7 @@ namespace EZSong.UI.Widgets {
             for (int i = 0; i < beatCount; i++) {
                 double x = i * beatWidth;
 
-                DrawBeat(cr, _measureData.GlobalMelody.Pattern.Beats[i], x, beatWidth, height);
+                DrawBeat(cr, _measureData.Staffs[_staffIndex].Pattern.Beats[i], x, beatWidth, height);
             }
         }
 
@@ -164,12 +167,12 @@ namespace EZSong.UI.Widgets {
                 return false;
             }
 
-            if (_measureData.GlobalMelody.Pattern == null) {
+            if (_measureData.Staffs[_staffIndex].Pattern == null) {
                 return false;
             }
 
             double width = Allocation.Width;
-            int beatCount = _measureData.GlobalMelody.Pattern.Beats.Count;
+            int beatCount = _measureData.Staffs[_staffIndex].Pattern.Beats.Count;
 
             double beatWidth = width / beatCount;
 
@@ -204,21 +207,21 @@ namespace EZSong.UI.Widgets {
             if (_measureData == null) {
                 return;
             }
-            if (_measureData.GlobalMelody.Pattern == null) {
+            if (_measureData.Staffs[_staffIndex].Pattern == null) {
                 return;
             }
 
-            BeatPattern beat = _measureData.GlobalMelody.Pattern.Beats[index];
+            BeatPattern beat = _measureData.Staffs[_staffIndex].Pattern.Beats[index];
             beat.Elements.Clear();
 
-            PatternChanged?.Invoke(_measureData.GlobalMelody.Pattern);
+            PatternChanged?.Invoke(_measureData.Staffs[_staffIndex].Pattern);
         }
 
         private void EditBeat(int index) {
             if (_measureData == null) {
                 return;
             }
-            if (_measureData.GlobalMelody.Pattern == null) {
+            if (_measureData.Staffs[_staffIndex].Pattern == null) {
                 return;
             }
 
@@ -233,16 +236,16 @@ namespace EZSong.UI.Widgets {
             if (_measureData == null) {
                 return;
             }
-            if (_measureData.GlobalMelody.Pattern == null) {
+            if (_measureData.Staffs[_staffIndex].Pattern == null) {
                 return;
             }
 
-            BeatPattern beat = _measureData.GlobalMelody.Pattern.Beats[index];
+            BeatPattern beat = _measureData.Staffs[_staffIndex].Pattern.Beats[index];
 
             RhythmElementPickerPopover popover = new(this);
 
             double width = Allocation.Width;
-            int beatCount = _measureData.GlobalMelody.Pattern.Beats.Count;
+            int beatCount = _measureData.Staffs[_staffIndex].Pattern.Beats.Count;
             double beatWidth = width / beatCount;
 
             int beatX = (int)(index * beatWidth);
@@ -254,12 +257,12 @@ namespace EZSong.UI.Widgets {
                 _statusAreaHeight
             );
 
-            RhythmRationalDuration remaining = beat.GetRemainingDuration(_measureData.GlobalMelody.Pattern.TimeSignature.GetBeatDuration());
+            RhythmRationalDuration remaining = beat.GetRemainingDuration(_measureData.Staffs[_staffIndex].Pattern.TimeSignature.GetBeatDuration());
 
             popover.ElementSelected += element =>
             {
 
-                BeatPattern beat = _measureData.GlobalMelody.Pattern.Beats[index];
+                BeatPattern beat = _measureData.Staffs[_staffIndex].Pattern.Beats[index];
 
 
                 if (element == null) {
@@ -288,7 +291,7 @@ namespace EZSong.UI.Widgets {
                         //  return;
                         //}
 
-                        if (!beat.CanAdd(rhythmElement, _measureData.GlobalMelody.Pattern.TimeSignature.GetBeatDuration())) {
+                        if (!beat.CanAdd(rhythmElement, _measureData.Staffs[_staffIndex].Pattern.TimeSignature.GetBeatDuration())) {
                             return;
                         }
 
@@ -303,7 +306,7 @@ namespace EZSong.UI.Widgets {
                         //  return;
                         //}
 
-                        if (!beat.CanAdd(rhythmElement, _measureData.GlobalMelody.Pattern.TimeSignature.GetBeatDuration())) {
+                        if (!beat.CanAdd(rhythmElement, _measureData.Staffs[_staffIndex].Pattern.TimeSignature.GetBeatDuration())) {
                             return;
                         }
 
@@ -312,7 +315,7 @@ namespace EZSong.UI.Widgets {
                         
                     }
 
-                    PatternChanged?.Invoke(_measureData.GlobalMelody.Pattern);
+                    PatternChanged?.Invoke(_measureData.Staffs[_staffIndex].Pattern);
                 }
             };
 
@@ -340,11 +343,11 @@ namespace EZSong.UI.Widgets {
             if (_measureData == null) {
                 return;
             }
-            if (_measureData.GlobalMelody.Pattern == null) {
+            if (_measureData.Staffs[_staffIndex].Pattern == null) {
                 return;
             }
 
-            if (!_measureData.GlobalMelody.Pattern.IsDurationValid() || !_measureData.GlobalMelody.Pattern.AreBeatsValid()) {
+            if (!_measureData.Staffs[_staffIndex].Pattern.IsDurationValid() || !_measureData.Staffs[_staffIndex].Pattern.AreBeatsValid()) {
                 cr.SetSourceRGB(0.8, 0.2, 0.2); // rouge
             } else if (!NoteOK()) {
                 cr.SetSourceRGB(0.8, 0.6, 1); 
@@ -356,7 +359,7 @@ namespace EZSong.UI.Widgets {
             cr.Fill();
 
             double width = Allocation.Width;
-            int beatCount = _measureData.GlobalMelody.Pattern.TimeSignature.GetBeatCount();
+            int beatCount = _measureData.Staffs[_staffIndex].Pattern.TimeSignature.GetBeatCount();
 
             double beatWidth = width / beatCount;
 
@@ -389,8 +392,8 @@ namespace EZSong.UI.Widgets {
             if (_measureData == null) {
                 return;
             }
-            if (_measureData.GlobalMelody.Pattern != null) {
-                _measureData.GlobalMelody.Pattern.TimeSignature = timeSignature;
+            if (_measureData.Staffs[_staffIndex].Pattern != null) {
+                _measureData.Staffs[_staffIndex].Pattern.TimeSignature = timeSignature;
 
                 QueueDraw();
             }

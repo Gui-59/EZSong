@@ -4,6 +4,11 @@ namespace EZSong.Model {
 
     public class MeasureRhythmPattern {
 
+        public int StaffIndex {
+            get;
+            set;
+        }
+
         private readonly List<BeatPattern> _beats = new();
 
         public IReadOnlyList<BeatPattern> Beats {
@@ -34,11 +39,13 @@ namespace EZSong.Model {
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public MeasureRhythmPattern() {
+            StaffIndex = 0; //Par défaut
             _timeSignature = new TimeSignature();
             InitializeFromTimeSignature(TimeSignature);
         }
 
-        public MeasureRhythmPattern(TimeSignature ts) {
+        public MeasureRhythmPattern(int staffIndex, TimeSignature ts) {
+            StaffIndex = staffIndex;
             _timeSignature = ts;
             InitializeFromTimeSignature(ts);
         }
@@ -65,7 +72,7 @@ namespace EZSong.Model {
 
             BeatPattern? previousBeat = null;
             if (previousMeasure != null) {
-                previousBeat = previousMeasure.GlobalMelody.Pattern.Beats.Last();
+                previousBeat = previousMeasure.Staffs[StaffIndex].Pattern.Beats.Last();
             }
 
             foreach (BeatPattern beat in Beats) {
@@ -215,17 +222,14 @@ namespace EZSong.Model {
                 beatDtos.Add(BeatPattern.ToDto(beat));
             }
 
-            MeasureRhythmPatternDto measureRhythmPatternDto = new() {
-                Beats = beatDtos,    
-                TimeSignature = TimeSignature
-            };
+            MeasureRhythmPatternDto measureRhythmPatternDto = new(StaffIndex, beatDtos, TimeSignature);
 
             return measureRhythmPatternDto;
         }
        
         public static MeasureRhythmPattern FromDto(MeasureRhythmPatternDto dto) {
 
-            MeasureRhythmPattern pattern = new(dto.TimeSignature) {};
+            MeasureRhythmPattern pattern = new(dto.StaffIndex, dto.TimeSignature) {};
 
             int i = 0;
             foreach (BeatPatternDto beat in dto.Beats) {
