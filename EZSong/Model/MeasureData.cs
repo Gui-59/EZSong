@@ -93,11 +93,11 @@ namespace EZSong.Model
             };
         }
 
-        public static MeasureData FromDto(MeasureDataDto dto) {
+        public static MeasureData FromDto(MeasureDataDto dto, SongSettings songSettings) {
             MeasureData measure = 
                 new(
-                    dto.Index, 
-                    SongSettings.FromDto(dto.SongSettings),
+                    dto.Index,
+                    songSettings,
                     TimeSignature.FromDto(dto.TimeSignature), 
                     KeySignature.FromDto(dto.KeySignature),
                     ChordSequence.FromDto(dto.ChordSequence),

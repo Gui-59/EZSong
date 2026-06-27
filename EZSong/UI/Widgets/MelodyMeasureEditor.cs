@@ -23,6 +23,8 @@ namespace EZSong.UI.Widgets {
 
         private UserSettings _userSettings;
 
+        private SoundFontManager _soundFontManager;
+
         // Public properties for configuration
         public int MinimumNoteHeight { get; set; } = 14;
         public int NoteWidth { get; set; } = 20; // width reserved per chord slot
@@ -92,8 +94,8 @@ namespace EZSong.UI.Widgets {
             _cursorTimeoutId = GLib.Timeout.Add(500, OnCursorTimer);
             CanFocus = true;
 
-            SoundFontManager soundFontManager = new();
-            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, _measureData.SongSettings.GetStaffVoice(0)); //TODO : gérer le cas où on a plus d'une portée
+            _soundFontManager = new();
+            _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _userSettings.MidiInputDefaultVoice);
 
         }
 
@@ -259,6 +261,7 @@ namespace EZSong.UI.Widgets {
         public void LoadFromModel(MeasureData measureData, int initialCursor = 0) {
             _measureData = measureData;
             _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.GlobalMelody.Melody.ToWidgetChords();
+            _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _measureData.SongSettings.GetStaffVoice(0)); //TODO : gérer le cas où on a plus d'une portée
             _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, initialCursor));
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);

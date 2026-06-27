@@ -58,12 +58,14 @@ namespace EZSong.Model
 
         public static Song FromDto(SongDto dto) {
 
+            SongSettings songSettings = SongSettings.FromDto(dto.SongSettings);
+
             List<MeasureData> measures = new();
             foreach (MeasureDataDto m in dto.Measures) {
-                measures.Add(MeasureData.FromDto(m));
+                measures.Add(MeasureData.FromDto(m, songSettings));
             }
 
-            Song song = new(dto.Title, dto.Artist, dto.Comment, measures, SongSettings.FromDto(dto.SongSettings));
+            Song song = new(dto.Title, dto.Artist, dto.Comment, measures, songSettings);
 
             return song;
         }

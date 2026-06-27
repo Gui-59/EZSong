@@ -24,6 +24,10 @@ namespace EZSong.Model {
             Staffs = new();
         }
 
+        public StaffsSettingsDto(List<StaffSettingsDto> staffs) {
+            Staffs = staffs;
+        }
+
 
     }
 }

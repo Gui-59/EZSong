@@ -25,7 +25,11 @@ namespace EZSong.Model {
         }
 
         public StaffsSettingsDto ToDto() {
-            return new StaffsSettingsDto();
+            List<StaffSettingsDto> staffs = new();
+            foreach (StaffSettings staffSettings in Staffs) {
+                staffs.Add(staffSettings.ToDto());
+            }
+            return new StaffsSettingsDto(staffs);
         }
 
         public static StaffsSettings FromDto(StaffsSettingsDto dto) {
