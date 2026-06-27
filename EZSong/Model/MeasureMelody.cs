@@ -28,12 +28,12 @@ namespace EZSong.Model {
 
         
 
-        public string ToLilyPondString(MeasureData measureData) {
+        public string ToLilyPondString(MeasureData measureData, int staffIndex) {
 
             string lilyPondString = string.Empty;
 
-            //Définition de l'octave de référence
-            int baseOctave = Settings.Constants.MelodyBaseOctave; //TODO : détecter si on est en mode mélodie ou basse
+            //Définition de l'octave de référence (basé sur l'octave de base de la portée)
+            int baseOctave = measureData.SongSettings.StaffsSettings.GetStaffBaseOctave(staffIndex); 
             switch (baseOctave) {
                 case 6:
                     lilyPondString += "\\fixed c'' {";
@@ -93,14 +93,14 @@ namespace EZSong.Model {
                         lilyPondString += Environment.NewLine;
 
                         if (melodyChord.Pitches.Count == 1) {
-                            lilyPondString += melodyChord.Pitches[0].ToLilyPondString();
+                            lilyPondString += melodyChord.Pitches[0].ToLilyPondString(baseOctave);
                             lilyPondString += "1";//Durée fixe
                             lilyPondString += " ";
                         } else {
                             //Dans Lilypond les notes d'un accords sont entre chevrons
                             lilyPondString += " < ";
                             foreach (Pitch pitch in melodyChord.Pitches) {
-                                lilyPondString += pitch.ToLilyPondString();
+                                lilyPondString += pitch.ToLilyPondString(baseOctave);
 
                                 lilyPondString += " ";
                             }
@@ -133,14 +133,14 @@ namespace EZSong.Model {
                                     lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
                                 } else {
                                     if (consideredMelodyChords[melodyChordIndex].Pitches.Count == 1) {
-                                        lilyPondString += consideredMelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
+                                        lilyPondString += consideredMelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString(baseOctave);
                                         lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
                                         lilyPondString += " ";
                                     } else {
                                         //Dans Lilypond les notes d'un accords sont entre chevrons
                                         lilyPondString += " < ";
                                         foreach (Pitch pitch in consideredMelodyChords[melodyChordIndex].Pitches) {
-                                            lilyPondString += pitch.ToLilyPondString();
+                                            lilyPondString += pitch.ToLilyPondString(baseOctave);
                                             lilyPondString += " ";
                                         }
                                         lilyPondString += " > ";
@@ -167,14 +167,14 @@ namespace EZSong.Model {
                             } else {
 
                                 if (consideredMelodyChords[melodyChordIndex].Pitches.Count == 1) {
-                                    lilyPondString += consideredMelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString();
+                                    lilyPondString += consideredMelodyChords[melodyChordIndex].Pitches[0].ToLilyPondString(baseOctave);
                                     lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
                                     lilyPondString += " ";
                                 } else {
                                     //Dans Lilypond les notes d'un accords sont entre chevrons
                                     lilyPondString += " < ";
                                     foreach (Pitch pitch in consideredMelodyChords[melodyChordIndex].Pitches) {
-                                        lilyPondString += pitch.ToLilyPondString();
+                                        lilyPondString += pitch.ToLilyPondString(baseOctave);
 
                                         lilyPondString += " ";
                                     }

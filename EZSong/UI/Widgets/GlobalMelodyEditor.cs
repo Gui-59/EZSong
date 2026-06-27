@@ -21,9 +21,9 @@ namespace EZSong.UI.Widgets {
         public event Action<MeasureRhythmPattern>? PatternChanged;
 
 
-        public GlobalMelodyEditor(MeasureData measureData) {
+        public GlobalMelodyEditor(int staffIndex, MeasureData measureData) {
             MelodyMeasureEditor = new();
-            MelodyMeasureEditor.LoadFromModel(measureData, initialCursor: 0);
+            MelodyMeasureEditor.LoadFromModel(staffIndex, measureData, initialCursor: 0);
             _rhythmEditor = new();
             _rhythmEditor.LoadFromModel(measureData);
             BuildUI();

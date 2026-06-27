@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets {
     public class MeasureEditorWidget : Frame {
+
+        private int _staffIndex;
         private MeasureData _measure;
 
         public GlobalMelodyEditor GlobalMelodyEditor { 
@@ -23,14 +25,10 @@ namespace EZSong.UI.Widgets {
 
         private SelectableValues _selectableValues = new();
 
-        public MeasureEditorWidget() {
-            _measure = new MeasureData();
-             GlobalMelodyEditor = new(_measure); 
-        }
-
-        public MeasureEditorWidget(MeasureData measure) {
+        public MeasureEditorWidget(int staffIndex, MeasureData measure) {
+            _staffIndex = staffIndex;
             _measure = measure;
-            GlobalMelodyEditor = new(_measure);
+            GlobalMelodyEditor = new(_staffIndex, _measure);
             BuildUI();
         }
 

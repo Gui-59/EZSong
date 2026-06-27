@@ -4,7 +4,7 @@ using EZSong.Model;
 namespace EZSong.Exporting.Lilypond {
     public interface ILilypondConverter {
 
-        string FormatMeasureMelody(MeasureMelody melody, MeasureData measureData);
+        string FormatMeasureMelody(MeasureMelody melody, MeasureData measureData, int staffIndex);
         string FormatChordSequence(ChordSequence chordSequence);
         string FormatTimeSignature(TimeSignature timeSignature);
 

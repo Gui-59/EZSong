@@ -44,7 +44,10 @@ namespace EZSong.Exporting.Lilypond {
 
             fullScript += GenerateLilypondScriptHeader();
             fullScript += GenerateLilypondSheetHeader();
-            fullScript += GenerateLilypondSongmelodyVar();
+
+            int staffIndex = 0;
+            fullScript += GenerateLilypondSongmelodyVar(staffIndex);
+
             fullScript += GenerateLilypondSongchordsVar();
             fullScript += GenerateLilypondSonglyricsVar();
             fullScript += GenerateLilypondScoreAssembly();
@@ -113,7 +116,7 @@ namespace EZSong.Exporting.Lilypond {
             return sw.ToString();
         }
 
-        private string GenerateLilypondSongmelodyVar() {
+        private string GenerateLilypondSongmelodyVar(int staffIndex) {
             StringBuilder sw = new();
 
            /*
@@ -168,7 +171,7 @@ namespace EZSong.Exporting.Lilypond {
                 TimeSignature timeSignature = new(m.TimeSignature.Beats, m.TimeSignature.BeatUnit);
                 _ = sw.AppendLine(GenerateLilypondTimeSignature(timeSignature));
 
-                _ = sw.AppendLine(_lilypondConverter.FormatMeasureMelody(m.GlobalMelody.Melody, m));
+                _ = sw.AppendLine(_lilypondConverter.FormatMeasureMelody(m.GlobalMelody.Melody, m, staffIndex));
 
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
             }

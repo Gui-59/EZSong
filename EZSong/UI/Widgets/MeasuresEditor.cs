@@ -48,7 +48,9 @@ namespace EZSong.UI.Widgets {
         }
 
         public void AddMeasure(MeasureData measure) {
-            MeasureEditorWidget widget = new(measure);
+
+            int staffIndex = 0; //TODO :Gérer plusieurs portées
+            MeasureEditorWidget widget = new(staffIndex, measure);
 
             widget.WidthRequest = 200;
 

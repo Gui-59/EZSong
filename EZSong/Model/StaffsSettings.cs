@@ -43,5 +43,9 @@ namespace EZSong.Model {
         public GMVoice GetStaffVoice(int staffIndex) {
             return Staffs[staffIndex].Voice;
         }
+
+        internal int GetStaffBaseOctave(int staffIndex) {
+            return Staffs[staffIndex].BaseOctave;
+        }
     }
 }

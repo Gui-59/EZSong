@@ -16,6 +16,7 @@ using EZSong.Settings;
 namespace EZSong.UI.Widgets {
     public class MelodyMeasureEditor : DrawingArea {
 
+        private int _staffIndex;
         private MeasureData _measureData;
 
         // Model: sequence of chords (positioned sequentially)
@@ -218,9 +219,11 @@ namespace EZSong.UI.Widgets {
         }
 
         private int GetUpperDisplayedMidiNoteNumber() {
+            int baseOctave = _measureData.SongSettings.StaffsSettings.GetStaffBaseOctave(_staffIndex);
+
             //TODO : Simplifier (pour être plus efficace)
             int octavesAboveOrBelowBaseOctave = (DisplayedOctaveCount - 1) / 2;
-            Pitch UpperDisplayedMidiNoteNumberPitch = new(NoteStep.B, Alteration.neutral, Constants.MelodyBaseOctave + octavesAboveOrBelowBaseOctave);
+            Pitch UpperDisplayedMidiNoteNumberPitch = new(NoteStep.B, Alteration.neutral, baseOctave + octavesAboveOrBelowBaseOctave);
             return UpperDisplayedMidiNoteNumberPitch.ToWidgetPitch().MidiNoteNumber;
         }
 
@@ -258,9 +261,10 @@ namespace EZSong.UI.Widgets {
         }
 
         // PUBLIC API: load external model into widget
-        public void LoadFromModel(MeasureData measureData, int initialCursor = 0) {
+        public void LoadFromModel(int staffIndex, MeasureData measureData, int initialCursor = 0) {
+            _staffIndex = staffIndex;
             _measureData = measureData;
-            _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.GlobalMelody.Melody.ToWidgetChords();
+            _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.GlobalMelody.Melody.ToWidgetChords(); //TODO : Gérer plusieurs portées
             _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _measureData.SongSettings.GetStaffVoice(0)); //TODO : gérer le cas où on a plus d'une portée
             _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, initialCursor));
             QueueDraw();

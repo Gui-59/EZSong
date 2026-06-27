@@ -20,11 +20,17 @@ namespace EZSong.Model {
             get; set;
         }
 
+        public int BaseOctave {
+            get;
+            set;
+        }
+
         public StaffSettingsDto() {
         }
 
-        public StaffSettingsDto(GMVoice voice) {
+        public StaffSettingsDto(GMVoice voice, int baseOctave) {
             Voice = voice;
+            BaseOctave = baseOctave;
         }
     }
 }

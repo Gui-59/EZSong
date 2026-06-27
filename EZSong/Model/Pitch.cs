@@ -32,7 +32,7 @@ namespace EZSong.Model {
         public Pitch() {
             Note = NoteStep.C;
             Alteration = Alteration.neutral;
-            MidiOctave = Constants.MelodyBaseOctave;
+            MidiOctave = Constants.MelodyBaseOctave; //Par défaut
             _lilypondConverter = new LilypondConverter();
         }
 
@@ -49,13 +49,13 @@ namespace EZSong.Model {
             MidiOctave = midiOctave;
         }
 
-        public string ToLilyPondString() {
+        public string ToLilyPondString(int baseOctave) {
             string lilyPondString = string.Empty;
 
             lilyPondString += _lilypondConverter.NoteStepToLilyPondString(Note);
             lilyPondString += _lilypondConverter.AlterationToLilyPondString(Alteration);
 
-            int sheetOctaveOffset = MidiOctave - Constants.MelodyBaseOctave;
+            int sheetOctaveOffset = MidiOctave - baseOctave;
 
             if (sheetOctaveOffset > 0) {
 
