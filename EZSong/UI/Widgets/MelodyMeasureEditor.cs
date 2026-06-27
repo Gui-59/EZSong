@@ -27,8 +27,8 @@ namespace EZSong.UI.Widgets {
         private SoundFontManager _soundFontManager;
 
         // Public properties for configuration
-        public int MinimumNoteHeight { get; set; } = 14;
-        public int NoteWidth { get; set; } = 20; // width reserved per chord slot
+        public int MinimumNoteHeight { get; set; } = 8;
+        public int NoteWidth { get; set; } = 15; // width reserved per chord slot
         public int DisplayedOctaveCount { get; set; } = 3; // number of octaves to display; must be even
 
 
