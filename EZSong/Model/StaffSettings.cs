@@ -25,7 +25,7 @@ namespace EZSong.Model {
         }
 
         public StaffSettingsDto ToDto() {
-            return new StaffSettingsDto();
+            return new StaffSettingsDto(Voice);
         }
 
         public static StaffSettings FromDto(StaffSettingsDto dto) {

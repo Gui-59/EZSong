@@ -22,5 +22,9 @@ namespace EZSong.Model {
 
         public StaffSettingsDto() {
         }
+
+        public StaffSettingsDto(GMVoice voice) {
+            Voice = voice;
+        }
     }
 }
