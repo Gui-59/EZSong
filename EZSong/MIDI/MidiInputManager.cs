@@ -38,7 +38,7 @@ namespace EZSong.MIDI {
 
         public MidiInputManager() {
             SoundFontManager soundFontManager = new();
-            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, _midiUserSettings.MidiInputEchoVoice);
+            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, _midiUserSettings.MidiInputDefaultVoice); //TODO : Adapter l'echo à la voice de la portée ?
         }
 
         public static IEnumerable<string> GetAvailableDevices() {

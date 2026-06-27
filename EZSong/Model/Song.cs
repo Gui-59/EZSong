@@ -23,6 +23,7 @@ namespace EZSong.Model
             set; 
         }
         public List<MeasureData> Measures;
+        public SongSettings SongSettings;
 
         //Constructeur vide (requis, entre autres, pour la (dé)sérialisation JSON)
         public Song() { 
@@ -30,13 +31,15 @@ namespace EZSong.Model
             Artist = string.Empty;
             Comment = string.Empty;
             Measures = new List<MeasureData>();
+            SongSettings = new(new StaffsSettings());
         }
 
-        public Song(string title, string artist, string comment, List<MeasureData> measures) {
+        public Song(string title, string artist, string comment, List<MeasureData> measures, SongSettings songSettings) {
             Title = title;
             Artist = artist;    
             Comment = comment;  
-            Measures = measures;    
+            Measures = measures;
+            SongSettings = songSettings;
         }
 
         public SongDto ToDto() {
@@ -48,7 +51,8 @@ namespace EZSong.Model
                 Title = Title,
                 Artist = Artist,
                 Comment = Comment,
-                Measures = measures
+                Measures = measures,
+                SongSettings = SongSettings.ToDto()
             };
         }
 
@@ -59,7 +63,7 @@ namespace EZSong.Model
                 measures.Add(MeasureData.FromDto(m));
             }
 
-            Song song = new(dto.Title, dto.Artist, dto.Comment, measures);
+            Song song = new(dto.Title, dto.Artist, dto.Comment, measures, SongSettings.FromDto(dto.SongSettings));
 
             return song;
         }

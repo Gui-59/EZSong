@@ -30,6 +30,10 @@ namespace EZSong.Model {
             get;
             set; 
         }
+        public SongSettingsDto SongSettings {
+            get;
+            set;
+        }
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public SongDto() {
@@ -37,6 +41,7 @@ namespace EZSong.Model {
             Artist = string.Empty;  
             Comment = string.Empty; 
             Measures = new List<MeasureDataDto>();
+            SongSettings = new();
         }
     }
 }

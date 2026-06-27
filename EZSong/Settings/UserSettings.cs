@@ -18,13 +18,13 @@ namespace EZSong.Settings {
             }
         }
 
-        GMVoice _midiInputEchoVoice = GMVoice.PIPE_PanFlute;
-        public GMVoice MidiInputEchoVoice {
+        GMVoice _midiInputEchoDefaultVoice = GMVoice.PIANO_BrightAcoustic;
+        public GMVoice MidiInputDefaultVoice {
             get {
-                return _midiInputEchoVoice;
+                return _midiInputEchoDefaultVoice;
             }
             set {
-                _midiInputEchoVoice = value;
+                _midiInputEchoDefaultVoice = value;
             }
         }
 

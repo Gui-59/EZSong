@@ -144,6 +144,7 @@ namespace EZSong.UI.Widgets {
         private MeasureData CreateEmptyMeasure(int index, TimeSignature ts) {
             return new MeasureData(
                 index,
+                _song.SongSettings,
                 ts,
                 new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major),
                 new ChordSequence(""),

@@ -15,6 +15,10 @@ namespace EZSong.Model
             set; 
         }
 
+        public SongSettings SongSettings {
+            get;
+            set;
+        }
         public MeasureData? PrecedingMeasure {
             get; 
             set;
@@ -44,10 +48,12 @@ namespace EZSong.Model
             get; 
             set; 
         }
+        
 
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
-        public MeasureData() { 
+        public MeasureData() {
+            SongSettings = new SongSettings();
             TimeSignature = new TimeSignature();
             KeySignature = new KeySignature();
             ChordSequence = new ChordSequence();
@@ -55,8 +61,9 @@ namespace EZSong.Model
             Lyrics = string.Empty;
         }
 
-        public MeasureData(int index, TimeSignature timeSignature, KeySignature keySignature, ChordSequence chordSequence, MeasureGlobalMelody globalMelody, string lyrics) {
+        public MeasureData(int index, SongSettings songSettings, TimeSignature timeSignature, KeySignature keySignature, ChordSequence chordSequence, MeasureGlobalMelody globalMelody, string lyrics) {
             Index = index;
+            SongSettings = songSettings;
             TimeSignature = timeSignature;
             KeySignature = keySignature;
             ChordSequence = chordSequence;
@@ -90,6 +97,7 @@ namespace EZSong.Model
             MeasureData measure = 
                 new(
                     dto.Index, 
+                    SongSettings.FromDto(dto.SongSettings),
                     TimeSignature.FromDto(dto.TimeSignature), 
                     KeySignature.FromDto(dto.KeySignature),
                     ChordSequence.FromDto(dto.ChordSequence),

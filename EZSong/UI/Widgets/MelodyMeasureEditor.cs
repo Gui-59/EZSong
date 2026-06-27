@@ -93,7 +93,7 @@ namespace EZSong.UI.Widgets {
             CanFocus = true;
 
             SoundFontManager soundFontManager = new();
-            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, _userSettings.MidiInputEchoVoice);
+            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, _measureData.SongSettings.GetStaffVoice(0)); //TODO : gérer le cas où on a plus d'une portée
 
         }
 

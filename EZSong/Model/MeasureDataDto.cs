@@ -20,6 +20,11 @@ namespace EZSong.Model {
             set;
         }
 
+        public SongSettingsDto SongSettings {
+            get;
+            set;
+        }
+
         public TimeSignatureDto TimeSignature {
             get; 
             set;
@@ -49,6 +54,7 @@ namespace EZSong.Model {
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public MeasureDataDto() {
+            SongSettings = new SongSettingsDto();
             TimeSignature = new TimeSignatureDto();
             KeySignature = new KeySignatureDto();
             ChordSequence = new ChordSequenceDto();
