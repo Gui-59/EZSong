@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class MeasureEditorWidget : Frame {
 
+        private int _staffIndex;
         private MeasureData _measure;
 
         public GlobalMelodyEditor GlobalMelodyEditor { 
@@ -27,8 +28,8 @@ namespace EZSong.UI.Widgets {
         public MeasureEditorWidget(MeasureData measure) {
             _measure = measure;
 
-            int staffIndex = 0; //TODO : Boucler sur les portées (ou choisir la portée à afficher)
-            GlobalMelodyEditor = new(staffIndex, _measure); 
+            _staffIndex = 0; 
+            GlobalMelodyEditor = new(_staffIndex, _measure); 
             BuildUI();
         }
 
@@ -179,6 +180,11 @@ namespace EZSong.UI.Widgets {
             Add(row);
 
             ShowAll();
+        }
+
+        internal void RefreshDisplayedStaff(int staffIndex) {
+            _staffIndex = staffIndex;
+            GlobalMelodyEditor.RefreshDisplayedStaff(staffIndex);
         }
     }
 }

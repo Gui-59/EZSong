@@ -49,13 +49,14 @@ namespace EZSong.Model
             foreach (MeasureData m in Measures) {
                 measures.Add(m.ToDto());
             }
-            return new SongDto () {
-                Title = Title,
-                Artist = Artist,
-                Comment = Comment,
-                Measures = measures,
-                SongSettings = SongSettings.ToDto()
-            };
+            return 
+                new SongDto (
+                    Title, 
+                    Artist, 
+                    Comment, 
+                    measures, 
+                    SongSettings.ToDto()
+                );
         }
 
         public static Song FromDto(SongDto dto) {
@@ -70,6 +71,17 @@ namespace EZSong.Model
             Song song = new(dto.Title, dto.Artist, dto.Comment, measures, songSettings);
 
             return song;
+        }
+
+        internal void AddStaff() {
+            int newStaffCount = SongSettings.AddStaff();
+            AddOrRemoveMesuresStaffs(newStaffCount);
+        }
+
+        private void AddOrRemoveMesuresStaffs(int excpectedStaffCount) {
+            foreach (MeasureData measure in Measures) {
+                measure.AddOrRemoveStaffs(excpectedStaffCount);
+            }
         }
     }
 

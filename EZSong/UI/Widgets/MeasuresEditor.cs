@@ -12,11 +12,10 @@ namespace EZSong.UI.Widgets {
         private Box _container;
         private Song _song;
 
-        private List<GlobalMelodyEditor> _globalMelodyEditorWidgets;
+        private int _staffIndex;
 
         public MeasuresEditor() {
             _song = new Song();
-            _globalMelodyEditorWidgets = new();
             _container = new Box(Orientation.Horizontal, 4);
             Add(_container);
         }
@@ -38,6 +37,15 @@ namespace EZSong.UI.Widgets {
                 AddMeasure(_song.Measures[i]);
             }
 
+            ShowAll();
+        }
+
+        internal void RefreshDisplayedStaff(int staffIndex) {
+            _staffIndex = staffIndex;
+            foreach (MeasureEditorWidget measureEditorWidget in _container.Children) {
+                measureEditorWidget.RefreshDisplayedStaff(staffIndex);
+            }
+            
             ShowAll();
         }
 
@@ -144,7 +152,7 @@ namespace EZSong.UI.Widgets {
 
         private MeasureData CreateEmptyMeasure(int index, TimeSignature ts) {
             List<MeasureGlobalMelody> staffs = new();
-            staffs.Add(new MeasureGlobalMelody()); //Toujours au moins une portée
+            staffs.Add(new MeasureGlobalMelody(0)); //Toujours au moins une portée
             //TODO : Ajouter le bon nombre de portées
             return new MeasureData(
                 index,
@@ -158,7 +166,7 @@ namespace EZSong.UI.Widgets {
         }
 
         public MelodyMeasureEditor? GetFocusedGlobalMelodyEditor() {
-            foreach (GlobalMelodyEditor globalMelodyEditorWidget in _globalMelodyEditorWidgets) {
+            foreach (GlobalMelodyEditor globalMelodyEditorWidget in _container.Children) {
                 if (globalMelodyEditorWidget.HasFocus) {
                     return globalMelodyEditorWidget.MelodyMeasureEditor; 
                 }
@@ -166,5 +174,7 @@ namespace EZSong.UI.Widgets {
 
             return null;
         }
+
+        
     }
 }

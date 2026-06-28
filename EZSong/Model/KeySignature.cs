@@ -120,11 +120,7 @@ namespace EZSong.Model {
         }
 
         internal KeySignatureDto ToDto() {
-            return new KeySignatureDto() {
-                Note = Note,
-                Alteration = Alteration,
-                Mode = Mode
-            };
+            return new KeySignatureDto(Note, Alteration, Mode);
 
         }
     }

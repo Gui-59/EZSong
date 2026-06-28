@@ -31,12 +31,12 @@ namespace EZSong.Model {
         }
 
         internal static RhythmSimpleElementDto ToDto(RhythmSimpleElement rhythmElement) {
-            return new RhythmSimpleElementDto() {
-                Numerator = rhythmElement._duration.Numerator,
-                Denominator = rhythmElement._duration.Denominator,
-                Dots = rhythmElement._duration.Dots,
-                IsRest = rhythmElement._isRest,
-            };
+            return new RhythmSimpleElementDto(
+                rhythmElement._duration.Numerator, 
+                rhythmElement._duration.Denominator, 
+                rhythmElement._duration.Dots, 
+                rhythmElement._isRest
+            );
         }
 
         public RhythmRationalDuration GetEffectiveDuration() {

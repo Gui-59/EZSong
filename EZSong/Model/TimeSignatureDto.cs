@@ -26,5 +26,9 @@ namespace EZSong.Model {
         //Constructeur vide (requis pour la sérialisation JSON)
         public TimeSignatureDto() {
         }
+        public TimeSignatureDto(int beats, int beatUnit) {
+            Beats = beats;
+            BeatUnit = beatUnit;
+        }
     }
 }

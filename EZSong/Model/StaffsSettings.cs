@@ -47,5 +47,9 @@ namespace EZSong.Model {
         internal int GetStaffBaseOctave(int staffIndex) {
             return Staffs[staffIndex].BaseOctave;
         }
+
+        internal void AddStaff() {
+            Staffs.Add(new StaffSettings());
+        }
     }
 }

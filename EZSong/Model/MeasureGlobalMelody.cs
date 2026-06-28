@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace EZSong.Model {
     public class MeasureGlobalMelody {
+
+        public int StaffIndex { 
+            get; 
+            set; 
+        }
+
         public MeasureMelody Melody { 
             get; 
             set;
@@ -16,22 +22,29 @@ namespace EZSong.Model {
         }
 
         public MeasureGlobalMelody() {
+            StaffIndex = 0;
             Melody = new MeasureMelody();
             Pattern = new MeasureRhythmPattern();
         }
 
+        public MeasureGlobalMelody(int staffIndex) {
+            StaffIndex = staffIndex;
+            Melody = new MeasureMelody(staffIndex);
+            Pattern = new MeasureRhythmPattern(staffIndex);
+        }
+
+        public MeasureGlobalMelody(int staffIndex, MeasureMelody melody, MeasureRhythmPattern pattern) {
+            StaffIndex = staffIndex;
+            Melody = melody;
+            Pattern = pattern;
+        }
+
         internal MeasureGlobalMelodyDto ToDto() {
-            return new MeasureGlobalMelodyDto() {
-                Melody = Melody.ToDto(),
-                Pattern = Pattern.ToDto()
-            };
+            return new MeasureGlobalMelodyDto(StaffIndex, Melody.ToDto(), Pattern.ToDto());
         }
 
         public static MeasureGlobalMelody FromDto(MeasureGlobalMelodyDto melody) {
-            return new MeasureGlobalMelody() {
-                Melody = MeasureMelody.FromDto(melody.Melody),
-                Pattern = MeasureRhythmPattern.FromDto(melody.Pattern)
-            };
+            return new MeasureGlobalMelody(melody.StaffIndex, MeasureMelody.FromDto(melody.Melody), MeasureRhythmPattern.FromDto(melody.Pattern));
         }
     }
 }

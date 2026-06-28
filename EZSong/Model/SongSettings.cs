@@ -32,5 +32,10 @@ namespace EZSong.Model {
         public GMVoice GetStaffVoice(int staffIndex) {
             return StaffsSettings.GetStaffVoice(staffIndex);
         }
+
+        internal int AddStaff() {
+            StaffsSettings.AddStaff();
+            return StaffsSettings.Staffs.Count();
+        }
     }
 }

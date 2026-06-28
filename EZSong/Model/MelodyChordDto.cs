@@ -17,5 +17,8 @@
         public MelodyChordDto() {
             Pitches = new List<PitchDto>();
         }
+        public MelodyChordDto(List<PitchDto> pitches) {
+            Pitches = pitches;
+        }
     }
 }

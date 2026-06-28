@@ -27,6 +27,11 @@ namespace EZSong.Model {
             MelodyChords = new List<MelodyChord>();
         }
 
+        public MeasureMelody(int staffIndex) {
+            StaffIndex = staffIndex;
+            MelodyChords = new List<MelodyChord>();
+        }
+
         public MeasureMelody(int staffIndex, List<MelodyChord> melodyChords) {
             StaffIndex = staffIndex;
             MelodyChords = melodyChords;

@@ -242,16 +242,16 @@ namespace EZSong.Model {
         }
 
         internal ChordDto ToDto() {
-            return new ChordDto {
-                IsSilentChord = IsSilentChord,
-                Duration = Duration,
-                RootNote = RootNote,
-                RootNoteAlteration = RootNoteAlteration,
-                ThirdNoteMode = ThirdNoteMode,
-                FithNoteMode = FithNoteMode,
-                SeventhNoteMode = SeventhNoteMode,
-                NinthNoteMode = NinthNoteMode
-            };
+            return new ChordDto(
+                IsSilentChord, 
+                Duration, 
+                RootNote, 
+                RootNoteAlteration, 
+                ThirdNoteMode, 
+                FithNoteMode, 
+                SeventhNoteMode, 
+                NinthNoteMode
+            );
         }
 
         public static Chord FromDto(ChordDto chordDto) {

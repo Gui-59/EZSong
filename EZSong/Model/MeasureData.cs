@@ -58,7 +58,7 @@ namespace EZSong.Model
             KeySignature = new KeySignature();
             ChordSequence = new ChordSequence();
             Staffs = new List<MeasureGlobalMelody>();
-            Staffs.Add(new MeasureGlobalMelody()); // Toujours au moins une portée
+            Staffs.Add(new MeasureGlobalMelody(0)); // Toujours au moins une portée
             Lyrics = string.Empty;
         }
 
@@ -87,14 +87,15 @@ namespace EZSong.Model
 
             String lyrics = Lyrics ?? string.Empty;
 
-            return new MeasureDataDto() {
-                Index = Index,
-                TimeSignature = timeSignature,
-                KeySignature = keySignature,
-                ChordSequence = chordSequence,
-                Staffs = staffs,
-                Lyrics = lyrics,          
-            };
+            return 
+                new MeasureDataDto(
+                    Index, 
+                    timeSignature, 
+                    keySignature, 
+                    chordSequence, 
+                    staffs, 
+                    lyrics
+                );
         }
 
         public static MeasureData FromDto(MeasureDataDto dto, SongSettings songSettings) {
@@ -116,6 +117,21 @@ namespace EZSong.Model
                 );               
 
             return measure;
+        }
+
+        internal void AddOrRemoveStaffs(int excpectedStaffCount) {
+            if (Staffs.Count() == excpectedStaffCount) {
+                return;
+            }
+
+            while (Staffs.Count() > excpectedStaffCount) {
+                Staffs.RemoveAt(Staffs.Count() - 1);
+            }
+
+            for (int staffIndex = Staffs.Count(); staffIndex < excpectedStaffCount; staffIndex++) {
+                       
+                Staffs.Add(new MeasureGlobalMelody(staffIndex));
+            }
         }
     }
 }

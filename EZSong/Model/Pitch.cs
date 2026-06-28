@@ -80,11 +80,7 @@ namespace EZSong.Model {
         }
 
         internal PitchDto ToDto() {
-            return new PitchDto {
-                Note = Note,
-                Alteration = Alteration,
-                MidiOctave = MidiOctave
-             };
+            return new PitchDto(Note, Alteration, MidiOctave);
         }
     }
 }

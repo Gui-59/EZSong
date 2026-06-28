@@ -1,4 +1,5 @@
 ﻿using EZSong.Enums;
+using Gtk;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,12 @@ namespace EZSong.Model {
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public KeySignatureDto() { 
+        }
+
+        public KeySignatureDto(NoteStep note, Alteration alteration, SongMode mode) {
+            Note = note;
+            Alteration = alteration;
+            Mode = mode;
         }
     }
 }

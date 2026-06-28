@@ -261,12 +261,12 @@ namespace EZSong.UI.Widgets {
         }
 
         // PUBLIC API: load external model into widget
-        public void LoadFromModel(int staffIndex, MeasureData measureData, int initialCursor = 0) {
+        public void LoadFromModel(int staffIndex, MeasureData measureData) {
             _staffIndex = staffIndex;
             _measureData = measureData;
             _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.Staffs[staffIndex].Melody.ToWidgetChords();
+            _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, 0));
             _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _measureData.SongSettings.GetStaffVoice(0));
-            _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, initialCursor));
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -526,6 +526,11 @@ namespace EZSong.UI.Widgets {
             ContentChanged?.Invoke(this, EventArgs.Empty);
         }
 
-
+        internal void RefreshDisplayedStaff(int displayedStaffIndex) {
+            _staffIndex = displayedStaffIndex;
+            _widgetMelodyChords = (List<WidgetMelodyChord>)_measureData.Staffs[_staffIndex].Melody.ToWidgetChords();
+            _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, 0));
+            QueueDraw();
+        }
     }
 }

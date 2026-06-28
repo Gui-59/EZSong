@@ -48,5 +48,23 @@ namespace EZSong.Model {
         //Constructeur vide (requis pour la sérialisation JSON)
         public ChordDto() {
         }
+
+        public ChordDto(bool isSilentChord,
+                RhythmRationalDuration duration,
+                NoteStep rootNote,
+                Alteration rootNoteAlteration,
+                ChordMode thirdNoteMode,
+                ChordMode fithNoteMode,
+                ChordMode seventhNoteMode,
+                ChordMode ninthNoteMode) {
+            IsSilentChord = isSilentChord; 
+            Duration = duration;
+            RootNote = rootNote;
+            RootNoteAlteration = rootNoteAlteration;
+            ThirdNoteMode = thirdNoteMode;
+            FithNoteMode = fithNoteMode;
+            SeventhNoteMode = seventhNoteMode;  
+            NinthNoteMode = ninthNoteMode;
+        }
     }
 }

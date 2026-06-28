@@ -43,5 +43,12 @@ namespace EZSong.Model {
             Measures = new List<MeasureDataDto>();
             SongSettings = new();
         }
+        public SongDto(String title, String artist, String comment, List<MeasureDataDto> measures, SongSettingsDto songSettings) {
+            Title = title;
+            Artist = artist;
+            Comment = comment;
+            Measures = measures;
+            SongSettings = songSettings;
+        }
     }
 }

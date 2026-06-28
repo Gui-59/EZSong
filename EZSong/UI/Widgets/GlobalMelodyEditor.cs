@@ -24,7 +24,7 @@ namespace EZSong.UI.Widgets {
         public GlobalMelodyEditor(int staffIndex, MeasureData measureData) {
             _staffIndex = staffIndex;
             MelodyMeasureEditor = new();
-            MelodyMeasureEditor.LoadFromModel(staffIndex, measureData, initialCursor: 0);
+            MelodyMeasureEditor.LoadFromModel(staffIndex, measureData);
             _rhythmEditor = new();
             _rhythmEditor.LoadFromModel(measureData);
             BuildUI();
@@ -40,7 +40,7 @@ namespace EZSong.UI.Widgets {
 
                 
 
-                MeasureMelody newMeasureMelody = new();
+                MeasureMelody newMeasureMelody = new(_staffIndex);
                 newMeasureMelody.MelodyChords = new List<MelodyChord>();
                 foreach (WidgetMelodyChord widgetChord in MelodyMeasureEditor.ExportToModel()) {
                     newMeasureMelody.MelodyChords.Add(widgetChord.ToMelodyChord());
@@ -68,6 +68,12 @@ namespace EZSong.UI.Widgets {
 
         internal void UpdateTimeSignature(TimeSignature timeSignature) {
             _rhythmEditor.UpdateTimeSignature(timeSignature);
+        }
+
+        internal void RefreshDisplayedStaff(int displayedStaffIndex) {
+            _staffIndex = displayedStaffIndex;
+            MelodyMeasureEditor.RefreshDisplayedStaff(displayedStaffIndex);
+            _rhythmEditor.RefreshDisplayedStaff(displayedStaffIndex);
         }
     }
 }

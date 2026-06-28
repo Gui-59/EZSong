@@ -44,6 +44,12 @@ namespace EZSong.Model {
             InitializeFromTimeSignature(TimeSignature);
         }
 
+        public MeasureRhythmPattern(int staffIndex) {
+            StaffIndex = staffIndex;
+            _timeSignature = new TimeSignature();
+            InitializeFromTimeSignature(TimeSignature);
+        }
+
         public MeasureRhythmPattern(int staffIndex, TimeSignature ts) {
             StaffIndex = staffIndex;
             _timeSignature = ts;

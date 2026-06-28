@@ -26,5 +26,10 @@ namespace EZSong.Model {
         //Constructeur vide (requis pour la sérialisation JSON)
         public PitchDto() {
         }
+        public PitchDto(NoteStep note, Alteration alteration, int midiOctave) {
+            Note = note;
+            Alteration = alteration;
+            MidiOctave = midiOctave;
+        }
     }
 }

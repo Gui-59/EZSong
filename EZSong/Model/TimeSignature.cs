@@ -79,10 +79,7 @@ namespace EZSong.Model {
         }
 
         internal TimeSignatureDto ToDTo() {
-            return new TimeSignatureDto() {
-                Beats = Beats,
-                BeatUnit = BeatUnit
-            };
+            return new TimeSignatureDto(Beats, BeatUnit);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Melanchall.DryWetMidi.Interaction;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -49,11 +50,27 @@ namespace EZSong.Model {
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public MeasureDataDto() {
+            Index = 0;
             TimeSignature = new TimeSignatureDto();
             KeySignature = new KeySignatureDto();
             ChordSequence = new ChordSequenceDto();
             Staffs = new List<MeasureGlobalMelodyDto>();
             Lyrics = string.Empty;
+        }
+
+        public MeasureDataDto(int index,
+                    TimeSignatureDto timeSignature,
+                    KeySignatureDto keySignature,
+                    ChordSequenceDto chordSequence,
+                    List<MeasureGlobalMelodyDto>  staffs,
+                    String lyrics) {
+
+            Index = index;
+            TimeSignature = timeSignature;
+            KeySignature = keySignature;
+            ChordSequence = chordSequence;
+            Staffs = staffs;
+            Lyrics = lyrics;
         }
     }
 }

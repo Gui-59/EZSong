@@ -392,11 +392,19 @@ namespace EZSong.UI.Widgets {
             if (_measureData == null) {
                 return;
             }
-            if (_measureData.Staffs[_staffIndex].Pattern != null) {
-                _measureData.Staffs[_staffIndex].Pattern.TimeSignature = timeSignature;
+            for (int staffIndex = 0; staffIndex < _measureData.Staffs.Count(); staffIndex++) {
+                if (_measureData.Staffs[staffIndex].Pattern != null) {
+                    _measureData.Staffs[staffIndex].Pattern.TimeSignature = timeSignature;
 
-                QueueDraw();
+                    QueueDraw();
+                }
             }
+            
+        }
+
+        internal void RefreshDisplayedStaff(int displayedStaffIndex) {
+            _staffIndex = displayedStaffIndex;
+            QueueDraw();
         }
     }
 }

@@ -32,6 +32,8 @@ namespace EZSong.UI {
         private Statusbar _statusBar;
         private uint _statusBarContextId;
 
+        private int _displayedStaffIndex = 0;
+
         public MainWindow() : base("EZSong") {
             _currentSong = new Song ();
 
@@ -136,6 +138,8 @@ namespace EZSong.UI {
         private void PopulateMenuTabs() {
             _flowTabs[0] = CreateTab("file");
             _stack.AddTitled(_flowTabs[0], "file", "Fichier");
+            _flowTabs[0] = CreateTab("staffs");
+            _stack.AddTitled(_flowTabs[0], "staffs", "Portées");
             _flowTabs[1] = CreateTab("mesures");
             _stack.AddTitled(_flowTabs[1], "mesures", "Mesures");
             _flowTabs[2] = CreateTab("export");
@@ -158,6 +162,12 @@ namespace EZSong.UI {
                     flow.Add(CreateIconButton("Enregistrer", (s, e) => SaveProject(), "file-save.svg"));
                     break;
 
+                case "staffs":
+                    flow.Add(CreateIconButton("Ajouter", (s, e) => AddStaff(), "icon-placeholder.svg"));
+                    flow.Add(CreateIconButton("Aller à la suivante", (s, e) => GoToNextStaff(), "icon-placeholder.svg"));
+                    flow.Add(CreateIconButton("Aller à la précédente", (s, e) => GoToPreviousStaff(), "icon-placeholder.svg"));
+                    break ;
+
                 case "mesures":
                     break;
 
@@ -168,6 +178,21 @@ namespace EZSong.UI {
             }
 
             return flow;
+        }
+
+        private void AddStaff() {
+            _currentSong.AddStaff();
+            GoToNextStaff();
+        }
+
+        private void GoToNextStaff() {
+            _displayedStaffIndex = (_displayedStaffIndex + 1) % _currentSong.SongSettings.StaffsSettings.Staffs.Count();
+            RefreshDisplayedStaff();
+        }
+
+        private void GoToPreviousStaff() {
+            _displayedStaffIndex = (_displayedStaffIndex + 1) % _currentSong.SongSettings.StaffsSettings.Staffs.Count();
+            RefreshDisplayedStaff();
         }
 
         private Widget CreateIconButton(string label, EventHandler onClick, string iconName = "icon-placeholder.svg") {
@@ -306,6 +331,11 @@ namespace EZSong.UI {
             //_measuresEditor.Refresh();
 
             UpdateSongInfoUI();
+            _measuresEditor.Refresh();
+        }
+
+        private void RefreshDisplayedStaff() {
+            _measuresEditor.RefreshDisplayedStaff(_displayedStaffIndex);
         }
 
         private void UpdateSongInfoUI() {
