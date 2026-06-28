@@ -27,6 +27,8 @@ namespace EZSong.UI {
         private Entry _titleEntry;
         private Entry _artistEntry;
         private Entry _commentEntry;
+        private Label _displayedStaffNumber;
+        private Label _displayedStaffName;
         private MeasuresEditor _measuresEditor;
 
         private Statusbar _statusBar;
@@ -81,6 +83,19 @@ namespace EZSong.UI {
             headerBox.PackStart(_commentEntry, true, true, 0);
             mainBox.PackStart(headerBox, false, false, 0);
 
+            //Barre d'informations (portée affichée, ...)
+            Box infoBox = new(Orientation.Horizontal, 0);
+            Label titleDisplayedStaff = new("Portée actuellement affichée :");
+            titleDisplayedStaff.StyleContext.AddClass("titleLabel");
+            _displayedStaffNumber = new Label("?");
+            _displayedStaffNumber.StyleContext.AddClass("infoLabel");
+            _displayedStaffName = new Label("?");
+            _displayedStaffName.StyleContext.AddClass("infoLabel");
+            infoBox.PackStart(titleDisplayedStaff, false, false, 0);
+            infoBox.PackStart(_displayedStaffNumber, false, false, 0);
+            infoBox.PackStart(_displayedStaffName, false, false, 0);
+            mainBox.PackStart(infoBox, false, false, 0);
+
             // Mesures
             _measuresEditor = new MeasuresEditor();
             ScrolledWindow scrolled = new();
@@ -104,6 +119,8 @@ namespace EZSong.UI {
             ApplyCss();
 
             DeleteEvent += (o, args) => Application.Quit();
+
+            GoToFirstStaff();
 
             ShowAll();
 
@@ -181,8 +198,16 @@ namespace EZSong.UI {
         }
 
         private void AddStaff() {
-            _currentSong.AddStaff();
+            //TODO : faire saisir via une popup très simple
+            String staffName = Settings.Constants.DefaultStaffName;
+            bool isBass = false;
+            _currentSong.AddStaff(staffName, isBass);
             GoToNextStaff();
+        }
+
+        private void GoToFirstStaff() {
+            _displayedStaffIndex = 0;
+            RefreshDisplayedStaff();
         }
 
         private void GoToNextStaff() {
@@ -286,6 +311,14 @@ namespace EZSong.UI {
                     box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
                 }
 
+                .titleLabel {
+                    font-weight : bold;
+                    padding : 4px;
+                }
+                .infoLabel {
+                    padding : 4px;
+                }
+
                 button.glyph {
                     font-family: 'Bravura'; 
                     font-size: 20px;
@@ -314,6 +347,8 @@ namespace EZSong.UI {
 
                 SetSong(SongPersistancyManager.Load(dlg.Filename));
 
+                GoToFirstStaff();
+
                 RefreshUI();
 
             }
@@ -335,6 +370,9 @@ namespace EZSong.UI {
         }
 
         private void RefreshDisplayedStaff() {
+            _displayedStaffNumber.Text = (_displayedStaffIndex + 1).ToString();
+            _displayedStaffName.Text = _currentSong.SongSettings.StaffsSettings.Staffs[_displayedStaffIndex].Name;
+
             _measuresEditor.RefreshDisplayedStaff(_displayedStaffIndex);
         }
 

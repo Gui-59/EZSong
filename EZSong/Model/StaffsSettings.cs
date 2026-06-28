@@ -1,4 +1,5 @@
 ﻿using EZSong.MIDI.Enums;
+using EZSong.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,9 @@ namespace EZSong.Model {
         public StaffsSettings() {
             Staffs = new();
             //Toujours au moins 1 portée
-            Staffs.Add(new StaffSettings());
+            UserSettings userSettings = new();
+            //TODO : Mélodie ou basse ?
+            Staffs.Add(new StaffSettings(Constants.DefaultStaffName, userSettings.MidiInputDefaultVoice, Constants.MelodyBaseOctave));
         }
 
         public StaffsSettings(List<StaffSettings> staffs) {
@@ -48,8 +51,9 @@ namespace EZSong.Model {
             return Staffs[staffIndex].BaseOctave;
         }
 
-        internal void AddStaff() {
-            Staffs.Add(new StaffSettings());
+        internal void AddStaff(string staffName, GMVoice voice, int baseOctave) {
+            
+            Staffs.Add(new StaffSettings(staffName, voice, baseOctave));
         }
     }
 }

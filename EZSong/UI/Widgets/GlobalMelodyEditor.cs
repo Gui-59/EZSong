@@ -63,6 +63,8 @@ namespace EZSong.UI.Widgets {
 
             Add(row);
 
+            
+
             ShowAll();
         }
 

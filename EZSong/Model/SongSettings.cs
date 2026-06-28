@@ -33,8 +33,8 @@ namespace EZSong.Model {
             return StaffsSettings.GetStaffVoice(staffIndex);
         }
 
-        internal int AddStaff() {
-            StaffsSettings.AddStaff();
+        internal int AddStaff(string staffName, GMVoice voice, int baseOctave) {
+            StaffsSettings.AddStaff(staffName, voice, baseOctave);
             return StaffsSettings.Staffs.Count();
         }
     }

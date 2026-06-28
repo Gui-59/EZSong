@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Xml.Linq;
 using Gtk;
 
@@ -73,8 +74,16 @@ namespace EZSong.Model
             return song;
         }
 
-        internal void AddStaff() {
-            int newStaffCount = SongSettings.AddStaff();
+        internal void AddStaff(string staffName, bool isBass) {
+
+            int baseOctave;
+            if (!isBass) {
+                baseOctave = Settings.Constants.MelodyBaseOctave;
+            } else {
+                baseOctave = Settings.Constants.BassBaseOctave;
+            }
+
+            int newStaffCount = SongSettings.AddStaff(staffName, MIDI.Enums.GMVoice.PIANO_AcousticGrand, baseOctave);
             AddOrRemoveMesuresStaffs(newStaffCount);
         }
 
