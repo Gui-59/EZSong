@@ -1,3 +1,4 @@
+using Atk;
 using EZSong.Enums;
 using EZSong.Model;
 using System;
@@ -20,7 +21,8 @@ namespace EZSong.Exporting.Lilypond {
 
         const string _lilypondvarSongchords = "songchords";
         const string _lilypondvarSonglyrics = "songlyrics";
-        const string _lilypondvarSongmelody = "songmelody";
+
+        private Dictionary<int,string> _lilypondSongMelodies; //Staff index => lilypondVarName
 
         private Song _song;
         private readonly ILilypondConverter _lilypondConverter;
@@ -29,6 +31,7 @@ namespace EZSong.Exporting.Lilypond {
         }
 
         public LilypondFileBuilder(Song song, ILilypondConverter converter) {
+            _lilypondSongMelodies = new();
             _song = song;
             _lilypondConverter = converter;
         }
@@ -45,8 +48,9 @@ namespace EZSong.Exporting.Lilypond {
             fullScript += GenerateLilypondScriptHeader();
             fullScript += GenerateLilypondSheetHeader();
 
-            int staffIndex = 0; //TODO : boucler sur les portées
-            fullScript += GenerateLilypondSongmelodyVar(staffIndex);
+            for (int staffIndex = 0; staffIndex < _song.SongSettings.StaffsSettings.Staffs.Count(); staffIndex++) {
+                fullScript += GenerateLilypondSongmelodyVar(staffIndex);
+            }
 
             fullScript += GenerateLilypondSongchordsVar();
             fullScript += GenerateLilypondSonglyricsVar();
@@ -88,7 +92,11 @@ namespace EZSong.Exporting.Lilypond {
                 if (process != null) {
                     _ = process.StandardOutput.ReadToEnd();
 
-                    _ = process.StandardError.ReadToEnd();
+                    string log = process.StandardError.ReadToEnd();
+                    Console.WriteLine(log);
+                    //TODO : gérer les erreurs de génération
+
+                    //TODO : Permettre de sauvegarder le log de génération dans un fichier texte pour analyse ultérieure (mettre le contenu du .ly en tout début de fichier)
 
                     process.WaitForExit();
                 }
@@ -119,50 +127,53 @@ namespace EZSong.Exporting.Lilypond {
         private string GenerateLilypondSongmelodyVar(int staffIndex) {
             StringBuilder sw = new();
 
-           /*
-             * Rappel de la synthaxe : 
-             * 
-             * Les noms des notes doivent toujours être en minuscules 
-             * (et doivent indiquer une durée totale exactement égale à la longeur de la mesure)            
-             * c' ? do une octave au-dessus
-             * c'' ? deux octaves au-dessus
-             * c ? do central
-             * c, ? do une octave en dessous
-             * c,, ? deux octaves en dessous
-             * 
-             * Altérations : 
-             * Altération	        Suffixe	
-             * ? (dièse)	        is	    
-             * ? (bémol)	        es	
-             * ? (bécarre)	        !	
-             * ?? (double dièse)	isis	
-             * ?? (double bémol)	eses
-             * 
-             * On entoure les notes d’un accord avec < >.
-             * 
-             * 
-             * La durée est indiquée par un chiffre après la note :
-             * 
-             * Durée	        Code LilyPond	Nom français
-             * ronde	        1	            1
-             * blanche	        2	            1/2
-             * noire	        4	            1/4
-             * croche	        8	            1/8
-             * double croche    16	            1/16
-             * triple croche    32	            1/32
-             * 
-             * Pour les notes pointées : 
-             * On ajoute un "." après la durée
-             * 
-             * Un tuplet (ex. trois croches en une noire) se note avec \tuplet.
-             * Exemple : "\tuplet 3/2 { c8 d e }"   (3 croches en place de 2)
-             * 
-             * Pour lier une note avec sa suivante : il suffit de mettre un tilde juste après la note
-             * 
-             * un silence est matérialisé par "r" (avec une durée comme pour les notes)
-             * */
-			//Mélodie
-            _ = sw.AppendLine($"{_lilypondvarSongmelody} = {_opening_bracket}");
+            /*
+              * Rappel de la synthaxe : 
+              * 
+              * Les noms des notes doivent toujours être en minuscules 
+              * (et doivent indiquer une durée totale exactement égale à la longeur de la mesure)            
+              * c' ? do une octave au-dessus
+              * c'' ? deux octaves au-dessus
+              * c ? do central
+              * c, ? do une octave en dessous
+              * c,, ? deux octaves en dessous
+              * 
+              * Altérations : 
+              * Altération	        Suffixe	
+              * ? (dièse)	        is	    
+              * ? (bémol)	        es	
+              * ? (bécarre)	        !	
+              * ?? (double dièse)	isis	
+              * ?? (double bémol)	eses
+              * 
+              * On entoure les notes d’un accord avec < >.
+              * 
+              * 
+              * La durée est indiquée par un chiffre après la note :
+              * 
+              * Durée	        Code LilyPond	Nom français
+              * ronde	        1	            1
+              * blanche	        2	            1/2
+              * noire	        4	            1/4
+              * croche	        8	            1/8
+              * double croche    16	            1/16
+              * triple croche    32	            1/32
+              * 
+              * Pour les notes pointées : 
+              * On ajoute un "." après la durée
+              * 
+              * Un tuplet (ex. trois croches en une noire) se note avec \tuplet.
+              * Exemple : "\tuplet 3/2 { c8 d e }"   (3 croches en place de 2)
+              * 
+              * Pour lier une note avec sa suivante : il suffit de mettre un tilde juste après la note
+              * 
+              * un silence est matérialisé par "r" (avec une durée comme pour les notes)
+              * */
+            //Mélodie
+            //Le nom de variable Lilypond ne peut pas terminer par un chiffre ; on met la lettre équivalente (via la table ASCII)
+            String lilypondVarName = "Songmelody" + Convert.ToChar(65 + staffIndex); 
+            _lilypondSongMelodies[staffIndex] = lilypondVarName;
+            _ = sw.AppendLine($"{lilypondVarName} = {_opening_bracket}");
 
             foreach (MeasureData m in _song.Measures) {
                 KeySignature keySignature = m.KeySignature;
@@ -315,17 +326,32 @@ namespace EZSong.Exporting.Lilypond {
 
 			//Code LilyPond pour l'assemblage de la partition 	
             _ = sw.AppendLine($"{_backslash}score {_opening_bracket}");
-            _ = sw.AppendLine($"<<");
 
-            _ = sw.AppendLine($"{_backslash}new Staff = {_dblquote}melStaff{_dblquote} <<");
+            //Système de portées
+            //https://lilypond.org/doc/v2.23/Documentation/learning/multiple-staves
 
-            _ = sw.AppendLine($"{_backslash}new Voice = {_dblquote}mel{_dblquote} {_opening_bracket} {_backslash}{_lilypondvarSongmelody} {_closing_bracket}");
-            _ = sw.AppendLine($" {_backslash}new Voice = {_dblquote}parolesMesures{_dblquote} {_opening_bracket} {_backslash}{_lilypondvarSonglyrics} {_closing_bracket}");
-            _ = sw.AppendLine($">>");
+            _ = sw.AppendLine($"<<"); //Début de système de mesures
+            
+            for (int staffIndex = 0; staffIndex < _lilypondSongMelodies.Count(); staffIndex++ ) {
+                
 
-            _ = sw.AppendLine($"{_backslash}new ChordNames {_backslash}with {_opening_bracket} alignAboveContext = {_dblquote}melStaff{_dblquote} {_closing_bracket} {_opening_bracket} {_backslash}{_lilypondvarSongchords} {_closing_bracket}");
+                _ = sw.AppendLine($"{_backslash}new Staff = {_dblquote}melStaff{staffIndex}{_dblquote} <<"); //Début de portée
 
-            _ = sw.AppendLine($">>");
+
+                _ = sw.AppendLine($"{_backslash}new Voice = {_dblquote}mel{staffIndex}{_dblquote} {_opening_bracket} {_backslash}{_lilypondSongMelodies[staffIndex]} {_closing_bracket}");
+
+                if (staffIndex == 0) {
+                    _ = sw.AppendLine($" {_backslash}new Voice = {_dblquote}parolesMesures{_dblquote} {_opening_bracket} {_backslash}{_lilypondvarSonglyrics} {_closing_bracket}");
+                }
+
+                _ = sw.AppendLine($">>"); //Fin de portée
+            }
+            
+
+
+            _ = sw.AppendLine($"{_backslash}new ChordNames {_backslash}with {_opening_bracket} alignAboveContext = {_dblquote}melStaff0{_dblquote} {_closing_bracket} {_opening_bracket} {_backslash}{_lilypondvarSongchords} {_closing_bracket}");
+
+            _ = sw.AppendLine($">>"); //Fin de système de portées
 
             _ = sw.AppendLine($"{_closing_bracket}");
 
