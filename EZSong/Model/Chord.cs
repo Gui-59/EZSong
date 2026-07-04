@@ -12,11 +12,6 @@ namespace EZSong.Model {
 
     public class Chord {
 
-        /* 
-         * Notes : 
-         * - Un accord sixième est une septième doublement diminuée (double dim).
-         */
-
         /*
          * Rappel de la syntaxe pour LilyPond
          * 
@@ -55,22 +50,12 @@ namespace EZSong.Model {
             get; 
             set;
         }
-        public ChordMode ThirdNoteMode {
+
+        public ChordType ChordType {
             get; 
             set;
         }
-        public ChordMode FithNoteMode {
-            get; 
-            set;
-        }
-        public ChordMode SeventhNoteMode {
-            get; 
-            set;
-        }
-        public ChordMode NinthNoteMode {
-            get; 
-            set;
-        }
+
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public Chord() {
@@ -79,115 +64,17 @@ namespace EZSong.Model {
             RootNoteAlteration = Alteration.neutral;
             //TODO (par défaut on met la durée d'une noire non pointée)
             Duration = new(1, 4, 0); 
-            ThirdNoteMode = ChordMode.None;
-            FithNoteMode = ChordMode.None;
-            SeventhNoteMode = ChordMode.None;
-            NinthNoteMode = ChordMode.None;
+            ChordType = ChordType.NoneOrMajor;
         }
 
-        public Chord(bool isSilentChord, RhythmRationalDuration duration, NoteStep rootNote, Alteration rootNoteAlteration, 
-            ChordMode thirdNoteMode, ChordMode fithNoteMode, ChordMode seventhNoteMode, ChordMode ninthNoteMode) {
+        public Chord(bool isSilentChord, RhythmRationalDuration duration, NoteStep rootNote, Alteration rootNoteAlteration,
+            ChordType chordType) {
   
             IsSilentChord = isSilentChord;
             Duration = duration;    
             RootNote = rootNote;    
             RootNoteAlteration = rootNoteAlteration;    
-            ThirdNoteMode = thirdNoteMode;
-            FithNoteMode = fithNoteMode;    
-            SeventhNoteMode = seventhNoteMode;  
-            NinthNoteMode = ninthNoteMode;  
-        }
-
-        public Chord(string uiChordString) {
-
-            LilypondConverter _lilypondConverter = new();
-
-            //Valeurs par défaut
-            IsSilentChord = false;
-            RootNote = NoteStep.C;
-            RootNoteAlteration = Alteration.neutral;
-            //TODO (par défaut on met la durée d'une noire non pointée)
-            Duration = new(1, 4, 0); 
-            ThirdNoteMode = ChordMode.None;
-            FithNoteMode = ChordMode.None;
-            SeventhNoteMode = ChordMode.None;
-            NinthNoteMode = ChordMode.None;
-                        
-            if (uiChordString == "") {
-                IsSilentChord = true;
-                return;
-            }
-
-            string[] uiChordSplit = uiChordString.Split(":");
-
-            string beforeColon = uiChordSplit[0];
-           
-            string afterColon = "";
-            if (uiChordSplit.Count() > 1) {
-                afterColon = uiChordSplit[1];
-            }
-
-            int dotsCount = beforeColon.Count(t => t == '.');
-            string firstHalfRest = beforeColon.Trim('.');
-
-            //La durée de la note est la valeur numérique indiquée en fin de première partie
-            //WholeFraction wholeFraction = WholeFraction.WHOLE;
-            int firstDigitIndex = firstHalfRest.IndexOfAny("0123456789".ToCharArray());
-            if (firstDigitIndex > 0) {
-                Duration = new(1, int.Parse(firstHalfRest.Substring(firstDigitIndex)), dotsCount);
-                firstHalfRest = firstHalfRest.Trim("0123456789".ToCharArray());
-            } else {
-                //TODO (par défaut on met la durée d'une noire)
-                Duration = new(1, 4, 0); 
-            }
-
-            if (firstHalfRest.ToLowerInvariant().EndsWith("is")) {
-                RootNoteAlteration = Alteration.sharp;
-                firstHalfRest = firstHalfRest.Remove(firstHalfRest.Length - 2);
-            } else if (firstHalfRest.ToLowerInvariant().EndsWith("es")) {
-                RootNoteAlteration = Alteration.flat;
-                firstHalfRest = firstHalfRest.Remove(firstHalfRest.Length - 2);
-            }
-
-            int readCharCount = 0;
-
-            //Reste juste la fondamentale
-            switch (firstHalfRest.Substring(0, 1).ToLowerInvariant()) {
-                case "c":
-                    RootNote = NoteStep.C;
-                    readCharCount += 1;
-                    break;
-                case "d":
-                    RootNote = NoteStep.D;
-                    readCharCount += 1;
-                    break;
-                case "e":
-                    RootNote = NoteStep.E;
-                    readCharCount += 1;
-                    break;
-                case "f":
-                    RootNote = NoteStep.F;
-                    readCharCount += 1;
-                    break;
-                case "g":
-                    RootNote = NoteStep.G;
-                    readCharCount += 1;
-                    break;
-                case "a":
-                    RootNote = NoteStep.A;
-                    readCharCount += 1;
-                    break;
-                case "b":
-                    RootNote = NoteStep.B;
-                    readCharCount += 1;
-                    break;
-            }
-
-            //TODO : détection des autres composantes de l'accord
-            ThirdNoteMode = ChordMode.None;
-            FithNoteMode = ChordMode.None;
-            SeventhNoteMode = ChordMode.None;
-            NinthNoteMode = ChordMode.None;
+            ChordType = chordType;
         }
 
 
@@ -206,38 +93,112 @@ namespace EZSong.Model {
 
             lilyPondString += Duration.ToLilyPondString();
 
-            lilyPondString += ":";
-
-            switch (ThirdNoteMode) {
-                case ChordMode.Minor:
-                    lilyPondString += "m";
+            switch (ChordType) {
+                case ChordType.NoneOrMajor:
                     break;
-                case ChordMode.Major:
-                    lilyPondString += "";
+                case ChordType.Minor:
+                    lilyPondString += ":m";
                     break;
-                case ChordMode.Aug:
-                    lilyPondString += "aug";
+                case ChordType.Seventh:
+                    lilyPondString += ":7";
                     break;
-                case ChordMode.None:
-                    lilyPondString += "5";
+                case ChordType.MinorSeventh:
+                    lilyPondString += ":m7";
+                    break;
+                case ChordType.MajorSeventh:
+                    lilyPondString += ":maj7";
+                    break;
+                case ChordType.PowerChord:
+                    lilyPondString += ":5";
+                    break;
+                case ChordType.Sixth:
+                    lilyPondString += ":6";
+                    break;
+                case ChordType.MinorSixth:
+                    lilyPondString += ":m6";
+                    break;
+                case ChordType.SuspendedSecond:
+                    lilyPondString += ":sus2";
+                    break;
+                case ChordType.SuspendedFourth:
+                    lilyPondString += ":sus4";
+                    break;
+                case ChordType.Diminished:
+                    lilyPondString += ":dim";
+                    break;
+                case ChordType.Augmented:
+                    lilyPondString += ":aug";
+                    break;
+                case ChordType.DiminishedSeventh:
+                    lilyPondString += ":dim7";
+                    break;
+                case ChordType.AugmentedSeventh:
+                    lilyPondString += ":aug7";
+                    break;
+                case ChordType.AddSecond:
+                    lilyPondString += ":add2";
+                    break;
+                case ChordType.AddFourth:
+                    lilyPondString += ":add4";
+                    break;
+                case ChordType.AddSixth:
+                    lilyPondString += ":add6";
+                    break;
+                case ChordType.AddNinth:
+                    lilyPondString += ":add9";
+                    break;
+                case ChordType.Ninth:
+                    lilyPondString += ":9";
+                    break;
+                case ChordType.MinorNinth:
+                    lilyPondString += ":m9";
+                    break;
+                case ChordType.MajorNinth:
+                    lilyPondString += ":maj9";
+                    break;
+                case ChordType.Eleventh:
+                    lilyPondString += ":11";
+                    break;
+                case ChordType.MinorEleventh:
+                    lilyPondString += ":m11";
+                    break;
+                case ChordType.MajorEleventh:
+                    lilyPondString += ":maj11";
+                    break;
+                case ChordType.Thirteenth:
+                    lilyPondString += ":13";
+                    break;
+                case ChordType.MinorThirteenth:
+                    lilyPondString += ":m13";
+                    break;
+                case ChordType.MajorThirteenth:
+                    lilyPondString += ":maj13";
+                    break;
+                case ChordType.MinorMajorSeventh:
+                    lilyPondString += ":m(maj7)";
+                    break;
+                case ChordType.SixthNinth:
+                    lilyPondString += ":6/9";
+                    break;
+                case ChordType.SeventhMinusFive:
+                    lilyPondString += ":7-5";
+                    break;
+                case ChordType.SeventhPlusFive:
+                    lilyPondString += ":7+5";
+                    break;
+                case ChordType.MinorSeventhFlatFive:
+                    lilyPondString += ":m7b5";
                     break;
                 default:
-                    lilyPondString += "";
-                    break;
-            }
+                    throw new ArgumentOutOfRangeException();
 
-            //TODO : Compléter les cas
+            }
 
             return lilyPondString.Trim(':');
         }
 
         public string ToHumanString() {
             //TODO : Générer une chaine plus "human friendly"
-            return ToGuiString();   
-        }
-
-        public string ToGuiString() {
-            //TODO (pour le moment, la syntaxe de saisie dans la GUI doit suivre la syntaxe de LilyPond) 
             return ToLilyPondString();
         }
 
@@ -247,10 +208,7 @@ namespace EZSong.Model {
                 Duration, 
                 RootNote, 
                 RootNoteAlteration, 
-                ThirdNoteMode, 
-                FithNoteMode, 
-                SeventhNoteMode, 
-                NinthNoteMode
+                ChordType
             );
         }
 
@@ -260,10 +218,7 @@ namespace EZSong.Model {
                 chordDto.Duration,
                 chordDto.RootNote,
                 chordDto.RootNoteAlteration,
-                chordDto.ThirdNoteMode,
-                chordDto.FithNoteMode,
-                chordDto.SeventhNoteMode,
-                chordDto.NinthNoteMode
+                chordDto.ChordType
             );
 
         }

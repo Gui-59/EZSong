@@ -8,61 +8,66 @@ namespace EZSong.Model {
 
     public class ChordSequence {
 
-        public List<Chord> Chords { 
+        public List<ChordBeat> ChordBeats { 
             get; 
             set; 
         }
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public ChordSequence() { 
-            Chords = new List<Chord>();
+            ChordBeats = new List<ChordBeat>();
+            InitializeFromTimeSignature(new TimeSignature());
         }
 
-        public ChordSequence(List<Chord> chords) {
-            Chords = chords;
+        public ChordSequence(List<ChordBeat> chordBeats) {
+            ChordBeats = new();
+            foreach (ChordBeat chordBeat in chordBeats) {
+                ChordBeats.Add(chordBeat);
+            }
+
         }
 
-        public ChordSequence(string chordListGuiString) {
-            Chords = new();
-            foreach (string guiChord in chordListGuiString.Split(" ")) {
-                Chords.Add(new Chord(guiChord));
+        public void InitializeFromTimeSignature(TimeSignature ts) {
+            ChordBeats.Clear();
+
+            int beatCount = ts.GetBeatCount();
+            RhythmRationalDuration beatDuration = ts.GetBeatDuration();
+
+            for (int i = 0; i < beatCount; i++) {
+                ChordBeats.Add(new ChordBeat(beatDuration));
             }
         }
 
         public string ToLilyPondString() {
             string lilyPondString = "";
-            foreach (Chord chord in Chords) {
-                lilyPondString += chord.ToLilyPondString() + " ";
+            foreach (ChordBeat chordBeat in ChordBeats) {
+                lilyPondString += chordBeat.ToLilyPondString() + " ";
             }
             return lilyPondString.Trim();
         }
 
-        public string ToGuiString() {
-            string guiString = "";
-            foreach (Chord chord in Chords) {
-                guiString += chord.ToGuiString() + " ";
-            }
-            return guiString.Trim();
-        }
-
         public ChordSequenceDto ToDto() {
-            List<ChordDto> chordDtos = new();
-            foreach (Chord chord in Chords) {
-                chordDtos.Add(chord.ToDto());
+            List<ChordBeatDto> chordBeats = new();
+            foreach (ChordBeat chordBeat in ChordBeats) {
+                chordBeats.Add(chordBeat.ToDto());
             }
             ChordSequenceDto dto = new() {
-                Chords = chordDtos
+                ChordBeats = chordBeats
             };
             return dto;
         }
 
-        public static ChordSequence FromDto(ChordSequenceDto chords) {
-            List<Chord> chordList = new();
-            foreach (ChordDto chordDto in chords.Chords) {
-                chordList.Add(Chord.FromDto(chordDto));
+        public static ChordSequence FromDto(ChordSequenceDto dto) {
+            List<ChordBeat> chordBeats = new();
+            foreach (ChordBeatDto chordBeatDto in dto.ChordBeats) {
+                chordBeats.Add(ChordBeat.FromDto(chordBeatDto));
             }
-            return new ChordSequence (chordList);
+            return new ChordSequence (chordBeats);
 
+        }
+
+        internal int GetBeatCount() {
+            return ChordBeats.Count;    
         }
     }
 }

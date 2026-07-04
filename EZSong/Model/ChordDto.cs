@@ -28,22 +28,11 @@ namespace EZSong.Model {
             get; 
             set; 
         }
-        public ChordMode ThirdNoteMode { 
+        public ChordType ChordType { 
             get; 
             set; 
         }
-        public ChordMode FithNoteMode { 
-            get; 
-            set; 
-        }
-        public ChordMode SeventhNoteMode { 
-            get; 
-            set; 
-        }
-        public ChordMode NinthNoteMode { 
-            get; 
-            set; 
-        }
+        
 
         //Constructeur vide (requis pour la sérialisation JSON)
         public ChordDto() {
@@ -53,18 +42,12 @@ namespace EZSong.Model {
                 RhythmRationalDuration duration,
                 NoteStep rootNote,
                 Alteration rootNoteAlteration,
-                ChordMode thirdNoteMode,
-                ChordMode fithNoteMode,
-                ChordMode seventhNoteMode,
-                ChordMode ninthNoteMode) {
+                ChordType chordType) {
             IsSilentChord = isSilentChord; 
             Duration = duration;
             RootNote = rootNote;
             RootNoteAlteration = rootNoteAlteration;
-            ThirdNoteMode = thirdNoteMode;
-            FithNoteMode = fithNoteMode;
-            SeventhNoteMode = seventhNoteMode;  
-            NinthNoteMode = ninthNoteMode;
+            ChordType = chordType;
         }
     }
 }

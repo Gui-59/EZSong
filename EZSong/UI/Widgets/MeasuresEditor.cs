@@ -159,7 +159,7 @@ namespace EZSong.UI.Widgets {
                 _song.SongSettings,
                 ts,
                 new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major),
-                new ChordSequence(""),
+                new ChordSequence(),
                 staffs,
                 ""
             );
