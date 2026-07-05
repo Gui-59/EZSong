@@ -198,8 +198,18 @@ namespace EZSong.Model {
         }
 
         public string ToHumanString() {
-            //TODO : Générer une chaine plus "human friendly"
-            return ToLilyPondString();
+            string humanString = "";
+
+            if (IsSilentChord) {
+                humanString += "¤";
+            } else {
+                humanString += NoteStepStringifier.ToHumanString(RootNote);
+                if (RootNoteAlteration != Alteration.neutral) {
+                    humanString += AlterationStringifier.ToHumanString(RootNoteAlteration);
+                }
+                humanString += ChordTypeStringifier.ToHumanString(ChordType);
+            }
+            return humanString;
         }
 
         internal ChordDto ToDto() {
