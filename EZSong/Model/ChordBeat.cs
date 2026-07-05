@@ -7,6 +7,9 @@ using System.Xml.Linq;
 
 namespace EZSong.Model {
     public class ChordBeat {
+
+        private RhythmRationalDuration _beatDuration;
+
         public List<Chord> Chords {
             get;
             set;
@@ -18,16 +21,8 @@ namespace EZSong.Model {
         }
 
         public ChordBeat(RhythmRationalDuration beatDuration) {
+            _beatDuration = beatDuration;
             Chords = new List<Chord>();
-            Chords.Add(
-                new Chord(
-                    true,
-                    beatDuration,
-                    Enums.NoteStep.C,
-                    Enums.Alteration.neutral,
-                    Enums.ChordType.NoneOrMajor
-                )
-            );
         }
 
         public ChordBeat(List<Chord> chords) {
@@ -76,16 +71,16 @@ namespace EZSong.Model {
 
         }
 
-        internal RhythmRationalDuration GetRemainingDuration(RhythmRationalDuration beatDuration) {
-            return beatDuration - GetTotalDuration();
+        internal RhythmRationalDuration GetRemainingDuration() {
+            return _beatDuration - GetTotalDuration();
         }
 
-        internal bool CanAdd(Chord chord, RhythmRationalDuration beatDuration) {
+        internal bool CanAdd(Chord chord) {
 
             if (chord.Duration.Numerator <= 0) {
                 return false;
             }
-            RhythmRationalDuration remaining = beatDuration - GetTotalDuration();
+            RhythmRationalDuration remaining = _beatDuration - GetTotalDuration();
             return (remaining - chord.Duration).Numerator >= 0;
            
 
@@ -107,6 +102,13 @@ namespace EZSong.Model {
                 humanString += chord.ToHumanString() + " ";
             }
             return humanString.Trim();
+        }
+
+        internal void AddChord(Chord chord) {
+            if (CanAdd(chord)) {
+                Chords.Add(chord);
+
+            }
         }
     }
 }

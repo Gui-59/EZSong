@@ -148,14 +148,12 @@ namespace EZSong.UI.Widgets {
 
 
             //TODO : faire un popover qui permet de choisir l'accord, la durée et le type d'accord (majeur, mineur, 7ème, etc.)
-            //CreateElementFromUserChoice(index);
-            Console.WriteLine(index);
+           CreateElementFromUserChoice(index);
 
         }
 
-        //TODO : faire un popover qui permet de choisir l'accord, la durée et le type d'accord (majeur, mineur, 7ème, etc.)
-        /*
-        void CreateElementFromUserChoice(int index) {
+        //popover qui permet de choisir l'accord, la durée et le type d'accord (majeur, mineur, 7ème, etc.)
+        void CreateElementFromUserChoice(int beatIndex) {
             if (_measureData == null) {
                 return;
             }
@@ -163,16 +161,16 @@ namespace EZSong.UI.Widgets {
                 return;
             }
 
-            ChordBeat chordBeat = _measureData.ChordSequence.ChordBeats[index];
+            ChordBeat chordBeat = _measureData.ChordSequence.ChordBeats[beatIndex];
 
-            ChordPickerPopover popover = new(this); //TODO : faire un popover qui permet de choisir l'accord, la durée et le type d'accord (majeur, mineur, 7ème, etc.)
+            ChordPickerPopover popover = new(this); //popover qui permet de choisir l'accord, la durée et le type d'accord (majeur, mineur, 7ème, etc.)
 
             double width = Allocation.Width;
             double height = Allocation.Height;
             int beatCount = _measureData.ChordSequence.ChordBeats.Count;
             double beatWidth = width / beatCount;
 
-            int beatX = (int)(index * beatWidth);
+            int beatX = (int)(beatIndex * beatWidth);
 
             popover.PointingTo = new Gdk.Rectangle(
                 (int)beatX,
@@ -182,11 +180,11 @@ namespace EZSong.UI.Widgets {
             );
             
 
-            RhythmRationalDuration remaining = chordBeat.GetRemainingDuration(_measureData.TimeSignature.GetBeatDuration());
+            RhythmRationalDuration remaining = chordBeat.GetRemainingDuration();
 
             popover.ElementSelected += element => {
 
-                ChordBeat chordBeat = _measureData.ChordSequence.ChordBeats[index];
+                ChordBeat chordBeat = _measureData.ChordSequence.ChordBeats[beatIndex];
 
 
                 if (element == null) {
@@ -200,14 +198,11 @@ namespace EZSong.UI.Widgets {
 
                     Chord chord = (Chord)element;
 
-                    if (!beat.CanAdd(rhythmElement, _measureData.ChordSequence.TimeSignature.GetBeatDuration())) {
+                    if (!chordBeat.CanAdd(chord)) {
                         return;
                     }
 
-                    beat.Elements.Add(chord);
-
-
-                    
+                    chordBeat.AddChord(chord);
 
                     ChordsChanged?.Invoke(_measureData.ChordSequence);
                 }
@@ -216,7 +211,7 @@ namespace EZSong.UI.Widgets {
             popover.Open(chordBeat, remaining);
             
         }
-        */
+        
 
 
         public event Action<ChordSequence>? ChordsChanged;
