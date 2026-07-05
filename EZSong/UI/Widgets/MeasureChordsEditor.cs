@@ -4,6 +4,7 @@ using EZSong.UI.Widgets.Helpers;
 using EZSong.UI.Widgets.WidgetsData;
 using Gdk;
 using Gtk;
+using Pango;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -45,7 +46,7 @@ namespace EZSong.UI.Widgets {
             cr.Paint();
         }
 
-        private void DrawBeats(Context cr) {
+        private void DrawBeats(Cairo.Context cr) {
             if (_measureData == null) {
                 return;
             }
@@ -71,24 +72,31 @@ namespace EZSong.UI.Widgets {
             }
         }
 
-        private void DrawBeat(Context cr, ChordBeat chordBeat, double x, double width, double height) {
+        private void DrawBeat(Cairo.Context cr, ChordBeat chordBeat, double x, double width, double height) {
 
             string beatChordText = chordBeat.ToHumanString();
 
             cr.SetSourceRGB(0, 0, 0);
 
             //TODO : Faire une fois au départ du draw
-            //TODO : Permettre de changer la police dans les settings
-            cr.SelectFontFace("Arial", FontSlant.Normal, FontWeight.Normal);
-            cr.SetFontSize(20);
+            Gtk.Settings settings = Gtk.Settings.Default;
+            String fontFamily = (string)settings.GetProperty("gtk-font-name"); //TODO : A revoir pour récupérer correctement la police par défaut de l'application
+            cr.SelectFontFace(fontFamily, FontSlant.Normal, FontWeight.Normal);
+            cr.SetFontSize(13);
 
             TextExtents ext = cr.TextExtents(beatChordText);
 
-            double tx = x + (width - ext.Width) / 2;
-            double ty = height / 2;
+            double tx = x + 4;
+            double ty = height / 2 + ext.Height / 2;
 
             cr.MoveTo(tx, ty);
             cr.ShowText(beatChordText);
+
+            // séparation visuelle
+            cr.SetSourceRGB(0, 0, 0);
+            cr.MoveTo(x+ width, 0);
+            cr.LineTo(x + width, height);
+            cr.Stroke();
         }
         protected override bool OnButtonPressEvent(Gdk.EventButton ev) {
 

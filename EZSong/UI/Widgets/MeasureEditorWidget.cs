@@ -141,12 +141,13 @@ namespace EZSong.UI.Widgets {
 
             // Accords (1 champ texte: accords séparés par espaces, 1 accord par temps)
             MeasureChordsEditor measureChordsEditor = new();
+            measureChordsEditor.LoadFromModel(_measure);
             measureChordsEditor.ChordsChanged += (ChordSequence) => {
                 _measure.ChordSequence = ChordSequence;
                 MeasureChanged?.Invoke(_measure);
             };
             row.PackStart(new Label("Accords :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(measureChordsEditor, true, true, 0);
+            row.PackStart(measureChordsEditor, false, true, 0);
 
             //GlobalMelodyEditor = new(_measure);
             GlobalMelodyEditor.MelodyChanged += (staffIndex, melody) => {
