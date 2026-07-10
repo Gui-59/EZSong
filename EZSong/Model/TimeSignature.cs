@@ -12,14 +12,15 @@ namespace EZSong.Model {
             get; 
             set;
         }
+
         public int BeatUnit {
             get; 
             set;
         }
         
         public RhythmRationalDuration ExpectedBeatDuration {
-            get {
 
+            get {
                 // signature composée
                 if (Beats % 3 == 0 && BeatUnit == 8 && Beats > 3) {
                     // noire pointée = 3 croches
@@ -59,6 +60,7 @@ namespace EZSong.Model {
         }
 
         public RhythmRationalDuration GetBeatDuration() {
+
             // signature composée
             if (Beats % 3 == 0 && BeatUnit == 8 && Beats > 3) {
                 // noire pointée = 3 croches
@@ -72,7 +74,6 @@ namespace EZSong.Model {
         public string ToLilyPondString() {
             return Beats + "/" + BeatUnit;
         }
-
 
         internal static TimeSignature FromDto(TimeSignatureDto timeSignature) {
             return new TimeSignature(timeSignature.Beats, timeSignature.BeatUnit);

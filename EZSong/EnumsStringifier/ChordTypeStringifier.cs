@@ -76,8 +76,6 @@ namespace EZSong.EnumsStringifier {
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
         }
-
     }
 }

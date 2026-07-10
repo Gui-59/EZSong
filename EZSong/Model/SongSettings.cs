@@ -25,6 +25,7 @@ namespace EZSong.Model {
         public SongSettingsDto ToDto() {
             return new SongSettingsDto(StaffsSettings.ToDto());
         }
+
         public static SongSettings FromDto(SongSettingsDto dto) {
             return new SongSettings(StaffsSettings.FromDto(dto.StaffsSettings));
         }

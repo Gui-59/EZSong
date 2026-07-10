@@ -38,7 +38,7 @@ namespace EZSong.Settings {
             }
         }
 
-        int _midiInputEchoDurationMs = 500;
+        int _midiInputEchoDurationMs = 400;
         public int MidiInputEchoDurationMs {
             get {
                 return _midiInputEchoDurationMs;

@@ -17,10 +17,12 @@ namespace EZSong.Model {
             get; 
             set;
         }
+
         public Alteration Alteration {
             get;
             set;
         }
+
         public int MidiOctave {
             get;
             set;
@@ -50,6 +52,7 @@ namespace EZSong.Model {
         }
 
         public string ToLilyPondString(int baseOctave) {
+
             string lilyPondString = string.Empty;
 
             lilyPondString += _lilypondConverter.NoteStepToLilyPondString(Note);

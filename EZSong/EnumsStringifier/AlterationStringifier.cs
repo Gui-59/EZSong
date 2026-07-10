@@ -7,9 +7,6 @@ using System.Threading.Tasks;
 
 namespace EZSong.EnumsStringifier {
     internal class AlterationStringifier {
-
-       
-
         public static string ToHumanString(Alteration alteration) {
             switch (alteration) {
                 case Alteration.flat:

@@ -27,14 +27,12 @@ namespace EZSong.UI.Widgets {
 
         public MeasureEditorWidget(MeasureData measure) {
             _measure = measure;
-
             _staffIndex = 0; 
             GlobalMelodyEditor = new(_staffIndex, _measure); 
             BuildUI();
         }
 
         private void BuildUI() {
-
 
             Box row = new(Orientation.Vertical, 0); //On met en superposé les elements qui définissent une mesure
 
@@ -57,7 +55,7 @@ namespace EZSong.UI.Widgets {
 
             //Bouton de suppression de la mesure
             Button deleteSelf = new();
-            deleteSelf.Label = "Supprimer";
+            deleteSelf.Label = "Supprimer"; //TODO : icone à la place du texte
             deleteSelf.Clicked += (o, args) => {
                 DeleteRequested?.Invoke(_measure);
             };
@@ -65,7 +63,7 @@ namespace EZSong.UI.Widgets {
 
             //Bouton d'ajout de mesure avant
             Button addBefore = new();
-            addBefore.Label = "Ajouter une mesure avant";
+            addBefore.Label = "Ajouter une mesure avant"; //TODO : icone à la place du texte
             addBefore.Clicked += (o, args) => {
                 InsertBeforeRequested?.Invoke(_measure);
             };
@@ -73,7 +71,7 @@ namespace EZSong.UI.Widgets {
 
             //Bouton d'ajout de mesure après
             Button addAfter = new();
-            addAfter.Label = "Ajouter une mesure après";
+            addAfter.Label = "Ajouter une mesure après"; //TODO : icone à la place du texte
             addAfter.Clicked += (o, args) => {
                 InsertAfterRequested?.Invoke(_measure);
             };
@@ -139,7 +137,7 @@ namespace EZSong.UI.Widgets {
             row.PackStart(new Label("Tonalité :") { Xalign = 0f }, false, false, 0);
             row.PackStart(keyCombo, false, false, 0);
 
-            // Accords (1 champ texte: accords séparés par espaces, 1 accord par temps)
+            // Accords
             MeasureChordsEditor measureChordsEditor = new();
             measureChordsEditor.LoadFromModel(_measure);
             measureChordsEditor.ChordsChanged += (ChordSequence) => {
@@ -149,7 +147,7 @@ namespace EZSong.UI.Widgets {
             row.PackStart(new Label("Accords :") { Xalign = 0f }, false, false, 0);
             row.PackStart(measureChordsEditor, false, true, 0);
 
-            //GlobalMelodyEditor = new(_measure);
+            //Mélodie (éditeur de mélodie global [notes + rythme])
             GlobalMelodyEditor.MelodyChanged += (staffIndex, melody) => {
                 _measure.Staffs[staffIndex].Melody = melody;
 

@@ -24,13 +24,9 @@ namespace EZSong.UI.Widgets {
                 ShowTabs = true
             };
 
-           
-
-
             BuildUI();
 
-            Closed += (s, e) =>
-            {
+            Closed += (s, e) => {
                 ElementSelected?.Invoke(null);
             };
         }
@@ -42,9 +38,7 @@ namespace EZSong.UI.Widgets {
         public void Open(BeatPattern beatPattern, RhythmRationalDuration maxDuration) {
             _maxDuration = maxDuration;
             _beatPattern = beatPattern;
-
             Rebuild();
-
             ShowAll();
             Popup();
         }
@@ -54,8 +48,6 @@ namespace EZSong.UI.Widgets {
         // =========================================================
 
         private void BuildUI() {
-
-
             Add(_notebook);
         }
 
@@ -90,12 +82,10 @@ namespace EZSong.UI.Widgets {
                     continue; // Skip unsupported durations
                 }
 
-
                 string label = compositeGlyph.ToString();
                 Button btn = CreateButton(label);
 
-                btn.Clicked += (s, e) =>
-                {
+                btn.Clicked += (s, e) => {
                     ElementSelected?.Invoke(t.RhythmTuplet);
                     Popdown();
                 };
@@ -107,6 +97,7 @@ namespace EZSong.UI.Widgets {
         }
 
         private Widget BuildOtherElementsPage() {
+
             FlowBox flow = CreateFlow();
 
             //Symbole de liaison avec la note/mesure suivante
@@ -142,8 +133,7 @@ namespace EZSong.UI.Widgets {
                 string label = compositeGlyph.ToString(); 
                 Button btn = CreateButton(label);
                 
-                btn.Clicked += (s, e) =>
-                {
+                btn.Clicked += (s, e) => {
                     RhythmSimpleElement element = new(d, isRest);
 
                     ElementSelected?.Invoke(element);

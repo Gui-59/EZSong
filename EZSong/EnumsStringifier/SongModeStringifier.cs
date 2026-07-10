@@ -7,9 +7,6 @@ using System.Threading.Tasks;
 
 namespace EZSong.EnumsStringifier {
     public static class SongModeStringifier {
-
-        
-
         public static string ToHumanString(SongMode mode) {
             switch (mode) {
                 case SongMode.minor:

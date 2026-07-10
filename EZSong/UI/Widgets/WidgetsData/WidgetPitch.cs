@@ -60,9 +60,6 @@ namespace EZSong.UI.Widgets.WidgetsData {
                 default:
                     throw new Exception();
             }
-
-            
-            
         }
     }
 }

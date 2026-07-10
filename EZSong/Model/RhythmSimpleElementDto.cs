@@ -13,15 +13,19 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class RhythmSimpleElementDto:IRhythmElementDto {
+
         public int Numerator {
             get; 
             set;
         }
+
         public int Denominator {
             get; 
             set;
         }
+
         public int Dots {
             get; 
             set;
@@ -39,12 +43,12 @@ namespace EZSong.Model {
             Dots = 0;
             IsRest = true;
         }
+
         public RhythmSimpleElementDto(int numerator, int denominator, int dots, bool isRest) {
             Numerator = numerator;
             Denominator = denominator;
             Dots = dots;
             IsRest = isRest;
         }
-
     }
 }

@@ -17,10 +17,12 @@ namespace EZSong.Model {
             get;
             set;
         }
+
         public MeasureRhythmPatternDto Pattern {
             get;
             set;
         }
+
         //Constructeur vide (requis pour la sérialisation JSON)
         public MeasureGlobalMelodyDto() {
             StaffIndex = 0;

@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets.Helpers {
     public class UIGlyph {
 
-        
-
         public Enums.Glyph Glyph {
             get;
         }
@@ -52,7 +50,6 @@ namespace EZSong.UI.Widgets.Helpers {
                         glyph = new UIGlyph(Enums.Glyph.Unknown);
                         break;
                 }
-
  
             } else {
 
@@ -115,7 +112,5 @@ namespace EZSong.UI.Widgets.Helpers {
                 _ => "\uE120" //OK
             };
         }
-
-
     }
 }

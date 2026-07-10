@@ -17,9 +17,7 @@ namespace EZSong.UI.Widgets.Helpers {
         }
 
         public IRhythmElement Create() {
-
             return new RhythmTuplet();
-
         }
 
     }

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace EZSong.IO {
 
-
     public static class SongPersistancyManager {
         public static void Save(string path, Song song) {
             SongDto dto = song.ToDto();
@@ -26,12 +25,10 @@ namespace EZSong.IO {
             SongDto? dto = JsonSerializer.Deserialize<SongDto>(json);
 
             if (dto is null) {
-                throw new InvalidOperationException("Le fichier ne contient pas de données de chanson valides.");
+                throw new InvalidOperationException("Le fichier ne contient pas de données valides.");
             }
 
             return Song.FromDto(dto);
         }
     }
-
-   
 }

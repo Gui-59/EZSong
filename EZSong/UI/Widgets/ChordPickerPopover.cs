@@ -51,12 +51,11 @@ namespace EZSong.UI.Widgets {
         // =========================================================
 
         private void BuildUI() {
-
-
             Add(_notebook);
         }
 
         private void Rebuild() {
+
             // Clear
             while (_notebook.NPages > 0) {
                 _notebook.RemovePage(0);
@@ -74,8 +73,6 @@ namespace EZSong.UI.Widgets {
             _ = _notebook.AppendPage(BuildChordListPage(NoteStep.A, Alteration.neutral), new Label("A"));
             _ = _notebook.AppendPage(BuildChordListPage(NoteStep.A, Alteration.sharp), new Label("A#/Bb"));
             _ = _notebook.AppendPage(BuildChordListPage(NoteStep.B, Alteration.neutral), new Label("B"));
-
-
         }
 
         private Widget BuildChordListPage(NoteStep root, Alteration rootAlteration) {
@@ -92,7 +89,9 @@ namespace EZSong.UI.Widgets {
         }
 
         private List<Model.Chord> GetAllChordsForRoot(NoteStep root, Alteration rootAlteration) {
+
             //TODO : gérer un choix de durée max pour les accords (ex: si on est sur une croche, ne pas proposer des accords de 4/4)
+            
             List<Model.Chord> chords = new();
 
             RhythmRationalDuration minDuration = new(1, 8, 0);

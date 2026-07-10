@@ -5,7 +5,6 @@ namespace EZSong.Model {
 
         private RhythmRationalDuration _duration;
 
-
         private bool _isRest;
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
@@ -22,12 +21,16 @@ namespace EZSong.Model {
         }
 
         public static RhythmSimpleElement FromDto(RhythmSimpleElementDto rhythmElementDto) {
-            RhythmRationalDuration duration = new(rhythmElementDto.Numerator, rhythmElementDto.Denominator, rhythmElementDto.Dots);
+            RhythmRationalDuration duration = 
+                new(
+                    rhythmElementDto.Numerator, 
+                    rhythmElementDto.Denominator, 
+                    rhythmElementDto.Dots
+                );
             return new RhythmSimpleElement(
                 duration,
                 rhythmElementDto.IsRest
             );
-
         }
 
         internal static RhythmSimpleElementDto ToDto(RhythmSimpleElement rhythmElement) {
@@ -46,7 +49,6 @@ namespace EZSong.Model {
         public int DotCount() {
             return _duration.Dots;
         }
-
 
         public bool IsRest() {
             return _isRest;

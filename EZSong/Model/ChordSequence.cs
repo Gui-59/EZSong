@@ -24,7 +24,6 @@ namespace EZSong.Model {
             foreach (ChordBeat chordBeat in chordBeats) {
                 ChordBeats.Add(chordBeat);
             }
-
         }
 
         public void InitializeFromTimeSignature(TimeSignature ts) {
@@ -41,9 +40,9 @@ namespace EZSong.Model {
         public string ToLilyPondString() {
             string lilyPondString = "";
             foreach (ChordBeat chordBeat in ChordBeats) {
-                lilyPondString += chordBeat.ToLilyPondString() + " ";
+                lilyPondString += chordBeat.ToLilyPondString() + " & "; //TODO : trouver un meilleur séparateur que " & " pour séparer les accords dans la séquence
             }
-            return lilyPondString.Trim();
+            return lilyPondString.Trim(); //TODO : enlever le dernier " & " de la chaîne
         }
 
         public ChordSequenceDto ToDto() {

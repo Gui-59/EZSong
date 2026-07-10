@@ -8,7 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-//Attention : il faut placer dans les répertoire compilé les fichiers de "fluidsynth-v2.5.1-win10-x64-cpp11.zip" 
+//Attention : il faut placer dans les répertoire compilé les fichiers de "fluidsynth-v2.5.1-win10-x64-cpp11.zip"
+//TODO: faire autrement !!
 
 namespace EZSong.MIDI {
     public class EmbeddedMidiSynth : IDisposable {
@@ -17,10 +18,9 @@ namespace EZSong.MIDI {
         private readonly Synth _synth;
         private readonly AudioDriver _driver;
 
-        private readonly int _channel = 0; //TODO
+        private readonly int _channel = 0; //TODO : rendre configurable le canal MIDI (0–15)
 
         public EmbeddedMidiSynth(string soundFontPath, uint voiceBank, GMVoice gmVoice) {
-
             _settings = new NFluidsynth.Settings();
             _synth = new Synth(_settings);
             uint sfId = _synth.LoadSoundFont(soundFontPath, true);          
@@ -35,7 +35,7 @@ namespace EZSong.MIDI {
         }
 
         /// <summary>
-        /// Joue une note MIDI sur le canal 0 (0–15).
+        /// Joue une note MIDI sur le canal du synthétiseur, puis l'arrête après un délai spécifié.
         /// </summary>
         public async Task EchoChordAsync(
         IEnumerable<int> noteNumbers,
@@ -57,7 +57,7 @@ namespace EZSong.MIDI {
         }
 
         /// <summary>
-        /// Joue une note MIDI sur le canal 0 (0–15).
+        /// Joue une note MIDI sur le canal du synthétiseur.
         /// </summary>
         public void PlayNote(int noteNumber, int velocity = 100) {
             Console.WriteLine("PlayNote : noteNumber=" + noteNumber);
@@ -65,11 +65,10 @@ namespace EZSong.MIDI {
         }
 
         /// <summary>
-        /// Arrête une note MIDI sur le canal 0.
+        /// Arrête une note MIDI sur le canal du synthétiseur.
         /// </summary>
         public void StopNote(int noteNumber) {
             _synth.NoteOff(_channel, noteNumber);
         }
-
     }
 }

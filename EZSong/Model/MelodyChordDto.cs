@@ -7,7 +7,9 @@
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class MelodyChordDto {
+
         public List<PitchDto> Pitches { 
             get; 
             set; 
@@ -17,6 +19,7 @@
         public MelodyChordDto() {
             Pitches = new List<PitchDto>();
         }
+
         public MelodyChordDto(List<PitchDto> pitches) {
             Pitches = pitches;
         }

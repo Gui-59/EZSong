@@ -6,10 +6,9 @@ using System.Xml.Linq;
 using Gtk;
 using EZSong.Enums;
 
-namespace EZSong.Model
-{
-    public class MeasureData
-    {
+namespace EZSong.Model {
+    public class MeasureData {
+
         public int Index { 
             get; 
             set; 
@@ -19,10 +18,12 @@ namespace EZSong.Model
             get;
             set;
         }
+
         public MeasureData? PrecedingMeasure {
             get; 
             set;
         }
+
         public MeasureData? FollowingMeasure {
             get; 
             set;
@@ -32,24 +33,26 @@ namespace EZSong.Model
             get; 
             set; 
         }
+
         public KeySignature KeySignature { 
             get; 
             set; 
         }
+
         public ChordSequence ChordSequence { 
             get; 
             set; 
-        }      
+        }   
+        
         public List<MeasureGlobalMelody> Staffs { //Groupes de portées
             get; 
             set; 
         }
+
         public string Lyrics { 
             get; 
             set; 
         }
-        
-
 
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public MeasureData() {
@@ -128,8 +131,7 @@ namespace EZSong.Model
                 Staffs.RemoveAt(Staffs.Count() - 1);
             }
 
-            for (int staffIndex = Staffs.Count(); staffIndex < excpectedStaffCount; staffIndex++) {
-                       
+            for (int staffIndex = Staffs.Count(); staffIndex < excpectedStaffCount; staffIndex++) {        
                 Staffs.Add(new MeasureGlobalMelody(staffIndex));
             }
         }

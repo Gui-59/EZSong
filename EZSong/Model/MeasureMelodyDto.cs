@@ -13,12 +13,14 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class MeasureMelodyDto {
 
         public int StaffIndex {
             get;
             set;
         }
+
         public List<MelodyChordDto> MelodyChords { 
             get; 
             set; 

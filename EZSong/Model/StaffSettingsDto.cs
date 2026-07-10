@@ -16,6 +16,7 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class StaffSettingsDto {
 
         public String Name { 

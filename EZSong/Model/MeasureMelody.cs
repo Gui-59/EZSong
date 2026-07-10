@@ -15,8 +15,8 @@ namespace EZSong.Model {
             get;
             set;
         }
-        public List<MelodyChord> MelodyChords
-        {
+
+        public List<MelodyChord> MelodyChords {
             get;
             set;
         }
@@ -37,13 +37,12 @@ namespace EZSong.Model {
             MelodyChords = melodyChords;
         }
 
-        
-
         public string ToLilyPondString(MeasureData measureData) {
 
             string lilyPondString = string.Empty;
 
             //Définition de l'octave de référence (basé sur l'octave de base de la portée)
+            //TODO : créer une méthode pour convertir un octave de base en octave de référence Lilypond (pour éviter d'avoir à modifier ce code si on change la façon dont on définit l'octave de base)
             int baseOctave = measureData.SongSettings.StaffsSettings.GetStaffBaseOctave(StaffIndex); 
             switch (baseOctave) {
                 case 6:
@@ -72,7 +71,6 @@ namespace EZSong.Model {
             //(comme si on l'avais ressaisie dans la mesure actuelle).
             List<MelodyChord> consideredMelodyChords = MelodyChords;
             if (measureData.PrecedingMeasure != null && measureData.PrecedingMeasure.Staffs[StaffIndex].Pattern.EndsWithTie()) {
-
                 consideredMelodyChords = new();
                 consideredMelodyChords.Add(measureData.PrecedingMeasure.Staffs[StaffIndex].Melody.MelodyChords.Last());
                 foreach (MelodyChord melodyChord in MelodyChords) {
@@ -80,7 +78,8 @@ namespace EZSong.Model {
                 }
             }
 
-            if (!hasValidCadency || !hasValidNoteCount) { 
+            if (!hasValidCadency || !hasValidNoteCount) { //TODO : mettre le code du bloc "if" dans une méthode
+
                 //Si pas de cadence ou si le nombre de note est incompatible avec la cadence,
                 //alors on considère que toutes les notes ont la même durée
 
@@ -89,7 +88,6 @@ namespace EZSong.Model {
                     lilyPondString += "R1"; 
                 } else {
                 
-
                     lilyPondString += "\\tuplet " + consideredMelodyChords.Count + "/1 { ";
 
                     foreach (MelodyChord melodyChord in consideredMelodyChords) {
@@ -124,10 +122,9 @@ namespace EZSong.Model {
                     lilyPondString += "}";
                 }
 
-            } else {
+            } else { //TODO : mettre le code du bloc "else" dans une méthode
 
                 int melodyChordIndex = 0;
-                
 
                 foreach (BeatPattern beat in measureData.Staffs[StaffIndex].Pattern.Beats) {
 
@@ -170,8 +167,8 @@ namespace EZSong.Model {
                         } else if (rhythmElement.GetType() == typeof(RhythmSimpleElement)) {
                             RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)rhythmElement;
 
-
                             if (rhythmSimpleElement.IsRest()) {
+
                                 lilyPondString += "r";
                                 lilyPondString += rhythmSimpleElement.GetEffectiveDuration().ToLilyPondString();
 
@@ -216,7 +213,7 @@ namespace EZSong.Model {
             return lilyPondString;
         }
 
-        internal IEnumerable<WidgetMelodyChord> ToWidgetChords() {
+        internal IEnumerable<WidgetMelodyChord> ToWidgetMelodyChords() {
             List<WidgetMelodyChord> widgetChords = new();
 
             foreach (MelodyChord melodyChord in MelodyChords) {
@@ -250,7 +247,6 @@ namespace EZSong.Model {
                     melodyChords
                 );
             return measureMelody;
-
         }
     }
 }

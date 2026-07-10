@@ -7,6 +7,7 @@
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class ChordSequenceDto {
         public List<ChordBeatDto> ChordBeats { 
             get; 

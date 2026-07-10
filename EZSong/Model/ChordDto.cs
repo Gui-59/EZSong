@@ -9,6 +9,7 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class ChordDto {
         public bool IsSilentChord { 
             get; 
@@ -24,16 +25,17 @@ namespace EZSong.Model {
             get; 
             set; 
         }
+
         public Alteration RootNoteAlteration { 
             get; 
             set; 
         }
+
         public ChordType ChordType { 
             get; 
             set; 
         }
         
-
         //Constructeur vide (requis pour la sérialisation JSON)
         public ChordDto() {
         }
@@ -42,7 +44,8 @@ namespace EZSong.Model {
                 RhythmRationalDuration duration,
                 NoteStep rootNote,
                 Alteration rootNoteAlteration,
-                ChordType chordType) {
+                ChordType chordType
+        ) {
             IsSilentChord = isSilentChord; 
             Duration = duration;
             RootNote = rootNote;

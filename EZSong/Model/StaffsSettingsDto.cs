@@ -13,6 +13,7 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class StaffsSettingsDto {
 
         public List<StaffSettingsDto> Staffs {
@@ -27,7 +28,5 @@ namespace EZSong.Model {
         public StaffsSettingsDto(List<StaffSettingsDto> staffs) {
             Staffs = staffs;
         }
-
-
     }
 }

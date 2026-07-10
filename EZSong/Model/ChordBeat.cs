@@ -68,7 +68,6 @@ namespace EZSong.Model {
 
         internal void Clear() {
             Chords.Clear();
-
         }
 
         internal RhythmRationalDuration GetRemainingDuration() {
@@ -76,14 +75,11 @@ namespace EZSong.Model {
         }
 
         internal bool CanAdd(Chord chord) {
-
             if (chord.Duration.Numerator <= 0) {
                 return false;
             }
             RhythmRationalDuration remaining = _beatDuration - GetTotalDuration();
             return (remaining - chord.Duration).Numerator >= 0;
-           
-
         }
 
         internal string ToLilyPondString() {
@@ -99,15 +95,14 @@ namespace EZSong.Model {
         internal string ToHumanString() {
             string humanString = "";
             foreach (Chord chord in Chords) {
-                humanString += chord.ToHumanString() + " ";
+                humanString += chord.ToHumanString() + " & "; //TODO : trouver mieux comme séparateur
             }
-            return humanString.Trim();
+            return humanString.Trim(); //TODO: remove the last " & " at the end of the string
         }
 
         internal void AddChord(Chord chord) {
             if (CanAdd(chord)) {
                 Chords.Add(chord);
-
             }
         }
     }

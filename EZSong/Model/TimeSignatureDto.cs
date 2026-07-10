@@ -13,11 +13,14 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class TimeSignatureDto {
+
         public int Beats {
             get; 
             set;
         }
+        
         public int BeatUnit {
             get; 
             set;
@@ -26,6 +29,7 @@ namespace EZSong.Model {
         //Constructeur vide (requis pour la sérialisation JSON)
         public TimeSignatureDto() {
         }
+
         public TimeSignatureDto(int beats, int beatUnit) {
             Beats = beats;
             BeatUnit = beatUnit;

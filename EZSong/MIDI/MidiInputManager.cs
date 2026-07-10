@@ -27,7 +27,7 @@ namespace EZSong.MIDI {
         /// <summary>
         /// Délai d’attente avant de considérer qu’un accord est complet (en ms).
         /// </summary>
-        public int GroupingDelayMs { get; set; } = 40;
+        public int GroupingDelayMs { get; set; } = 40; //TODO : rendre configurable par l’utilisateur ? Essayer de travailler en durée de note selon le tempo de la partition ?
 
         /// <summary>
         /// Déclenché lorsqu’une ou plusieurs notes (accord) sont jouées.
@@ -38,11 +38,16 @@ namespace EZSong.MIDI {
 
         public MidiInputManager() {
             SoundFontManager soundFontManager = new();
-            _embeddedMidiSynth = new(soundFontManager.GetCurrentSoundFontPath(), 0, _midiUserSettings.MidiInputDefaultVoice); //TODO : Adapter l'echo à la voice de la portée ?
+            _embeddedMidiSynth = 
+                new(
+                    soundFontManager.GetCurrentSoundFontPath(), 
+                    0, 
+                    _midiUserSettings.MidiInputDefaultVoice //TODO : Adapter l'echo à la voice de la portée ?
+                ); 
         }
 
         public static IEnumerable<string> GetAvailableDevices() {
-            //todo : éviter le Select (lent)
+            //TODO : éviter le Select (lent)
             return InputDevice.GetAll().Select(d => d.Name);
         }
 

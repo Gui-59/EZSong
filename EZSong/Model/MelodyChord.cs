@@ -24,7 +24,6 @@ namespace EZSong.Model {
                 pitches.Add(new Pitch(pitchDto.Note, pitchDto.Alteration, pitchDto.MidiOctave));
             }
             return new MelodyChord(pitches);
-
         }
 
         internal MelodyChordDto ToDto() {
@@ -33,7 +32,6 @@ namespace EZSong.Model {
                 pitchDtos.Add(pitch.ToDto());
             }
             return new MelodyChordDto(pitchDtos);
-
         }
 
         internal WidgetMelodyChord ToWidgetMelodyChord() {

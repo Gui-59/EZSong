@@ -13,7 +13,9 @@ namespace EZSong.Model {
     * - propriétés publiques get/set
     * - aucune logique
     */
+
     public class RhythmTieFromDto:IRhythmElementDto {
+
         // Constructeur vide (requis pour la (dé)sérialisation JSON)
         public RhythmTieFromDto() {
         }

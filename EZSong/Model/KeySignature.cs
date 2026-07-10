@@ -16,10 +16,12 @@ namespace EZSong.Model {
             get; 
             set; 
         }
+
         public Alteration Alteration { 
             get; 
             set; 
         }
+
         public SongMode Mode { 
             get; 
             set; 
@@ -92,7 +94,6 @@ namespace EZSong.Model {
             } else {
                 Mode = SongMode.major; //Par défaut (au cas où)
             }
-
         }
 
         public string ToDropDownId() {
@@ -105,7 +106,7 @@ namespace EZSong.Model {
 
         public string ToDropDownLabel() {
             return 
-                NoteStepStringifier.ToHumanString(Note) 
+                NoteStepStringifier.ToHumanString(Note, false) //TODO : international notation 
                 + AlterationStringifier.ToHumanString(Alteration) 
                 + " "
                 + SongModeStringifier.ToHumanString(Mode);
@@ -121,7 +122,6 @@ namespace EZSong.Model {
 
         internal KeySignatureDto ToDto() {
             return new KeySignatureDto(Note, Alteration, Mode);
-
         }
     }
 }

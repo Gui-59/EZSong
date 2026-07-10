@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.Enums {
+    //En position (demi-tons) dans la gamme chromatique, en partant de C (0) jusqu'à B (11)
     public enum NoteStep {
         C = 0,
         D = 2,

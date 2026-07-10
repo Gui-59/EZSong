@@ -13,6 +13,7 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class MeasureRhythmPatternDto {
 
         public int StaffIndex {
@@ -24,6 +25,7 @@ namespace EZSong.Model {
             get; 
             set; 
         }
+
         public TimeSignature TimeSignature { 
             get; 
             set; 

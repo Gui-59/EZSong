@@ -56,7 +56,7 @@ namespace EZSong.Model {
             InitializeFromTimeSignature(ts);
         }
 
-        public void SetBeat(int index, BeatPattern beat) {
+        public void SetBeat(int index, BeatPattern beat) { //TODO : utiliser le setter de Beats pour gérer le nombre de beats automatiquement
             _beats[index] = beat;
         }
 
@@ -87,7 +87,6 @@ namespace EZSong.Model {
             }
 
             return count;
-           
         }
 
         public bool IsDurationValid() {
@@ -109,15 +108,12 @@ namespace EZSong.Model {
         // Il faut transmettre l'eventuelle mesure précédente pour gérer les liaisons correctement
         public bool IsCompatibleWithNoteCount(MeasureMelody measureMelody,  MeasureData? precedingMeasure) {
             
-
             int noteCount = measureMelody.MelodyChords.Count();
             int graceNoteCount = 0; //TODO : cas des appogiatures  
 
             int totalNotes = noteCount + graceNoteCount;
 
-
             return totalNotes == GetAttackCount(precedingMeasure);
-
         }
 
         // Il faut transmettre l'eventuelle mesure précédente pour gérer les liaisons correctement
@@ -132,7 +128,6 @@ namespace EZSong.Model {
             }
             
             return true;
-
         }
 
         private string DurationToSymbol(RhythmRationalDuration d) {
@@ -171,6 +166,7 @@ namespace EZSong.Model {
                 s += ">";
 
             } else if (rhythmElement.GetType() == typeof(RhythmSimpleElement)) {
+
                 RhythmSimpleElement rhythmSimpleElement = (RhythmSimpleElement)rhythmElement;
                 if (rhythmSimpleElement.IsRest()) {
                     s += "r" + s;
@@ -181,9 +177,7 @@ namespace EZSong.Model {
                 s += "~";
             }
 
-
-
-                return s;
+            return s;
         }
 
         public override string ToString() {
@@ -248,7 +242,6 @@ namespace EZSong.Model {
             }
 
             return pattern;
-
         }
 
         internal bool EndsWithTie() {

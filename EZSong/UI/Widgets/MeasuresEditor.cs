@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets {
     public class MeasuresEditor : ScrolledWindow {
+
         private Box _container;
+
         private Song _song;
 
         private int _staffIndex;
@@ -26,6 +28,7 @@ namespace EZSong.UI.Widgets {
         }
 
         public void Refresh() {
+
             Clear();
 
             Reindex();
@@ -44,8 +47,7 @@ namespace EZSong.UI.Widgets {
             _staffIndex = staffIndex;
             foreach (MeasureEditorWidget measureEditorWidget in _container.Children) {
                 measureEditorWidget.RefreshDisplayedStaff(staffIndex);
-            }
-            
+            }            
             ShowAll();
         }
 
@@ -59,10 +61,7 @@ namespace EZSong.UI.Widgets {
 
             MeasureEditorWidget widget = new(measure);
 
-            widget.WidthRequest = 200;
-
-            
-            //_globalMelodyEditorWidgets.Add(widget.GlobalMelodyEditor);
+            widget.WidthRequest = 200; //TODO : Ajuster la largeur en fonction du nombre de portées et de la signature rythmique
 
             widget.MeasureChanged += (MeasureData measure) => {
                 int index = _song.Measures.IndexOf(measure);
@@ -80,44 +79,31 @@ namespace EZSong.UI.Widgets {
                 Delete(measure);
             };
 
-            
-
             _container.PackStart(widget, false, false, 2);
         }
 
         public void AppendBlankMeasures(int number) {
-
             for (int i = 0; i < number; i++) {
-
                 MeasureData newMeasure = CreateEmptyMeasure(i, new TimeSignature());
-
                 _song.Measures.Insert(i, newMeasure);
             }
-
             Reindex();
-
             Refresh();
         }
 
         private void InsertAfter(MeasureData measure) {
             int index = _song.Measures.IndexOf(measure);
-
             MeasureData newMeasure = CreateEmptyMeasure(index + 1, measure.TimeSignature);
-
             _song.Measures.Insert(index + 1, newMeasure);
             Reindex();
-
             Refresh();
         }
 
         private void InsertBefore(MeasureData measure) {
             int index = _song.Measures.IndexOf(measure);
-
             MeasureData newMeasure = CreateEmptyMeasure(index, measure.TimeSignature);
-
             _song.Measures.Insert(index, newMeasure);
             Reindex();
-
             Refresh();
         }
 
@@ -125,14 +111,13 @@ namespace EZSong.UI.Widgets {
             if (_song.Measures.Count <= 1) {
                 return;
             }
-
             _ = _song.Measures.Remove(measure);
             Reindex();
-
             Refresh();
         }
 
         private void Reindex() {
+
             for (int i = 0; i < _song.Measures.Count; i++) {
                 _song.Measures[i].Index = i + 1;
 
@@ -153,7 +138,7 @@ namespace EZSong.UI.Widgets {
         private MeasureData CreateEmptyMeasure(int index, TimeSignature ts) {
             List<MeasureGlobalMelody> staffs = new();
             staffs.Add(new MeasureGlobalMelody(0)); //Toujours au moins une portée
-            //TODO : Ajouter le bon nombre de portées
+            //TODO : S'assurer d'jouter le bon nombre de portées
             return new MeasureData(
                 index,
                 _song.SongSettings,
@@ -171,10 +156,7 @@ namespace EZSong.UI.Widgets {
                     return globalMelodyEditorWidget.MelodyMeasureEditor; 
                 }
             }
-
             return null;
         }
-
-        
     }
 }

@@ -15,14 +15,18 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class KeySignatureDto {
         public NoteStep Note { 
             get; 
-            set; }
+            set; 
+        }
+        
         public Alteration Alteration { 
             get; 
             set; 
         }
+        
         public SongMode Mode { 
             get; 
             set; 

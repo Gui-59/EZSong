@@ -31,9 +31,6 @@ namespace EZSong.UI.Widgets {
         public int NoteWidth { get; set; } = 15; // width reserved per chord slot
         public int DisplayedOctaveCount { get; set; } = 3; // number of octaves to display; must be even
 
-
-        
-
         // Cursor index: insertion point between chords (0..Count)
         private int _cursorIndex = 0;
         private double _actualNoteHeight = 1; //Will be computed
@@ -97,7 +94,6 @@ namespace EZSong.UI.Widgets {
 
             _soundFontManager = new();
             _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _userSettings.MidiInputDefaultVoice);
-
         }
 
         protected override bool OnDrawn(Context cr) {
@@ -115,7 +111,6 @@ namespace EZSong.UI.Widgets {
             int octavesAboveOrBelowBaseOctave = (DisplayedOctaveCount - 1) / 2;
             int octaveOffset = 0 + octavesAboveOrBelowBaseOctave; //La ligne du haut est la plus aigue
 
-           
             bool isUpperOctave = true;
 
             // Draw horizontal separators for each visible pitch
@@ -134,10 +129,7 @@ namespace EZSong.UI.Widgets {
                 }
                 
                 DrawPitchArea(cr, y, noteIntexInOctave, octaveOffset);
-                
             }
-
-            
 
             // Draw vertical chord columns and existing chords
             for (int i = 0; i <= _widgetMelodyChords.Count; i++) {
@@ -150,15 +142,14 @@ namespace EZSong.UI.Widgets {
                 cr.Stroke();
             }
 
-            // Draw chords
+            // Draw melody chords
             for (int i = 0; i < _widgetMelodyChords.Count; i++) {
                 double center_x = i * NoteWidth + (NoteWidth / 2);
-                DrawChordAt(cr, _widgetMelodyChords[i], center_x, 0, totalHeight);
+                DrawMelodyChordAt(cr, _widgetMelodyChords[i], center_x, 0, totalHeight);
             }
 
-
             // Ajustement automatique du spacing si trop de colonnes
-            int defaultSpacing = 18;
+            int defaultSpacing = 18; //TODO : rendre configurable
             int maxVisibleCols = Math.Max(1, (Allocation.Width - (NoteWidth / 2) * 2) / defaultSpacing);
             NoteWidth = _widgetMelodyChords.Count > maxVisibleCols
                 ? (Allocation.Width - (NoteWidth / 2) * 2) / _widgetMelodyChords.Count
@@ -167,8 +158,6 @@ namespace EZSong.UI.Widgets {
             // Draw cursor (vertical line between chords) at _cursorIndex
             if (_cursorVisible && HasFocus) {
                 double x = (NoteWidth / 2) + _cursorIndex * NoteWidth - NoteWidth / 2.0;
-
-
                 cr.SetSourceRGBA(1, 0, 0, 1); //TODO : couleur du curseur configurable
                 cr.LineWidth = 2.5;
                 cr.MoveTo(x,  -6);
@@ -227,7 +216,7 @@ namespace EZSong.UI.Widgets {
             return UpperDisplayedMidiNoteNumberPitch.ToWidgetPitch().MidiNoteNumber;
         }
 
-        private void DrawChordAt(Context cr, WidgetMelodyChord chord, double center_x, double areaTop, double areaHeight) {
+        private void DrawMelodyChordAt(Context cr, WidgetMelodyChord chord, double center_x, double areaTop, double areaHeight) {
             int rows = DisplayedOctaveCount * 12;
             double rowHeight = areaHeight / rows;
 
@@ -240,13 +229,14 @@ namespace EZSong.UI.Widgets {
                 cr.SetSourceRGBA(0, 0, 0, 1); //TODO ?
 
                 //Draw rectangle
+                //TODO : faire une forme plus moderne (losange, etc.)
                 cr.MoveTo(center_x - (NoteWidth / 2), center_y - (_actualNoteHeight /2)); //Coin Haut Gauche
                 cr.LineTo(center_x + (NoteWidth / 2), center_y - (_actualNoteHeight / 2)); //Coin Haut Droite      
                 cr.LineTo(center_x + (NoteWidth / 2), center_y + (_actualNoteHeight / 2));  //Coin Bas Droite      
                 cr.LineTo(center_x - (NoteWidth / 2), center_y + (_actualNoteHeight / 2));   //Coin Bas Gauche    
                 cr.ClosePath();
 
-                // remplissage du diamond
+                // remplissage
                 cr.FillPreserve();
                 cr.SetSourceRGBA(0, 0, 0, 1);
                 cr.LineWidth = 1.0;
@@ -264,7 +254,7 @@ namespace EZSong.UI.Widgets {
         public void LoadFromModel(int staffIndex, MeasureData measureData) {
             _staffIndex = staffIndex;
             _measureData = measureData;
-            _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.Staffs[staffIndex].Melody.ToWidgetChords();
+            _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.Staffs[staffIndex].Melody.ToWidgetMelodyChords();
             _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, 0));
             _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _measureData.SongSettings.GetStaffVoice(0));
             QueueDraw();
@@ -276,7 +266,6 @@ namespace EZSong.UI.Widgets {
             foreach (WidgetPitch p in s.Pitches) {
                 c.Pitches.Add(new WidgetPitch(p.MidiNoteNumber));
             }
-
             return c;
         }
 
@@ -366,6 +355,7 @@ namespace EZSong.UI.Widgets {
         }
 
         private async Task TogglePitchAt(int cursorIndex, int clickedRowFromTop) {
+
             if (cursorIndex < 0 || cursorIndex >= _widgetMelodyChords.Count) {
                 return;
             }
@@ -377,13 +367,9 @@ namespace EZSong.UI.Widgets {
             WidgetPitch? existingPitch = editedChord.Pitches.FirstOrDefault(
                 p => p.MidiNoteNumber == clickedMidiNoteNumber);
             if (existingPitch != null) {
-                // remove it
                 _ = editedChord.Pitches.Remove(existingPitch);
-                // if chord becomes empty, keep it (empty chord allowed) — you can remove if desired
             } else {
                 editedChord.Pitches.Add(new WidgetPitch(clickedMidiNoteNumber));
-                
-                
                 await _embeddedMidiSynth.EchoChordAsync(editedChord.MidiNotes, editedChord.Velocities, _userSettings.MidiInputEchoDurationMs);
             }
         }
@@ -424,9 +410,6 @@ namespace EZSong.UI.Widgets {
 
             return 0;
         }   
-
-
-     
 
         private void OnKeyPress(object o, KeyPressEventArgs args) {
             // Navigation and edit
@@ -489,8 +472,6 @@ namespace EZSong.UI.Widgets {
             }
         }
 
-
-
         private async Task EchoChord(int index) {
             List<int> notes = new();
             List<int> velocities = new();
@@ -500,7 +481,6 @@ namespace EZSong.UI.Widgets {
             }
 
             await _embeddedMidiSynth.EchoChordAsync(notes, velocities, _userSettings.MidiInputEchoDurationMs);
-
         }
 
         // Placeholder for hooking external MIDI input. When MIDI note(s) arrive call this.
@@ -528,7 +508,7 @@ namespace EZSong.UI.Widgets {
 
         internal void RefreshDisplayedStaff(int displayedStaffIndex) {
             _staffIndex = displayedStaffIndex;
-            _widgetMelodyChords = (List<WidgetMelodyChord>)_measureData.Staffs[_staffIndex].Melody.ToWidgetChords();
+            _widgetMelodyChords = (List<WidgetMelodyChord>)_measureData.Staffs[_staffIndex].Melody.ToWidgetMelodyChords();
             _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, 0));
             QueueDraw();
         }

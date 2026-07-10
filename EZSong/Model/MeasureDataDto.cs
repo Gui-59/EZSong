@@ -14,6 +14,7 @@ namespace EZSong.Model {
      * - propriétés publiques get/set
      * - aucune logique
      */
+
     public class MeasureDataDto {
 
         public int Index {
@@ -46,8 +47,6 @@ namespace EZSong.Model {
             set;
         }
 
-        
-
         //Constructeur vide (requis pour la sérialisation JSON)
         public MeasureDataDto() {
             Index = 0;
@@ -58,13 +57,14 @@ namespace EZSong.Model {
             Lyrics = string.Empty;
         }
 
-        public MeasureDataDto(int index,
-                    TimeSignatureDto timeSignature,
-                    KeySignatureDto keySignature,
-                    ChordSequenceDto chordSequence,
-                    List<MeasureGlobalMelodyDto>  staffs,
-                    String lyrics) {
-
+        public MeasureDataDto(
+            int index,
+            TimeSignatureDto timeSignature,
+            KeySignatureDto keySignature,
+            ChordSequenceDto chordSequence,
+            List<MeasureGlobalMelodyDto>  staffs,
+            String lyrics
+        ) {
             Index = index;
             TimeSignature = timeSignature;
             KeySignature = keySignature;

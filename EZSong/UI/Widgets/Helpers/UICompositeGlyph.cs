@@ -11,6 +11,7 @@ namespace EZSong.UI.Widgets.Helpers {
         private List<UIGlyph> Glyphs {
             get;
         }
+
         public UICompositeGlyph() {
             Glyphs = new List<UIGlyph>();
         }

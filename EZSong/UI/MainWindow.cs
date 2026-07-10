@@ -134,8 +134,7 @@ namespace EZSong.UI {
             }
 
             // Quand des notes sont jouées
-            _midiManager.NotesPlayed += notes =>
-            {
+            _midiManager.NotesPlayed += notes =>  {
                 // Trouve l'éditeur de mesure actuellement focus
                 MelodyMeasureEditor? focusedEditor = _measuresEditor.GetFocusedGlobalMelodyEditor();
                 if (focusedEditor != null) {
@@ -175,6 +174,7 @@ namespace EZSong.UI {
             switch (name) {
 
                 case "file":
+                    //TODO : ajouter un bouton "Nouveau projet"
                     flow.Add(CreateIconButton("Ouvrir", (s, e) => LoadProject(), "file-load.svg"));
                     flow.Add(CreateIconButton("Enregistrer", (s, e) => SaveProject(), "file-save.svg"));
                     break;
@@ -186,6 +186,7 @@ namespace EZSong.UI {
                     break ;
 
                 case "mesures":
+                    //TODO : supprimer cet onglet peu utile ?
                     break;
 
                 case "export":
@@ -252,6 +253,7 @@ namespace EZSong.UI {
         }
 
         private void ApplyCss() {
+            //TODO : mettre le CSS dans un fichier externe pour pouvoir le modifier facilement
             string css = @" 
 
                 * {
@@ -331,11 +333,10 @@ namespace EZSong.UI {
             StyleContext.AddProviderForScreen(Gdk.Screen.Default, cssProvider, uint.MaxValue);
         }
 
-        
-
         private void SaveProject() {
             FileChooserDialog dlg = new("Enregistrer projet", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Enregistrer", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
+                //TODO : revoir la construction du chemin de sauvegarde pour ajouter l'extension .ezsong si nécessaire
                 SongPersistancyManager.Save(dlg.Filename, _currentSong);
             }
             dlg.Destroy();
@@ -344,13 +345,9 @@ namespace EZSong.UI {
         private void LoadProject() {
             FileChooserDialog dlg = new("Ouvrir projet", this, FileChooserAction.Open, "Annuler", ResponseType.Cancel, "Ouvrir", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
-
                 SetSong(SongPersistancyManager.Load(dlg.Filename));
-
                 GoToFirstStaff();
-
                 RefreshUI();
-
             }
             dlg.Destroy();
         }
@@ -362,9 +359,6 @@ namespace EZSong.UI {
         }
 
         private void RefreshUI() {
-
-            //_measuresEditor.Refresh();
-
             UpdateSongInfoUI();
             _measuresEditor.Refresh();
         }
@@ -372,7 +366,6 @@ namespace EZSong.UI {
         private void RefreshDisplayedStaff() {
             _displayedStaffNumber.Text = (_displayedStaffIndex + 1).ToString();
             _displayedStaffName.Text = _currentSong.SongSettings.StaffsSettings.Staffs[_displayedStaffIndex].Name;
-
             _measuresEditor.RefreshDisplayedStaff(_displayedStaffIndex);
         }
 
@@ -391,11 +384,11 @@ namespace EZSong.UI {
         private void ExportPdf() {
             FileChooserDialog dlg = new("Exporter en PDF", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Exporter", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
+                //TODO : revoir la construction du chemin de sauvegarde pour ajouter l'extension .pdf si nécessaire
                 LilypondFileBuilder builder = new(_currentSong);
                 builder.GeneratePdfFile(dlg.Filename);
             }
             dlg.Destroy();
         }
-
     }
 }

@@ -11,15 +11,16 @@ namespace EZSong.UI.Widgets {
     public class GlobalMelodyEditor : Frame {
 
         private int _staffIndex;
+
         public MelodyMeasureEditor MelodyMeasureEditor {
             get; 
             private set;
         }
+        
         private MeasureRhythmEditor _rhythmEditor;
 
         public event Action<int, MeasureMelody>? MelodyChanged; //Premier paramètre : l'index de la portée
         public event Action<int, MeasureRhythmPattern>? PatternChanged; //Premier paramètre : l'index de la portée
-
 
         public GlobalMelodyEditor(int staffIndex, MeasureData measureData) {
             _staffIndex = staffIndex;
@@ -34,22 +35,17 @@ namespace EZSong.UI.Widgets {
 
             Box row = new(Orientation.Vertical, 0); //On met en superposé les elements qui définissent une mesure
             
-
             // Handler local : met à jour la measure associée (capture 'measure' et 'editor')
-            MelodyMeasureEditor.ContentChanged += (s, e) => {
-
-                
-
+            MelodyMeasureEditor.ContentChanged += (s, e) => {              
                 MeasureMelody newMeasureMelody = new(_staffIndex);
                 newMeasureMelody.MelodyChords = new List<MelodyChord>();
                 foreach (WidgetMelodyChord widgetChord in MelodyMeasureEditor.ExportToModel()) {
                     newMeasureMelody.MelodyChords.Add(widgetChord.ToMelodyChord());
                 }
                 MelodyChanged?.Invoke(_staffIndex, newMeasureMelody);
-                
             };
 
-            MelodyMeasureEditor.WidthRequest = 250;
+            MelodyMeasureEditor.WidthRequest = 250; //TODO : calculer la largeur en fonction du nombre de notes et de la signature rythmique
             row.PackStart(MelodyMeasureEditor, true, false, 0);
 
             MelodyMeasureEditor.ShowAll();
@@ -62,8 +58,6 @@ namespace EZSong.UI.Widgets {
             row.PackStart(_rhythmEditor, true, false, 0);
 
             Add(row);
-
-            
 
             ShowAll();
         }

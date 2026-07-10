@@ -18,6 +18,7 @@ namespace EZSong.Model {
             get; 
             set; 
         }
+
         public int BaseOctave {
             get;
             set;

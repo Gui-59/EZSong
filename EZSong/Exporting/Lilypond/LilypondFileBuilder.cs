@@ -10,14 +10,14 @@ using System.Text;
 namespace EZSong.Exporting.Lilypond {
     public class LilypondFileBuilder {
 
-        const string _backslash = "\\";
-        const string _dblquote = "\"";
-        const string _opening_bracket = "{";
-        const string _closing_bracket = "}";
+        const string _backslash = "\\"; //TODO : utiliser un verbatim string pour éviter d'avoir à doubler les backslashs
+        const string _dblquote = "\""; //TODO : utiliser un verbatim string pour éviter d'avoir à doubler les guillemets
+        const string _opening_bracket = "{"; //TODO : utiliser un verbatim string pour éviter d'avoir à doubler les accolades
+        const string _closing_bracket = "}"; //TODO : utiliser un verbatim string pour éviter d'avoir à doubler les accolades
 
-        const string _lilypondTargetVersion = "2.24.2";
+        const string _lilypondTargetVersion = "2.24.2"; //TODO : paramétrer la version de Lilypond à utiliser pour la génération du fichier .ly
 
-        const string _styleSheetName = "default-style";
+        const string _styleSheetName = "default-style"; //TODO : paramétrer le nom de la feuille de style à utiliser pour la génération du fichier .ly (la feuille de style doit se trouver dans le répertoire "Stylesheets" du projet)
 
         const string _lilypondvarSongchords = "songchords";
         const string _lilypondvarSonglyrics = "songlyrics";
@@ -38,9 +38,14 @@ namespace EZSong.Exporting.Lilypond {
 
         public void GenerateLilypondFile(String outputFilePath) {
 
-            String directory = Path.GetDirectoryName(outputFilePath) ?? string.Empty;
+            String? directory = Path.GetDirectoryName(outputFilePath);
+
+            if (directory == null) {
+                throw new ArgumentException("Le chemin est invalide.", nameof(outputFilePath));
+            }
+
             if (!Directory.Exists(directory)) {
-                _ = Directory.CreateDirectory(directory);
+                throw new DirectoryNotFoundException($"Le répertoire '{directory}' n'existe pas.");
             }
 
             String fullScript = string.Empty;
@@ -60,11 +65,16 @@ namespace EZSong.Exporting.Lilypond {
         }
 
         public void GeneratePdfFile(String outputFilePath) {
-            String tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
+            //TODO : créer une méthode pour générer un nom de répertoire temporaire unique
+            String tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()); 
             String tempFileName = Path.GetFileNameWithoutExtension(outputFilePath) + ".ly";
             String tempFilePath = Path.Combine(tempDirectory, tempFileName);
             GenerateLilypondFile(tempFilePath);
 
+            //TODO : placer cette génération dans un thread séparé pour ne pas bloquer l'interface utilisateur (et afficher une barre de progression)
+            /////////////////////
+            
             // On exécute une commande de génération sur le modèle : 
             // C:\path\to\lilypond.exe -I "C:\temp\dir\path" -I "C:\path\to\stylesheets\directory" -o "C:\output\file\path" "tempFileName.ly"   
 
@@ -119,12 +129,19 @@ namespace EZSong.Exporting.Lilypond {
             StringBuilder sw = new();
 
 			//Entête (titre et compositeur)
-            _ = sw.AppendLine($"{_backslash}header {_opening_bracket} title = {_dblquote}{_song.Title}{_dblquote} composer = {_dblquote}{_song.Artist}{_dblquote} {_closing_bracket}");
+            //TODO : Ajouter l'info "remarques"
+            _ = sw.AppendLine(
+                $"{_backslash}header " +
+                $"{_opening_bracket} " +
+                $"title = {_dblquote}{_song.Title}{_dblquote} " +
+                $"composer = {_dblquote}{_song.Artist}{_dblquote}" +
+                $"{_closing_bracket}");
 
             return sw.ToString();
         }
 
         private string GenerateLilypondSongmelodyVar(int staffIndex) {
+
             StringBuilder sw = new();
 
             /*
@@ -148,7 +165,6 @@ namespace EZSong.Exporting.Lilypond {
               * 
               * On entoure les notes d’un accord avec < >.
               * 
-              * 
               * La durée est indiquée par un chiffre après la note :
               * 
               * Durée	        Code LilyPond	Nom français
@@ -168,8 +184,9 @@ namespace EZSong.Exporting.Lilypond {
               * Pour lier une note avec sa suivante : il suffit de mettre un tilde juste après la note
               * 
               * un silence est matérialisé par "r" (avec une durée comme pour les notes)
-              * */
-            //Mélodie
+              * 
+              */
+
             //Le nom de variable Lilypond ne peut pas terminer par un chiffre ; on met la lettre équivalente (via la table ASCII)
             String lilypondVarName = "Songmelody" + Convert.ToChar(65 + staffIndex); 
             _lilypondSongMelodies[staffIndex] = lilypondVarName;
@@ -177,12 +194,12 @@ namespace EZSong.Exporting.Lilypond {
 
             foreach (MeasureData m in _song.Measures) {
                 KeySignature keySignature = m.KeySignature;
-                _ = sw.AppendLine(GenerateLilypondKeySignature(keySignature));
+                _ = sw.AppendLine(KeySignatureToLilyPondString(keySignature));
 
                 TimeSignature timeSignature = new(m.TimeSignature.Beats, m.TimeSignature.BeatUnit);
-                _ = sw.AppendLine(GenerateLilypondTimeSignature(timeSignature));
+                _ = sw.AppendLine(TimeSignatureToLilyPondString(timeSignature));
 
-                _ = sw.AppendLine(_lilypondConverter.FormatMeasureMelody(m.Staffs[staffIndex].Melody, m));
+                _ = sw.AppendLine(_lilypondConverter.MeasureMelodyToLilyPondString(m.Staffs[staffIndex].Melody, m));
 
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
             }
@@ -192,12 +209,14 @@ namespace EZSong.Exporting.Lilypond {
             return sw.ToString();
         }
 
-        private string GenerateLilypondTimeSignature(TimeSignature timeSignature) {
-            return "\\time " + _lilypondConverter.FormatTimeSignature(timeSignature);
+        //TODO : déplacer cette méthode dans la classe LilypondConverter
+        private string TimeSignatureToLilyPondString(TimeSignature timeSignature) {
+            return "\\time " + _lilypondConverter.TimeSignatureToLilyPondString(timeSignature);
         }
 
-        private string GenerateLilypondKeySignature(KeySignature keySignature) {
-            // Pour l'instant, on réimplémente ici la conversion
+        //TODO : déplacer cette méthode dans la classe LilypondConverter
+        private string KeySignatureToLilyPondString(KeySignature keySignature) {
+            // Pour l'instant, on réimplémente ici la conversion (TODO)
             string lilypondCode = string.Empty;
 			/*
              * Tonalité	    Armure		Notes altérées							Commande LilyPond
@@ -295,9 +314,9 @@ namespace EZSong.Exporting.Lilypond {
             StringBuilder sw = new();
 
 			//accords
-            _ = sw.AppendLine($"{_lilypondvarSongchords} =  {_backslash}chordmode {_opening_bracket} ");
+            _ = sw.AppendLine($"{_lilypondvarSongchords} = {_backslash}chordmode {_opening_bracket} ");
             foreach (MeasureData m in _song.Measures) {
-                _ = sw.AppendLine($"{_lilypondConverter.FormatChordSequence(m.ChordSequence)}");
+                _ = sw.AppendLine($"{_lilypondConverter.ChordSequenceToLilyPondString(m.ChordSequence)}");
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
             }
 
@@ -333,23 +352,37 @@ namespace EZSong.Exporting.Lilypond {
             _ = sw.AppendLine($"<<"); //Début de système de mesures
             
             for (int staffIndex = 0; staffIndex < _lilypondSongMelodies.Count(); staffIndex++ ) {
-                
 
                 _ = sw.AppendLine($"{_backslash}new Staff = {_dblquote}melStaff{staffIndex}{_dblquote} <<"); //Début de portée
 
-
-                _ = sw.AppendLine($"{_backslash}new Voice = {_dblquote}mel{staffIndex}{_dblquote} {_opening_bracket} {_backslash}{_lilypondSongMelodies[staffIndex]} {_closing_bracket}");
+                _ = sw.AppendLine(
+                        $"{_backslash}new Voice = {_dblquote}mel{staffIndex}{_dblquote} " +
+                        $"{_opening_bracket} " +
+                        $"{_backslash}{_lilypondSongMelodies[staffIndex]} " +
+                        $"{_closing_bracket}"
+                    );
 
                 if (staffIndex == 0) {
-                    _ = sw.AppendLine($" {_backslash}new Voice = {_dblquote}parolesMesures{_dblquote} {_opening_bracket} {_backslash}{_lilypondvarSonglyrics} {_closing_bracket}");
+                    _ = sw.AppendLine(
+                            $" {_backslash}new Voice = {_dblquote}parolesMesures{_dblquote} " +
+                            $"{_opening_bracket} " +
+                            $"{_backslash}{_lilypondvarSonglyrics} " +
+                            $"{_closing_bracket}"
+                        );
                 }
 
                 _ = sw.AppendLine($">>"); //Fin de portée
             }
-            
 
-
-            _ = sw.AppendLine($"{_backslash}new ChordNames {_backslash}with {_opening_bracket} alignAboveContext = {_dblquote}melStaff0{_dblquote} {_closing_bracket} {_opening_bracket} {_backslash}{_lilypondvarSongchords} {_closing_bracket}");
+            _ = sw.AppendLine(
+                    $"{_backslash}new ChordNames {_backslash}with " +
+                    $"{_opening_bracket} " +
+                    $"alignAboveContext = {_dblquote}melStaff0{_dblquote} " +
+                    $"{_closing_bracket} " +
+                    $"{_opening_bracket} " +
+                    $"{_backslash}{_lilypondvarSongchords} " +
+                    $"{_closing_bracket}"
+                );
 
             _ = sw.AppendLine($">>"); //Fin de système de portées
 

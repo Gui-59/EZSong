@@ -6,25 +6,27 @@ using System.Reflection.Metadata;
 using System.Xml.Linq;
 using Gtk;
 
-namespace EZSong.Model
-{
+namespace EZSong.Model {
 
-    public class Song
-    {
+    public class Song {
+
         public string Title { 
             get; 
             set; 
         }
+
         public string Artist { 
             get; 
             set; 
         } 
+
         public string Comment { 
             get; 
             set; 
         }
-        public List<MeasureData> Measures;
+
         public SongSettings SongSettings;
+        public List<MeasureData> Measures;
 
         //Constructeur vide (requis, entre autres, pour la (dé)sérialisation JSON)
         public Song() { 
@@ -33,7 +35,6 @@ namespace EZSong.Model
             Comment = string.Empty;
             SongSettings = new(new StaffsSettings());
             Measures = new List<MeasureData>();
-            
         }
 
         public Song(string title, string artist, string comment, List<MeasureData> measures, SongSettings songSettings) {
@@ -42,10 +43,10 @@ namespace EZSong.Model
             Comment = comment;
             SongSettings = songSettings;
             Measures = measures;
-            
         }
 
         public SongDto ToDto() {
+
             List<MeasureDataDto> measures = new();
             foreach (MeasureData m in Measures) {
                 measures.Add(m.ToDto());

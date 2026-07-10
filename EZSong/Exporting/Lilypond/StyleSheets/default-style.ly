@@ -46,14 +46,10 @@
     \override ChordName.font-size = #1
     \override ChordName.self-alignment-X = #CENTER
 	\override VerticalAxisGroup.nonstaff-relatedstaff-spacing.minimum-distance = #6
-	
-	
 	\override ChordName.font-name = "Arial"
     \override ChordName.font-size = #3
     \override ChordName.color = #(x11-color 'black)
     \override ChordName.font-series = #'bold
-	
-	
   }
 
   \context {

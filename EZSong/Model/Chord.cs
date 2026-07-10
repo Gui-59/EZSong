@@ -56,7 +56,6 @@ namespace EZSong.Model {
             set;
         }
 
-
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public Chord() {
             IsSilentChord = false;
@@ -67,9 +66,13 @@ namespace EZSong.Model {
             ChordType = ChordType.NoneOrMajor;
         }
 
-        public Chord(bool isSilentChord, RhythmRationalDuration duration, NoteStep rootNote, Alteration rootNoteAlteration,
-            ChordType chordType) {
-  
+        public Chord(
+            bool isSilentChord, 
+            RhythmRationalDuration duration, 
+            NoteStep rootNote, 
+            Alteration rootNoteAlteration,
+            ChordType chordType
+        ) {
             IsSilentChord = isSilentChord;
             Duration = duration;    
             RootNote = rootNote;    
@@ -77,12 +80,10 @@ namespace EZSong.Model {
             ChordType = chordType;
         }
 
-
-
         public string ToLilyPondString() {
 
             if (IsSilentChord) {
-                return "";            
+                return ""; //TODO : gérer les silences d'accords dans LilyPond (peut-être avec \skip ou \rest)       
             }
 
             ILilypondConverter _lilypondConverter = new LilypondConverter();
@@ -93,7 +94,7 @@ namespace EZSong.Model {
 
             lilyPondString += Duration.ToLilyPondString();
 
-            switch (ChordType) {
+            switch (ChordType) { //TODO : créer une méthode ToLilyPondString() dans ChordTypeStringifier et l'appeler ici
                 case ChordType.NoneOrMajor:
                     break;
                 case ChordType.Minor:
@@ -201,9 +202,9 @@ namespace EZSong.Model {
             string humanString = "";
 
             if (IsSilentChord) {
-                humanString += "¤";
+                humanString += "¤"; //TODO : gérer les silences d'accords dans la représentation humaine (peut-être avec un symbole spécial)
             } else {
-                humanString += NoteStepStringifier.ToHumanString(RootNote);
+                humanString += NoteStepStringifier.ToHumanString(RootNote, false); //TODO : gérer la notation internationale (avec un paramètre de configuration)
                 if (RootNoteAlteration != Alteration.neutral) {
                     humanString += AlterationStringifier.ToHumanString(RootNoteAlteration);
                 }
@@ -230,7 +231,6 @@ namespace EZSong.Model {
                 chordDto.RootNoteAlteration,
                 chordDto.ChordType
             );
-
         }
     }
 }

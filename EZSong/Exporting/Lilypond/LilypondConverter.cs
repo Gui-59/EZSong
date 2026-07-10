@@ -4,15 +4,15 @@ using EZSong.Model;
 namespace EZSong.Exporting.Lilypond {
     public class LilypondConverter : ILilypondConverter {
 
-        public string FormatMeasureMelody(MeasureMelody melody, MeasureData measureData) {
+        public string MeasureMelodyToLilyPondString(MeasureMelody melody, MeasureData measureData) {
             return melody.ToLilyPondString(measureData);
         }
 
-        public string FormatChordSequence(ChordSequence chordSequence) {
+        public string ChordSequenceToLilyPondString(ChordSequence chordSequence) {
             return chordSequence.ToLilyPondString();
         }
 
-        public string FormatTimeSignature(TimeSignature timeSignature) {
+        public string TimeSignatureToLilyPondString(TimeSignature timeSignature) {
             return timeSignature.ToLilyPondString();
         }
 

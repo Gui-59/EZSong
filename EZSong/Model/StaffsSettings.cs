@@ -52,7 +52,6 @@ namespace EZSong.Model {
         }
 
         internal void AddStaff(string staffName, GMVoice voice, int baseOctave) {
-            
             Staffs.Add(new StaffSettings(staffName, voice, baseOctave));
         }
     }

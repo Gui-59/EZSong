@@ -1,12 +1,14 @@
 ﻿namespace EZSong.Model {
-
     public struct RhythmRationalDuration : IEquatable<RhythmRationalDuration> {
+
         public int Numerator {
             get; set; //Set requis pour la sérialisation JSON
         }
+
         public int Denominator {
             get; set; //Set requis pour la sérialisation JSON
         }
+
         public int Dots {
             get; set; //Set requis pour la sérialisation JSON
         }
@@ -18,6 +20,7 @@
         }
 
         public RhythmRationalDuration ApplyDots() {
+
             if (Dots == 0) {
                 return this;
             }
@@ -33,7 +36,8 @@
 
         public static RhythmRationalDuration operator +(
             RhythmRationalDuration a,
-            RhythmRationalDuration b) {
+            RhythmRationalDuration b
+        ) {
             a = a.ApplyDots();
             b = b.ApplyDots();
 
@@ -49,7 +53,8 @@
 
         public static RhythmRationalDuration operator -(
             RhythmRationalDuration a,
-            RhythmRationalDuration b) {
+            RhythmRationalDuration b
+        ) {
             a = a.ApplyDots();
             b = b.ApplyDots();
             int num =
@@ -61,13 +66,10 @@
         }
 
         public RhythmRationalDuration Normalize() {
-
-
             int gcd = Gcd(Numerator, Denominator);
             if (gcd == 0) {
                 throw new InvalidOperationException("Cannot normalize a duration with zero numerator and denominator.");
             }
-
             return new RhythmRationalDuration(Numerator / gcd, Denominator / gcd, Dots);
         }
 
@@ -75,7 +77,6 @@
             while (b != 0) {
                 (a, b) = (b, a % b);
             }
-
             return Math.Abs(a);
         }
 

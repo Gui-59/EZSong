@@ -42,7 +42,6 @@ namespace EZSong.UI {
 
             byte[] data = bmp.Bytes;
 
-            // 🔥 Correction BGRA → RGBA
             for (int i = 0; i < data.Length; i += 4) {
                 byte b = data[i];
                 byte g = data[i + 1];
