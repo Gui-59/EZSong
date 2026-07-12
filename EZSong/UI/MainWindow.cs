@@ -3,6 +3,7 @@ using EZSong.Exporting.Lilypond;
 using EZSong.IO;
 using EZSong.MIDI;
 using EZSong.Model;
+using EZSong.UI.UX;
 using EZSong.UI.Widgets;
 using EZSong.UI.Widgets.WidgetsData;
 using Gtk;
@@ -252,85 +253,10 @@ namespace EZSong.UI {
             }
         }
 
-        private void ApplyCss() {
-            //TODO : mettre le CSS dans un fichier externe pour pouvoir le modifier facilement
-            //TODO : utilier la palette de couleurs définie dans les paramètres utilisateur
-            string css = @" 
-
-                * {
-                    padding : 0px;
-                    margin : 0px;
-                }
-
-                button, entry {
-                    padding : 4px;
-                    margin : 1px;
-                    border-radius : 4px;
-                }
-
-                .stack-switcher {
-                    padding : 0px;
-                    margin : 0px;
-                }
-
-                .stack-switcher button {
-                    font-weight: bold;
-                    background:transparent;
-                    color:rgba(0, 0, 0, 1);
-                    border : 0px;
-                    border-bottom : 2px solid;
-                    border-radius : 0px;
-                    border-color : lightgray;
-                    box-shadow: none;
-                    background-image: none;
-                    padding : 0px;
-                    margin : 0px;
-                    border-color : transparent;
-                }
-
-                .stack-switcher button:hover {
-                    border-color : lightblue;
-                }
-                .stack-switcher button:checked {
-                    border-color : blue;
-                }
-
-                .stack-switcher button label {
-                    font-size: 9pt;
-                    font-weight : normal;
-                }
-                .stack-switcher button:checked label {
-                    font-weight : bold;
-                }
-
-                flowbox {
-                    background-color : white;
-                    margin-top : 6px;
-                    margin-left: 7px;
-                    margin-right: 7px;
-                    margin-bottom: 10px;
-                    padding : 2px;
-                    border-radius : 5px;
-                    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
-                }
-
-                .titleLabel {
-                    font-weight : bold;
-                    padding : 4px;
-                }
-                .infoLabel {
-                    padding : 4px;
-                }
-
-                button.glyph {
-                    font-family: 'Bravura'; 
-                    font-size: 20px;
-                }
-
-                
-                "; //TODO : rendre la police de glyph dynamique en fonction des paramètres utilisateur
+        private void ApplyCss() {            
+            CSSManager cssManager = new();
             CssProvider cssProvider = new();
-            _ = cssProvider.LoadFromData(css);
+            _ = cssProvider.LoadFromData(cssManager.Css); 
             StyleContext.AddProviderForScreen(Gdk.Screen.Default, cssProvider, uint.MaxValue);
         }
 

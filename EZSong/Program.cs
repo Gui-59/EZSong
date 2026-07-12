@@ -10,7 +10,8 @@ using EZSong.UI;
 class Program {
     static void Main() {
         Application.Init();
-        _ = new MainWindow();
+        MainWindow win = new();
+        win.StyleContext.AddClass("gtk-window");
         Application.Run();
     }
 }
