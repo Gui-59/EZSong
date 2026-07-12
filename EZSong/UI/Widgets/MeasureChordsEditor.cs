@@ -1,5 +1,6 @@
 ﻿using Cairo;
 using EZSong.Model;
+using EZSong.UI.UX;
 using EZSong.UI.Widgets.Helpers;
 using EZSong.UI.Widgets.WidgetsData;
 using Gdk;
@@ -14,6 +15,8 @@ namespace EZSong.UI.Widgets {
         const int _height = 20; //Taille fixe pour éviter les problèmes de redimensionnement. TODO : calculer la taille en fonction de la police
 
         private MeasureData? _measureData;
+
+        private ColorPaletteManager _colorPaletteManager = new();
 
         public MeasureChordsEditor() {
             HeightRequest = _height; 
@@ -44,7 +47,11 @@ namespace EZSong.UI.Widgets {
         }
 
         private void DrawBackground(Cairo.Context cr) {
-            cr.SetSourceRGB(1, 1, 0.8);
+            cr.SetSourceRGB(
+                _colorPaletteManager.FrameBg.R, 
+                _colorPaletteManager.FrameBg.G, 
+                _colorPaletteManager.FrameBg.B
+            );
             cr.Paint();
         }
 
@@ -77,7 +84,11 @@ namespace EZSong.UI.Widgets {
 
             string beatChordText = chordBeat.ToHumanString();
 
-            cr.SetSourceRGB(0, 0, 0);
+            cr.SetSourceRGB(
+                _colorPaletteManager.FrameFore.R, 
+                _colorPaletteManager.FrameFore.G, 
+                _colorPaletteManager.FrameFore.B
+            );
 
             //TODO : Faire une fois au départ du draw
             Gtk.Settings settings = Gtk.Settings.Default;
@@ -95,7 +106,11 @@ namespace EZSong.UI.Widgets {
 
             // séparation visuelle
             //TODO : ne pas mettre de ligne si c'est le dernier beat
-            cr.SetSourceRGB(0, 0, 0);
+            cr.SetSourceRGB(
+                _colorPaletteManager.FrameFore.R, 
+                _colorPaletteManager.FrameFore.G, 
+                _colorPaletteManager.FrameFore.B
+            );
             cr.MoveTo(x+ width, 0);
             cr.LineTo(x + width, height);
             cr.Stroke();

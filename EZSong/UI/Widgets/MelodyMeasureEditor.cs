@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EZSong.Model;
 using EZSong.Settings;
+using EZSong.UI.UX;
 
 namespace EZSong.UI.Widgets {
     public class MelodyMeasureEditor : DrawingArea {
@@ -23,6 +24,8 @@ namespace EZSong.UI.Widgets {
         private List<WidgetMelodyChord> _widgetMelodyChords = new();
 
         private UserSettings _userSettings;
+
+        private ColorPaletteManager _colorPaletteManager = new();
 
         private SoundFontManager _soundFontManager;
 
@@ -98,7 +101,11 @@ namespace EZSong.UI.Widgets {
 
         protected override bool OnDrawn(Context cr) {
             // Clear background
-            cr.SetSourceRGB(1, 1, 1);
+            cr.SetSourceRGB(
+                _colorPaletteManager.FrameBg.R,
+                _colorPaletteManager.FrameBg.G,
+                _colorPaletteManager.FrameBg.B
+            );
             cr.Paint();
 
             // Compute geometry
@@ -135,7 +142,12 @@ namespace EZSong.UI.Widgets {
             for (int i = 0; i <= _widgetMelodyChords.Count; i++) {
                 double x = i * NoteWidth;
                 // subtle vertical tick
-                cr.SetSourceRGBA(0.9, 0.9, 0.9, 1);
+                cr.SetSourceRGBA(
+                    _colorPaletteManager.FrameSubtleLine.R,
+                    _colorPaletteManager.FrameSubtleLine.G,
+                    _colorPaletteManager.FrameSubtleLine.B,
+                    _colorPaletteManager.FrameSubtleLine.A
+                );
                 cr.LineWidth = 0.5;
                 cr.MoveTo(x, -4);
                 cr.LineTo(x, totalHeight + 4);
@@ -158,7 +170,12 @@ namespace EZSong.UI.Widgets {
             // Draw cursor (vertical line between chords) at _cursorIndex
             if (_cursorVisible && HasFocus) {
                 double x = (NoteWidth / 2) + _cursorIndex * NoteWidth - NoteWidth / 2.0;
-                cr.SetSourceRGBA(1, 0, 0, 1); //TODO : couleur du curseur configurable
+                cr.SetSourceRGBA(
+                    _colorPaletteManager.CursorLine.R, 
+                    _colorPaletteManager.CursorLine.G, 
+                    _colorPaletteManager.CursorLine.B, 
+                    _colorPaletteManager.CursorLine.A
+                );
                 cr.LineWidth = 2.5;
                 cr.MoveTo(x,  -6);
                 cr.LineTo(x, totalHeight + 6);
@@ -176,19 +193,39 @@ namespace EZSong.UI.Widgets {
 
             //Ligne pleine
             cr.LineWidth = _actualNoteHeight;
-            if (octaveOffset == 0) {
-                //Cas de l'octave "centrale"
+            if (octaveOffset % 2 == 0) {
+                //Cas de l'octave "centrale" (et autres octaves paires)
                 //L'octave centrale est différente selon si on est sur une mélodie ou des basses
                 if (noteInOctave == 0 || noteInOctave == 2 || noteInOctave == 4 || noteInOctave == 5 || noteInOctave == 7 || noteInOctave == 9 || noteInOctave == 11) {
-                    cr.SetSourceRGBA(0.8, 0.8, 1, 1.0); // clair pour les notes naturelles
+                    cr.SetSourceRGBA(
+                        _colorPaletteManager.NaturalEvenPianoKey.R,
+                        _colorPaletteManager.NaturalEvenPianoKey.G, 
+                        _colorPaletteManager.NaturalEvenPianoKey.B, 
+                        _colorPaletteManager.NaturalEvenPianoKey.A
+                    ); // notes naturelles
                 } else {
-                    cr.SetSourceRGBA(0.6, 0.6, 0.8, 1.0); // plus foncé pour les altérations
+                    cr.SetSourceRGBA(
+                        _colorPaletteManager.AlteredEvenPianoKey.R, 
+                        _colorPaletteManager.AlteredEvenPianoKey.G, 
+                        _colorPaletteManager.AlteredEvenPianoKey.B, 
+                        _colorPaletteManager.AlteredEvenPianoKey.A
+                    ); // altérations
                 }
             } else {
                 if (noteInOctave == 0 || noteInOctave == 2 || noteInOctave == 4 || noteInOctave == 5 || noteInOctave == 7 || noteInOctave == 9 || noteInOctave == 11) {
-                    cr.SetSourceRGBA(0.6, 0.6, 0.6, 1.0); // clair pour les notes naturelles
+                    cr.SetSourceRGBA(
+                        _colorPaletteManager.NaturalOddPianoKey.R, 
+                        _colorPaletteManager.NaturalOddPianoKey.G, 
+                        _colorPaletteManager.NaturalOddPianoKey.B,
+                        _colorPaletteManager.NaturalOddPianoKey.A
+                    ); // notes naturelles
                 } else {
-                    cr.SetSourceRGBA(0.4, 0.4, 0.4, 1.0); // plus foncé pour les altérations
+                    cr.SetSourceRGBA(
+                        _colorPaletteManager.AlteredOddPianoKey.R, 
+                        _colorPaletteManager.AlteredOddPianoKey.G, 
+                        _colorPaletteManager.AlteredOddPianoKey.B, 
+                        _colorPaletteManager.AlteredOddPianoKey.A
+                    ); // altérations
                 }
             }
             cr.SetDash(Array.Empty<double>(), 0); // repasse en ligne pleine
@@ -225,10 +262,13 @@ namespace EZSong.UI.Widgets {
                 int rowFromTop = GetRowFromTopFromMidiNoteNumber(p.MidiNoteNumber);
                 double center_y = areaTop + rowFromTop * rowHeight + rowHeight / 2.0;
 
-                // color
-                cr.SetSourceRGBA(0, 0, 0, 1); //TODO ?
-
                 //Draw rectangle
+                cr.SetSourceRGBA(
+                    _colorPaletteManager.PianoNoteBg.R,
+                    _colorPaletteManager.PianoNoteBg.G,
+                    _colorPaletteManager.PianoNoteBg.B,
+                    _colorPaletteManager.PianoNoteBg.A
+                 );
                 //TODO : faire une forme plus moderne (losange, etc.)
                 cr.MoveTo(center_x - (NoteWidth / 2), center_y - (_actualNoteHeight /2)); //Coin Haut Gauche
                 cr.LineTo(center_x + (NoteWidth / 2), center_y - (_actualNoteHeight / 2)); //Coin Haut Droite      
@@ -238,7 +278,6 @@ namespace EZSong.UI.Widgets {
 
                 // remplissage
                 cr.FillPreserve();
-                cr.SetSourceRGBA(0, 0, 0, 1);
                 cr.LineWidth = 1.0;
                 cr.Stroke();
             }

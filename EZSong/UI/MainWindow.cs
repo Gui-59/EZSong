@@ -254,6 +254,7 @@ namespace EZSong.UI {
 
         private void ApplyCss() {
             //TODO : mettre le CSS dans un fichier externe pour pouvoir le modifier facilement
+            //TODO : utilier la palette de couleurs définie dans les paramètres utilisateur
             string css = @" 
 
                 * {

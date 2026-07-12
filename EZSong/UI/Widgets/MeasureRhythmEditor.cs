@@ -1,5 +1,6 @@
 ﻿using Cairo;
 using EZSong.Model;
+using EZSong.UI.UX;
 using EZSong.UI.Widgets.Helpers;
 using EZSong.UI.Widgets.WidgetsData;
 using Gdk;
@@ -17,6 +18,8 @@ namespace EZSong.UI.Widgets {
         private int _staffIndex;
 
         private MeasureData? _measureData;
+
+        private ColorPaletteManager _colorPaletteManager = new();
 
         private string _musicalFontFamily = new Settings.UserSettings().MusicalFontFamily;
 
@@ -62,7 +65,11 @@ namespace EZSong.UI.Widgets {
         }
 
         private void DrawBackground(Cairo.Context cr) {
-            cr.SetSourceRGB(1, 1, 1);
+            cr.SetSourceRGB(
+                _colorPaletteManager.FrameBg.R, 
+                _colorPaletteManager.FrameBg.G, 
+                _colorPaletteManager.FrameBg.B
+            );
             cr.Paint();
         }
 
@@ -146,7 +153,11 @@ namespace EZSong.UI.Widgets {
 
             Helpers.UICompositeGlyph compositeGlyph = BuildBeatCompositeGlyph(beat);
 
-            cr.SetSourceRGB(0, 0, 0);
+            cr.SetSourceRGB(
+                _colorPaletteManager.FrameFore.R, 
+                _colorPaletteManager.FrameFore.G,
+                _colorPaletteManager.FrameFore.B
+            );
 
             //TODO : Faire une fois au départ du draw
             cr.SelectFontFace(_musicalFontFamily, FontSlant.Normal, FontWeight.Normal);
@@ -340,11 +351,23 @@ namespace EZSong.UI.Widgets {
             }
 
             if (!_measureData.Staffs[_staffIndex].Pattern.IsDurationValid() || !_measureData.Staffs[_staffIndex].Pattern.AreBeatsValid()) {
-                cr.SetSourceRGB(0.8, 0.2, 0.2); //TODO : changer les couleurs pour les rendre plus visibles (utiliser une palette)
+                cr.SetSourceRGB(
+                    _colorPaletteManager.ErrorBg.R,
+                    _colorPaletteManager.ErrorBg.G,
+                    _colorPaletteManager.ErrorBg.B
+                ); 
             } else if (!NoteOK()) {
-                cr.SetSourceRGB(0.8, 0.6, 1); //TODO : changer les couleurs pour les rendre plus visibles (utiliser une palette)
+                cr.SetSourceRGB(
+                    _colorPaletteManager.WarningBg.R,
+                    _colorPaletteManager.WarningBg.G,
+                    _colorPaletteManager.WarningBg.B
+                ); 
             } else {
-                cr.SetSourceRGB(0.2, 0.8, 0.2);  //TODO : changer les couleurs pour les rendre plus visibles (utiliser une palette)
+                cr.SetSourceRGB(
+                    _colorPaletteManager.SuccessBg.R,
+                    _colorPaletteManager.SuccessBg.G,
+                    _colorPaletteManager.SuccessBg.B                    
+                );
             }
 
             cr.Rectangle(0, 0, Allocation.Width, _statusAreaHeight);
@@ -359,7 +382,11 @@ namespace EZSong.UI.Widgets {
                 double x = i * beatWidth;
 
                 // séparation visuelle
-                cr.SetSourceRGB(1, 1, 1);
+                cr.SetSourceRGB(
+                    _colorPaletteManager.FrameSubtleLine.R,
+                    _colorPaletteManager.FrameSubtleLine.G,
+                    _colorPaletteManager.FrameSubtleLine.B
+                );
                 cr.MoveTo(x, 0);
                 cr.LineTo(x, _statusAreaHeight);
                 cr.Stroke();
