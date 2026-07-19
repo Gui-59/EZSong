@@ -1,18 +1,19 @@
 ﻿using Cairo;
-using Gdk;
-using Gtk;
 using EZSong.Enums;
 using EZSong.MIDI;
 using EZSong.MIDI.Enums;
+using EZSong.Model;
+using EZSong.Settings;
+using EZSong.UI.UX;
+using EZSong.UI.Widgets.Helpers;
 using EZSong.UI.Widgets.WidgetsData;
+using Gdk;
+using Gtk;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using EZSong.Model;
-using EZSong.Settings;
-using EZSong.UI.UX;
 
 namespace EZSong.UI.Widgets {
     public class MelodyMeasureEditor : DrawingArea {
@@ -27,11 +28,13 @@ namespace EZSong.UI.Widgets {
 
         private ColorPaletteManager _colorPaletteManager = new();
 
+        private string _musicalFontFamily = new Settings.UserSettings().MusicalFontFamily;
+
         private SoundFontManager _soundFontManager;
 
         // Public properties for configuration
-        public int MinimumNoteHeight { get; set; } = 8;
-        public int NoteWidth { get; set; } = 15; // width reserved per chord slot
+        public int MinimumNoteHeight { get; set; } = 16; //Prefered : 8
+        public int NoteWidth { get; set; } = 30; // width reserved per chord slot. Prefered : 15
         public int DisplayedOctaveCount { get; set; } = 3; // number of octaves to display; must be even
 
         // Cursor index: insertion point between chords (0..Count)
@@ -262,7 +265,10 @@ namespace EZSong.UI.Widgets {
                 int rowFromTop = GetRowFromTopFromMidiNoteNumber(p.MidiNoteNumber);
                 double center_y = areaTop + rowFromTop * rowHeight + rowHeight / 2.0;
 
-                //Draw rectangle
+                //Draw note shape
+                //int DrawnShapeRequiredMaxWidth = (int)(NoteWidth - 4);
+                int DrawnShapeRequiredMaxHeight = (int)(_actualNoteHeight - 4);
+                
                 cr.SetSourceRGBA(
                     _colorPaletteManager.PianoNoteBg.R,
                     _colorPaletteManager.PianoNoteBg.G,
@@ -270,16 +276,19 @@ namespace EZSong.UI.Widgets {
                     _colorPaletteManager.PianoNoteBg.A
                  );
                 //TODO : faire une forme plus moderne (losange, etc.)
-                cr.MoveTo(center_x - (NoteWidth / 2), center_y - (_actualNoteHeight /2)); //Coin Haut Gauche
-                cr.LineTo(center_x + (NoteWidth / 2), center_y - (_actualNoteHeight / 2)); //Coin Haut Droite      
-                cr.LineTo(center_x + (NoteWidth / 2), center_y + (_actualNoteHeight / 2));  //Coin Bas Droite      
-                cr.LineTo(center_x - (NoteWidth / 2), center_y + (_actualNoteHeight / 2));   //Coin Bas Gauche    
-                cr.ClosePath();
+                cr.SelectFontFace(_musicalFontFamily, FontSlant.Normal, FontWeight.Normal);
+                cr.SetFontSize(DrawnShapeRequiredMaxHeight*3); //TODO
 
-                // remplissage
-                cr.FillPreserve();
-                cr.LineWidth = 1.0;
-                cr.Stroke();
+                Helpers.UICompositeGlyph compositeGlyph = new();
+                compositeGlyph.AddGlyph(new UIGlyph(Enums.Glyph.WholeNote)); //TODO : changer de forme
+
+                TextExtents ext = cr.TextExtents(compositeGlyph.ToString());
+
+                double tx = center_x - (ext.Width/2);
+                double ty = center_y + (ext.Height/2);
+
+                cr.MoveTo(tx, ty);
+                cr.ShowText(compositeGlyph.ToString());
             }
         }
 
