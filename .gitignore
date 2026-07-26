@@ -2,6 +2,12 @@
 /EZSong/obj
 /EZSong/bin
 
+/ColorForge.Core/obj
+/ColorForge.Core/bin
+
+/ColorForge.Core.Tests/obj
+/ColorForge.Core.Tests/bin
+
 # Visual Studio : Les informations contenues dans ce répertoires sont liées au profil utilisateur, pas au projet lui-même. 
 # Elles n'ont aucune utilité pour les autres développeurs, et peuvent même causer des conflits.
 .vs/
