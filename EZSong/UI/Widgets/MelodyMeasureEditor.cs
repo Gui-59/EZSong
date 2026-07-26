@@ -29,12 +29,14 @@ namespace EZSong.UI.Widgets {
         private ColorPaletteManager _colorPaletteManager = new();
 
         private string _musicalFontFamily = new Settings.UserSettings().MusicalFontFamily;
+        private Helpers.UICompositeGlyph _noteSymbolCompositeGlyph;
+        private int _noteSymbolFontSize = -1; //Will be computed
 
         private SoundFontManager _soundFontManager;
 
         // Public properties for configuration
-        public int MinimumNoteHeight { get; set; } = 16; //Prefered : 8
-        public int NoteWidth { get; set; } = 30; // width reserved per chord slot. Prefered : 15
+        public int TargetedNoteSymbolHeightPx { get; set; } = 8; //Prefered : 8
+        public int TargetedNoteFrameWidthPx { get; set; } = 16; // width reserved per chord slot. Prefered : 2 * TargetedNoteSymbolHeightPx
         public int DisplayedOctaveCount { get; set; } = 3; // number of octaves to display; must be even
 
         // Cursor index: insertion point between chords (0..Count)
@@ -87,7 +89,11 @@ namespace EZSong.UI.Widgets {
             ));
 
             // Set a minimum height
-            HeightRequest = (DisplayedOctaveCount * 12) * MinimumNoteHeight;
+            HeightRequest = (DisplayedOctaveCount * 12) * TargetedNoteSymbolHeightPx;
+
+            //Define note symbol
+            _noteSymbolCompositeGlyph = new();
+            _noteSymbolCompositeGlyph.AddGlyph(new UIGlyph(Enums.Glyph.WholeNote)); //TODO : changer de forme            
 
             // Input handlers
             ButtonPressEvent += OnButtonPress;
@@ -102,7 +108,29 @@ namespace EZSong.UI.Widgets {
             _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _userSettings.MidiInputDefaultVoice);
         }
 
+        private void ComputeMusicalFontSize(Context cr) {
+            cr.SelectFontFace(_musicalFontFamily, FontSlant.Normal, FontWeight.Normal);
+            
+            for (int i = 1; i < 100; i++) {
+                _noteSymbolFontSize = i;
+                cr.SetFontSize(_noteSymbolFontSize);
+                TextExtents ext = cr.TextExtents(_noteSymbolCompositeGlyph.ToString());
+                if (ext.Height > TargetedNoteSymbolHeightPx) {
+                    _noteSymbolFontSize -= 1;
+                    return;
+                }
+                
+            }
+            return;            
+        }
+
         protected override bool OnDrawn(Context cr) {
+
+            //Calculate note symbol size
+            if (_noteSymbolFontSize <= 0) {                
+                ComputeMusicalFontSize(cr);
+            }
+
             // Clear background
             cr.SetSourceRGB(
                 _colorPaletteManager.FrameBg.R,
@@ -114,7 +142,7 @@ namespace EZSong.UI.Widgets {
             // Compute geometry
             int rows = DisplayedOctaveCount * 12;
             // draw staff-like grid (simple horizontal lines for notes)
-            double totalHeight = rows * MinimumNoteHeight;
+            double totalHeight = rows * TargetedNoteSymbolHeightPx;
             _actualNoteHeight = totalHeight / rows;
 
             // Recherche de l'index d'octave la plus aigue actuellement affichée (point de départ)
@@ -143,7 +171,7 @@ namespace EZSong.UI.Widgets {
 
             // Draw vertical chord columns and existing chords
             for (int i = 0; i <= _widgetMelodyChords.Count; i++) {
-                double x = i * NoteWidth;
+                double x = i * TargetedNoteFrameWidthPx;
                 // subtle vertical tick
                 cr.SetSourceRGBA(
                     _colorPaletteManager.FrameSubtleLine.R,
@@ -159,20 +187,20 @@ namespace EZSong.UI.Widgets {
 
             // Draw melody chords
             for (int i = 0; i < _widgetMelodyChords.Count; i++) {
-                double center_x = i * NoteWidth + (NoteWidth / 2);
+                double center_x = i * TargetedNoteFrameWidthPx + (TargetedNoteFrameWidthPx / 2);
                 DrawMelodyChordAt(cr, _widgetMelodyChords[i], center_x, 0, totalHeight);
             }
 
             // Ajustement automatique du spacing si trop de colonnes
-            int defaultSpacing = 18; //TODO : rendre configurable
-            int maxVisibleCols = Math.Max(1, (Allocation.Width - (NoteWidth / 2) * 2) / defaultSpacing);
-            NoteWidth = _widgetMelodyChords.Count > maxVisibleCols
-                ? (Allocation.Width - (NoteWidth / 2) * 2) / _widgetMelodyChords.Count
+            int defaultSpacing = TargetedNoteFrameWidthPx; //TODO : rendre configurable
+            int maxVisibleCols = Math.Max(1, (Allocation.Width - (TargetedNoteFrameWidthPx / 2) * 2) / defaultSpacing);
+            TargetedNoteFrameWidthPx = _widgetMelodyChords.Count > maxVisibleCols
+                ? (Allocation.Width - (TargetedNoteFrameWidthPx / 2) * 2) / _widgetMelodyChords.Count
                 : defaultSpacing;
 
             // Draw cursor (vertical line between chords) at _cursorIndex
             if (_cursorVisible && HasFocus) {
-                double x = (NoteWidth / 2) + _cursorIndex * NoteWidth - NoteWidth / 2.0;
+                double x = (TargetedNoteFrameWidthPx / 2) + _cursorIndex * TargetedNoteFrameWidthPx - TargetedNoteFrameWidthPx / 2.0;
                 cr.SetSourceRGBA(
                     _colorPaletteManager.CursorLine.R, 
                     _colorPaletteManager.CursorLine.G, 
@@ -265,30 +293,21 @@ namespace EZSong.UI.Widgets {
                 int rowFromTop = GetRowFromTopFromMidiNoteNumber(p.MidiNoteNumber);
                 double center_y = areaTop + rowFromTop * rowHeight + rowHeight / 2.0;
 
-                //Draw note shape
-                //int DrawnShapeRequiredMaxWidth = (int)(NoteWidth - 4);
-                int DrawnShapeRequiredMaxHeight = (int)(_actualNoteHeight - 4);
-                
+                //Draw note shape                
                 cr.SetSourceRGBA(
                     _colorPaletteManager.PianoNoteBg.R,
                     _colorPaletteManager.PianoNoteBg.G,
                     _colorPaletteManager.PianoNoteBg.B,
                     _colorPaletteManager.PianoNoteBg.A
                  );
-                //TODO : faire une forme plus moderne (losange, etc.)
                 cr.SelectFontFace(_musicalFontFamily, FontSlant.Normal, FontWeight.Normal);
-                cr.SetFontSize(DrawnShapeRequiredMaxHeight*3); //TODO
+                cr.SetFontSize(_noteSymbolFontSize);
 
-                Helpers.UICompositeGlyph compositeGlyph = new();
-                compositeGlyph.AddGlyph(new UIGlyph(Enums.Glyph.WholeNote)); //TODO : changer de forme
-
-                TextExtents ext = cr.TextExtents(compositeGlyph.ToString());
-
+                TextExtents ext = cr.TextExtents(_noteSymbolCompositeGlyph.ToString());
                 double tx = center_x - (ext.Width/2);
-                double ty = center_y + (ext.Height/2);
 
-                cr.MoveTo(tx, ty);
-                cr.ShowText(compositeGlyph.ToString());
+                cr.MoveTo(tx, center_y);
+                cr.ShowText(_noteSymbolCompositeGlyph.ToString());
             }
         }
 
@@ -336,7 +355,7 @@ namespace EZSong.UI.Widgets {
         // Return row index (0..rows-1 from top) and column (0..count)
         private void HitTest(double x, double y, out int column, out int row) {
             
-            column = (int)Math.Round((x - (NoteWidth / 2)) / NoteWidth);
+            column = (int)Math.Round((x - (TargetedNoteFrameWidthPx / 2)) / TargetedNoteFrameWidthPx);
             if (column < 0) {
                 column = 0;
             }
