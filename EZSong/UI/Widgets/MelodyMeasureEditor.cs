@@ -93,7 +93,7 @@ namespace EZSong.UI.Widgets {
 
             //Define note symbol
             _noteSymbolCompositeGlyph = new();
-            _noteSymbolCompositeGlyph.AddGlyph(new UIGlyph(Enums.Glyph.WholeNote)); //TODO : changer de forme            
+            _noteSymbolCompositeGlyph.AddGlyph(new UIGlyph(Enums.Glyph.UndefindedDurationNote));          
 
             // Input handlers
             ButtonPressEvent += OnButtonPress;

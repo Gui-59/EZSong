@@ -21,6 +21,7 @@ namespace EZSong.Enums {
         HalfRest, //Blanche
         QuarterRest, //Noire
         EighthRest, //Croche
-        SixteenthRest //Double croche
+        SixteenthRest, //Double croche
+        UndefindedDurationNote, //Note sans durée définie
     }
 }

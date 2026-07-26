@@ -70,7 +70,7 @@ namespace EZSong.UI.Widgets.Helpers {
                         glyph = new UIGlyph(Enums.Glyph.SixteenthNote); // double croche
                         break;
                     default:
-                        glyph = new UIGlyph(Enums.Glyph.Unknown);
+                        glyph = new UIGlyph(Enums.Glyph.UndefindedDurationNote); //Note sans durée définie
                         break;
                 }
             }
@@ -105,6 +105,8 @@ namespace EZSong.UI.Widgets.Helpers {
                 Enums.Glyph.QuarterRest => "\uE4E5", //OK
                 Enums.Glyph.EighthRest => "\uE4E6", //OK
                 Enums.Glyph.SixteenthRest => "\uE4E7", //OK
+
+                Enums.Glyph.UndefindedDurationNote => "\uE0A4",
 
                 Enums.Glyph.tupletStart => "\uEA7A",
                 Enums.Glyph.tupletEnd => "\uEA7C", 
