@@ -9,59 +9,46 @@ namespace ColorForge.Core.Tests;
 
 public sealed class LinearRgbColorTests {
 
-
-
-    //TODO : Réactiver
-    /*
     [Fact]
     public void Clamp_Should_Work() {
-        var color = new LinearRgbColor(
+        LinearRgbColor color = new(
             -0.2,
              0.5,
              1.4);
 
-        var result = color.Clamp();
+        LinearRgbColor result = color.Clamp();
 
         Assert.Equal(0.0, result.R);
         Assert.Equal(0.5, result.G);
         Assert.Equal(1.0, result.B);
     }
-    */
-
-    //TODO : Réactiver
-    /*
+    
     [Fact]
     public void InGamut_Should_Return_True() {
-        var color = new LinearRgbColor(
+        LinearRgbColor color = new(
             0.2,
             0.5,
             0.9);
 
         Assert.True(color.IsInGamut);
     }
-    */
-
-    //TODO : Réactiver
-    /*
+    
     [Fact]
     public void InGamut_Should_Return_False() {
-        var color = new LinearRgbColor(
+        LinearRgbColor color = new(
             1.2,
             0.3,
             0.5);
 
         Assert.False(color.IsInGamut);
     }
-    */
-
-    //TODO : Réactiver
-    /*
+   
     [Fact]
     public void Equality_Should_Work() {
-        var a = new LinearRgbColor(0.1, 0.2, 0.3);
-        var b = new LinearRgbColor(0.1, 0.2, 0.3);
+        LinearRgbColor a = new(0.1, 0.2, 0.3);
+        LinearRgbColor b = new(0.1, 0.2, 0.3);
 
         Assert.Equal(a, b);
     }
-    */
+   
 }

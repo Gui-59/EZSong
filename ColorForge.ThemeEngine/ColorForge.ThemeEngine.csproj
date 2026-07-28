@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ColorForge.Core\ColorForge.Core.csproj" />
+  </ItemGroup>
+
 </Project>

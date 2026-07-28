@@ -8,70 +8,56 @@ using Xunit;
 namespace ColorForge.Core.Tests;
 
 public sealed class OklchColorTests {
-    //TODO : Réactiver
-/*
-[Fact]
-public void Constructor_Should_Normalize_Hue() {
-    var color = new OklchColor(0.50, 0.20, 390);
 
-    Assert.Equal(30, color.H);
-}
-*/
+    [Fact]
+    public void Constructor_Should_Normalize_Hue() {
+        OklchColor color = new(0.50, 0.20, 390);
 
-//TODO : Réactiver
-/*
-[Fact]
-public void Negative_Hue_Should_Be_Normalized() {
-var color = new OklchColor(0.50, 0.20, -45);
+        Assert.Equal(30, color.H);
+    }
 
-Assert.Equal(315, color.H);
-}
-*/
 
-//TODO : Réactiver
-/*
-[Fact]
-public void RotateHue_Should_Wrap_Correctly() {
-var color = new OklchColor(0.40, 0.10, 350);
+    [Fact]
+    public void Negative_Hue_Should_Be_Normalized() {
+        OklchColor color = new(0.50, 0.20, -45);
 
-var rotated = color.RotateHue(20);
+        Assert.Equal(315, color.H);
+    }
 
-Assert.Equal(10, rotated.H);
-}
-*/
+    [Fact]
+    public void RotateHue_Should_Wrap_Correctly() {
+        OklchColor color = new(0.40, 0.10, 350);
 
-//TODO : Réactiver
-/*
-[Fact]
-public void WithChroma_Should_Create_New_Instance() {
-var original = new OklchColor(0.60, 0.15, 45);
+        OklchColor rotated = color.RotateHue(20);
 
-var modified = original.WithChroma(0.30);
+        Assert.Equal(10, rotated.H);
+    }
 
-Assert.Equal(original.L, modified.L);
-Assert.Equal(0.30, modified.C);
-Assert.Equal(original.H, modified.H);
-}
-*/
 
-//TODO : Réactiver
-/*
-[Fact]
-public void Equality_Should_Work() {
-var c1 = new OklchColor(0.5, 0.2, 90);
-var c2 = new OklchColor(0.5, 0.2, 90);
+    [Fact]
+    public void WithChroma_Should_Create_New_Instance() {
+        OklchColor original = new(0.60, 0.15, 45);
 
-Assert.Equal(c1, c2);
-}
-*/
+        OklchColor modified = original.WithChroma(0.30);
 
-//TODO : Réactiver
-/*
-[Fact]
-public void IsValid_Should_Return_False_For_NaN() {
-var color = new OklchColor(double.NaN, 0.2, 45);
+        Assert.Equal(original.L, modified.L);
+        Assert.Equal(0.30, modified.C);
+        Assert.Equal(original.H, modified.H);
+    }
 
-Assert.False(color.IsValid);
-}
-*/
+    [Fact]
+    public void Equality_Should_Work() {
+        OklchColor c1 = new(0.5, 0.2, 90);
+        OklchColor c2 = new(0.5, 0.2, 90);
+
+        Assert.Equal(c1, c2);
+    }
+
+    [Fact]
+    public void IsValid_Should_Return_False_For_NaN() {
+        OklchColor color = new(double.NaN, 0.2, 45);
+
+        Assert.False(color.IsValid);
+    }
+
 }

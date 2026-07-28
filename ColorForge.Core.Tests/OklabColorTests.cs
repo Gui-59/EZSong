@@ -8,60 +8,50 @@ using Xunit;
 namespace ColorForge.Core.Tests;
 
 public sealed class OklabColorTests {
-    //TODO : Réactiver
-    /*
+
     [Fact]
     public void Constructor_Should_Assign_Properties() {
-        var color = new OklabColor(0.75, 0.15, -0.08);
+        OklabColor color = new(0.75, 0.15, -0.08);
 
         Assert.Equal(0.75, color.L);
         Assert.Equal(0.15, color.A);
         Assert.Equal(-0.08, color.B);
     }
-    */
+    
 
-    //TODO : Réactiver
-    /*
     [Fact]
     public void IsValid_Should_Be_True() {
-        var color = new OklabColor(0.5, 0.1, -0.1);
+        OklabColor color = new(0.5, 0.1, -0.1);
 
         Assert.True(color.IsValid);
     }
-    */
+    
 
-    //TODO : Réactiver
-    /*
     [Fact]
     public void IsValid_Should_Be_False_When_Component_Is_NaN() {
-    var color = new OklabColor(double.NaN, 0.0, 0.0);
+        OklabColor color = new(double.NaN, 0.0, 0.0);
 
-    Assert.False(color.IsValid);
+        Assert.False(color.IsValid);
     }
-    */
-
-    //TODO : Réactiver
-    /*
+    
     [Fact]
     public void WithLightness_Should_Create_New_Instance() {
-    var original = new OklabColor(0.40, 0.10, 0.20);
+        OklabColor original = new(0.40, 0.10, 0.20);
 
-    var modified = original.WithLightness(0.80);
+        OklabColor modified = original.WithLightness(0.80);
 
-    Assert.Equal(0.80, modified.L);
-    Assert.Equal(original.A, modified.A);
-    Assert.Equal(original.B, modified.B);
+        Assert.Equal(0.80, modified.L);
+        Assert.Equal(original.A, modified.A);
+        Assert.Equal(original.B, modified.B);
     }
-    */
+    
 
-    //TODO : Réactiver
-    /*
     [Fact]
     public void Equality_Should_Work() {
-    var c1 = new OklabColor(0.5, 0.1, 0.2);
-    var c2 = new OklabColor(0.5, 0.1, 0.2);
+        OklabColor c1 = new(0.5, 0.1, 0.2);
+        OklabColor c2 = new(0.5, 0.1, 0.2);
 
-    Assert.Equal(c1, c2);
+        Assert.Equal(c1, c2);
     }
-    */
+    
 }

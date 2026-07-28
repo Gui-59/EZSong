@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using ColorForge.Core;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ColorForge.Core {
+namespace ColorForge.ThemeEngine {
 
     /// <summary>
-    /// ControlState
+    /// SemanticEntry
     /// </summary>
-    public sealed record ControlState {
+    public sealed record SemanticState {
 
         /// <summary>
         /// Background
@@ -17,7 +19,6 @@ namespace ColorForge.Core {
             get; init;
         }
 
-
         /// <summary>
         /// Foreground
         /// </summary>
@@ -25,19 +26,10 @@ namespace ColorForge.Core {
             get; init;
         }
 
-
         /// <summary>
         /// Border
         /// </summary>
         public required ThemeColor Border {
-            get; init;
-        }
-
-
-        /// <summary>
-        /// Shadow
-        /// </summary>
-        public required ThemeColor Shadow {
             get; init;
         }
     }

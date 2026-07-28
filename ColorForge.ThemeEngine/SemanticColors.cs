@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ColorForge.Core {
+namespace ColorForge.ThemeEngine {
 
     /// <summary>
     /// SemanticColors
@@ -14,28 +14,28 @@ namespace ColorForge.Core {
         /// <summary>
         /// Success
         /// </summary>
-        public required SemanticEntry Success {
+        public required SemanticState Success {
             get; init;
         }
 
         /// <summary>
         /// Warning
         /// </summary>
-        public required SemanticEntry Warning {
+        public required SemanticState Warning {
             get; init;
         }
 
         /// <summary>
         /// Error
         /// </summary>
-        public required SemanticEntry Error {
+        public required SemanticState Error {
             get; init;
         }
 
         /// <summary>
         /// Information
         /// </summary>
-        public required SemanticEntry Information {
+        public required SemanticState Information {
             get; init;
         }
     }

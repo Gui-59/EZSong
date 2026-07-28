@@ -8,11 +8,10 @@ using Xunit;
 namespace ColorForge.Core.Tests;
 
 public sealed class XyzColorTests {
-    //TODO : Réactiver
-    /*
+
     [Fact]
     public void Constructor_Should_Assign_Values() {
-        var xyz = new XyzColor(
+        XyzColor xyz = new(
             0.32,
             0.48,
             0.19);
@@ -21,41 +20,35 @@ public sealed class XyzColorTests {
         Assert.Equal(0.48, xyz.Y);
         Assert.Equal(0.19, xyz.Z);
     }
-    */
-    //TODO : Réactiver
-    /*
+    
     [Fact]
     public void Equality_Should_Work() {
-    var a = new XyzColor(1, 2, 3);
-    var b = new XyzColor(1, 2, 3);
+        XyzColor a = new(1, 2, 3);
+        XyzColor b = new(1, 2, 3);
 
-    Assert.Equal(a, b);
+        Assert.Equal(a, b);
     }
-    */
-    //TODO : Réactiver
-    /*
+    
     [Fact]
     public void WithY_Should_Return_New_Instance() {
-    var xyz = new XyzColor(1, 2, 3);
+        XyzColor xyz = new(1, 2, 3);
 
-    var modified = xyz.WithY(10);
+        XyzColor modified = xyz.WithY(10);
 
-    Assert.Equal(1, modified.X);
-    Assert.Equal(10, modified.Y);
-    Assert.Equal(3, modified.Z);
+        Assert.Equal(1, modified.X);
+        Assert.Equal(10, modified.Y);
+        Assert.Equal(3, modified.Z);
     }
-    */
-
-    //TODO : Réactiver
-    /*
+    
     [Fact]
     public void Invalid_Value_Should_Be_Detected() {
-    var xyz = new XyzColor(
-    double.NaN,
-    0,
-    0);
+        XyzColor xyz = new(
+            double.NaN,
+            0,
+            0
+        );
 
-    Assert.False(xyz.IsValid);
+        Assert.False(xyz.IsValid);
     }
-    */
+    
 }

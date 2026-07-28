@@ -1,10 +1,11 @@
-﻿using System;
+﻿using ColorForge.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ColorForge.Core {
+namespace ColorForge.ThemeEngine.Generation {
     internal static class TonalPaletteGenerator {
         public static TonalPalette Generate(
             ThemeColor accent) {

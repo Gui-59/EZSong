@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ColorForge.Core {
+namespace ColorForge.ThemeEngine {
 
     /// <summary>
     /// StateColors
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public sealed record StateColors<T> {
+    public sealed record ControlStates<T> {
 
         /// <summary>
         /// Normal

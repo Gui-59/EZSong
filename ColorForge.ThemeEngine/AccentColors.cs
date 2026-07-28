@@ -1,4 +1,6 @@
-﻿namespace ColorForge.ThemeEngine {
+﻿using ColorForge.Core;
+
+namespace ColorForge.ThemeEngine {
 
     /*
      * Note : Un accent n'est jamais "disabled". C'est le contrôle qui l'est.

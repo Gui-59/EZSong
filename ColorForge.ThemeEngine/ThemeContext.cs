@@ -1,4 +1,5 @@
-﻿using ColorForge.ThemeEngine;
+﻿using ColorForge.Core;
+using ColorForge.ThemeEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;

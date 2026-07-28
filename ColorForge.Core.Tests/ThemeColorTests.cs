@@ -8,51 +8,42 @@ using Xunit;
 namespace ColorForge.Core.Tests;
 
 public class ThemeColorTests {
-    //TODO : réactiver
-    /*
+
     [Fact]
     public void Equality() {
-        var c1 = ThemeColor.FromHex("#336699"); 
-        var c2 = ThemeColor.FromRgb(0x33, 0x66, 0x99);
+        ThemeColor c1 = ThemeColor.FromHex("#336699");
+        ThemeColor c2 = ThemeColor.FromRgb(0x33, 0x66, 0x99);
 
         Assert.Equal(c1, c2);
     }
-    */
-    //TODO : réactiver
-    /*
+    
     [Fact]    
     public void HexFormatting() {
-        var color = ThemeColor.FromHex("#336699");
+        ThemeColor color = ThemeColor.FromHex("#336699");
 
         Assert.Equal("#336699",
             color.ToRgbHex());
     }
-    */
-
-    //TODO : réactiver
-    /*
+    
     [Fact]
     public void AlphaFormatting() {
-        var color = ThemeColor.FromHex("#80336699");
+        ThemeColor color = ThemeColor.FromHex("#80336699");
 
         Assert.Equal("#80336699",
             color.ToArgbHex());
     }
-    */
-
-    //TODO : réactiver
-    /*
+    
     [Fact]
     public void Deconstruct() {
-        var color = ThemeColor.FromRgb(
+        ThemeColor color = ThemeColor.FromRgb(
             1, 2, 3);
 
-        var (r, g, b, a) = color;
+        (byte r, byte g, byte b, byte a) = color;
 
         Assert.Equal((byte)1, r);
         Assert.Equal((byte)2, g);
         Assert.Equal((byte)3, b);
         Assert.Equal((byte)255, a);
     }
-    */
+    
 }

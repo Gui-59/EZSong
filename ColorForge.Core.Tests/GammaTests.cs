@@ -9,8 +9,6 @@ namespace ColorForge.Core.Tests;
 
 public sealed class GammaTests {
 
-    //TODO : Réactiver
-    /*
     [Theory]
     [InlineData(0)]
     [InlineData(32)]
@@ -19,28 +17,23 @@ public sealed class GammaTests {
     [InlineData(192)]
     [InlineData(255)]
     public void Gamma_Roundtrip(byte value) {
-        var linear =
+        double linear =
             ColorConverter.SrgbToLinear(value);
 
-        var result =
+        byte result =
             ColorConverter.LinearToSrgb(linear);
 
         Assert.Equal(value, result);
     }
-    */
+    
 
-    //TODO : Réactiver
-    /*
     [Fact]
     public void Black_Should_Be_Zero() {
         Assert.Equal(
             0.0,
             ColorConverter.SrgbToLinear(0));
     }
-    */
-
-    //TODO : Réactiver
-    /*
+    
     [Fact]
     public void White_Should_Be_One() {
         Assert.Equal(
@@ -48,5 +41,5 @@ public sealed class GammaTests {
             ColorConverter.SrgbToLinear(255),
             12);
     }
-    */
+   
 }

@@ -1,4 +1,5 @@
 ﻿using ColorForge.Core;
+using ColorForge.ThemeEngine.Generation;
 
 namespace ColorForge.ThemeEngine;
 
