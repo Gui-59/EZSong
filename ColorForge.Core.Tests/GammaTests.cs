@@ -38,8 +38,7 @@ public sealed class GammaTests {
     public void White_Should_Be_One() {
         AssertEx.NearlyEqual(
             1.0,
-            ColorConverter.SrgbToLinear(255),
-            12);
+            ColorConverter.SrgbToLinear(255));
     }
    
 }

@@ -9,16 +9,16 @@ public sealed class XyzConversionTests {
     [Fact]
     public void White_Should_Convert_To_D65() {
         LinearRgbColor linear = new(
-            1,
-            1,
-            1
+            ColorSpaceConstants.RgbWhiteR,
+            ColorSpaceConstants.RgbWhiteG,
+            ColorSpaceConstants.RgbWhiteB
         );
 
         XyzColor xyz = ColorConverter.ToXyz(linear);
 
-        Assert.Equal(0.950, xyz.X, 3);
-        Assert.Equal(1.000, xyz.Y, 3);
-        Assert.Equal(1.089, xyz.Z, 3);
+        Assert.Equal(ColorSpaceConstants.D65WhiteX, xyz.X, 3);
+        Assert.Equal(ColorSpaceConstants.D65WhiteY, xyz.Y, 3);
+        Assert.Equal(ColorSpaceConstants.D65WhiteZ, xyz.Z, 3);
     }
     
     [Fact]
@@ -33,16 +33,8 @@ public sealed class XyzConversionTests {
         XyzColor xyz =
             ColorConverter.ToXyz(linear);
 
-        Console.WriteLine($"xyz.X = {xyz.X:R}");
-        Console.WriteLine($"xyz.Y = {xyz.Y:R}");
-        Console.WriteLine($"xyz.Z = {xyz.Z:R}");
-
         LinearRgbColor result =
             ColorConverter.FromXyz(xyz);
-
-        Console.WriteLine($"result.R = {result.R:R}");
-        Console.WriteLine($"result.G = {result.G:R}");
-        Console.WriteLine($"result.B = {result.B:R}");
 
         AssertEx.NearlyEqual(linear, result);
 

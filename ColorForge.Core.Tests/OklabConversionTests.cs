@@ -10,9 +10,9 @@ public sealed class OklabConversionTests {
     public void White_Roundtrip() {
         LinearRgbColor rgb = 
             new(
-                1,
-                1,
-                1
+                ColorSpaceConstants.RgbWhiteR,
+                ColorSpaceConstants.RgbWhiteG,
+                ColorSpaceConstants.RgbWhiteB
             );
 
         OklabColor lab =
@@ -28,9 +28,9 @@ public sealed class OklabConversionTests {
     [Fact]
     public void Red_Roundtrip() {
         LinearRgbColor rgb = new(
-            1,
-            0,
-            0);
+            ColorSpaceConstants.RgbPureRedR,
+            ColorSpaceConstants.RgbPureRedG,
+            ColorSpaceConstants.RgbPureRedB);
 
         OklabColor lab =
             ColorConverter.ToOklab(rgb);
