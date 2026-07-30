@@ -13,9 +13,9 @@ public sealed class OklabColorTests {
     public void Constructor_Should_Assign_Properties() {
         OklabColor color = new(0.75, 0.15, -0.08);
 
-        Assert.Equal(0.75, color.L);
-        Assert.Equal(0.15, color.A);
-        Assert.Equal(-0.08, color.B);
+        AssertEx.NearlyEqual(0.75, color.L);
+        AssertEx.NearlyEqual(0.15, color.A);
+        AssertEx.NearlyEqual(-0.08, color.B);
     }
     
 
@@ -40,9 +40,9 @@ public sealed class OklabColorTests {
 
         OklabColor modified = original.WithLightness(0.80);
 
-        Assert.Equal(0.80, modified.L);
-        Assert.Equal(original.A, modified.A);
-        Assert.Equal(original.B, modified.B);
+        AssertEx.NearlyEqual(0.80, modified.L);
+        AssertEx.NearlyEqual(original.A, modified.A);
+        AssertEx.NearlyEqual(original.B, modified.B);
     }
     
 

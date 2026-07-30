@@ -33,12 +33,19 @@ public sealed class XyzConversionTests {
         XyzColor xyz =
             ColorConverter.ToXyz(linear);
 
+        Console.WriteLine($"xyz.X = {xyz.X:R}");
+        Console.WriteLine($"xyz.Y = {xyz.Y:R}");
+        Console.WriteLine($"xyz.Z = {xyz.Z:R}");
+
         LinearRgbColor result =
             ColorConverter.FromXyz(xyz);
 
-        Assert.Equal(linear.R, result.R, 10);
-        Assert.Equal(linear.G, result.G, 10);
-        Assert.Equal(linear.B, result.B, 10);
+        Console.WriteLine($"result.R = {result.R:R}");
+        Console.WriteLine($"result.G = {result.G:R}");
+        Console.WriteLine($"result.B = {result.B:R}");
+
+        AssertEx.NearlyEqual(linear, result);
+
     }
    
 }

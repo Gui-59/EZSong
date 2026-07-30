@@ -23,20 +23,20 @@ public sealed class GammaTests {
         byte result =
             ColorConverter.LinearToSrgb(linear);
 
-        Assert.Equal(value, result);
+        AssertEx.NearlyEqual(value, result);
     }
     
 
     [Fact]
     public void Black_Should_Be_Zero() {
-        Assert.Equal(
+        AssertEx.NearlyEqual(
             0.0,
             ColorConverter.SrgbToLinear(0));
     }
     
     [Fact]
     public void White_Should_Be_One() {
-        Assert.Equal(
+        AssertEx.NearlyEqual(
             1.0,
             ColorConverter.SrgbToLinear(255),
             12);

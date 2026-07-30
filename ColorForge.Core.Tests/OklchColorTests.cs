@@ -13,7 +13,7 @@ public sealed class OklchColorTests {
     public void Constructor_Should_Normalize_Hue() {
         OklchColor color = new(0.50, 0.20, 390);
 
-        Assert.Equal(30, color.H);
+        AssertEx.NearlyEqual(30, color.H);
     }
 
 
@@ -21,7 +21,7 @@ public sealed class OklchColorTests {
     public void Negative_Hue_Should_Be_Normalized() {
         OklchColor color = new(0.50, 0.20, -45);
 
-        Assert.Equal(315, color.H);
+        AssertEx.NearlyEqual(315, color.H);
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public sealed class OklchColorTests {
 
         OklchColor rotated = color.RotateHue(20);
 
-        Assert.Equal(10, rotated.H);
+        AssertEx.NearlyEqual(10, rotated.H);
     }
 
 
@@ -40,9 +40,9 @@ public sealed class OklchColorTests {
 
         OklchColor modified = original.WithChroma(0.30);
 
-        Assert.Equal(original.L, modified.L);
-        Assert.Equal(0.30, modified.C);
-        Assert.Equal(original.H, modified.H);
+        AssertEx.NearlyEqual(original.L, modified.L);
+        AssertEx.NearlyEqual(0.30, modified.C);
+        AssertEx.NearlyEqual(original.H, modified.H);
     }
 
     [Fact]

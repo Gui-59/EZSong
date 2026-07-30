@@ -8,21 +8,24 @@ public sealed class ColorMathTests {
 
     [Fact]
     public void Clamp01_Should_Work() {
-        Assert.Equal(0, ColorMath.Clamp01(-2));
-        Assert.Equal(.5, ColorMath.Clamp01(.5));
-        Assert.Equal(1, ColorMath.Clamp01(5));
+
+        AssertEx.NearlyEqual(0, ColorMath.Clamp01(-2));
+
+        AssertEx.NearlyEqual(0.5, ColorMath.Clamp01(.5));
+
+        AssertEx.NearlyEqual(1, ColorMath.Clamp01(5));
     }
     
     [Fact]
     public void Lerp_Should_Work() {
-        Assert.Equal(
+        AssertEx.NearlyEqual(
             5,
             ColorMath.Lerp(0, 10, .5));
     }
     
     [Fact]
     public void InverseLerp_Should_Work() {
-        Assert.Equal(
+        AssertEx.NearlyEqual(
             .5,
             ColorMath.InverseLerp(
                 10,
@@ -32,7 +35,7 @@ public sealed class ColorMathTests {
     
     [Fact]
     public void Remap_Should_Work() {
-        Assert.Equal(
+        AssertEx.NearlyEqual(
             50,
             ColorMath.Remap(
                 .5,

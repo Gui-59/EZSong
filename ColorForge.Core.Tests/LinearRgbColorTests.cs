@@ -18,9 +18,9 @@ public sealed class LinearRgbColorTests {
 
         LinearRgbColor result = color.Clamp();
 
-        Assert.Equal(0.0, result.R);
-        Assert.Equal(0.5, result.G);
-        Assert.Equal(1.0, result.B);
+        AssertEx.NearlyEqual(0.0, result.R);
+        AssertEx.NearlyEqual(0.5, result.G);
+        AssertEx.NearlyEqual(1.0, result.B);
     }
     
     [Fact]

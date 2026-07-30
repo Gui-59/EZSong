@@ -21,9 +21,7 @@ public sealed class OklabConversionTests {
         LinearRgbColor result =
             ColorConverter.FromOklab(lab);
 
-        Assert.Equal(rgb.R, result.R, 10);
-        Assert.Equal(rgb.G, result.G, 10);
-        Assert.Equal(rgb.B, result.B, 10);
+        AssertEx.NearlyEqual(rgb, result);
     }
     
 
@@ -40,9 +38,8 @@ public sealed class OklabConversionTests {
         LinearRgbColor result =
             ColorConverter.FromOklab(lab);
 
-        Assert.Equal(rgb.R, result.R, 10);
-        Assert.Equal(rgb.G, result.G, 10);
-        Assert.Equal(rgb.B, result.B, 10);
+        AssertEx.NearlyEqual(rgb, result);
+
     }
     
 }

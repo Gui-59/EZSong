@@ -93,17 +93,17 @@ public static class ColorConverter {
         double b = color.B;
 
         return new XyzColor(
-            x: 0.4122214708 * r +
-               0.5363325363 * g +
-               0.0514459929 * b,
+            x: 0.4124564 * r +
+               0.3575761 * g +
+               0.1804375 * b,
 
-            y: 0.2119034982 * r +
-               0.6806995451 * g +
-               0.1073969566 * b,
+            y: 0.2126729 * r +
+               0.7151522 * g +
+               0.0721750 * b,
 
-            z: 0.0883024619 * r +
-               0.2817188376 * g +
-               0.6299787005 * b);
+            z: 0.0193339 * r +
+               0.1191920 * g +
+               0.9503041 * b);
     }
 
     #endregion
@@ -118,22 +118,26 @@ public static class ColorConverter {
         double y = xyz.Y;
         double z = xyz.Z;
 
-        return new LinearRgbColor(
+        double r =
+              3.2404542 * x
+           - 1.5371385 * y
+           - 0.4985314 * z;
 
-            r:
-                4.0767416621 * x
-              - 3.3077115913 * y
-              + 0.2309699292 * z,
+        double g =
+            -0.9692660 * x
+           + 1.8760108 * y
+           + 0.0415560 * z;
 
-            g:
-              -1.2684380046 * x
-              + 2.6097574011 * y
-              - 0.3413193965 * z,
+        double b =
+            0.0556434 * x
+           - 0.2040259 * y
+           + 1.0572252 * z;
 
-            b:
-              -0.0041960863 * x
-              - 0.7034186147 * y
-              + 1.7076147010 * z);
+        Console.WriteLine($"{r:R}");
+        Console.WriteLine($"{g:R}");
+        Console.WriteLine($"{b:R}");
+
+        return new LinearRgbColor(r, g, b);
     }
 
     #endregion
