@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Version>0.0.1</Version>
+  <AssemblyVersion>0.0.1</AssemblyVersion>
+  <FileVersion>0.0.1</FileVersion>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
