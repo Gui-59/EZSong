@@ -11,46 +11,35 @@ namespace ColorForge.ThemeEngine {
     /// Theme
     /// </summary>
     public sealed record Theme {
-
-        /// <summary>
-        /// Mode
-        /// </summary>
-        public required ThemeMode Mode {
+        public required ThemeIdentity Identity {
             get; init;
         }
 
-        /// <summary>
-        /// Surface
-        /// </summary>
-        public required SurfaceColors Surface {
+        public required SurfaceTokens Surfaces {
             get; init;
         }
 
-        /// <summary>
-        /// Text
-        /// </summary>
-        public required TextColors Text {
+        public required ContentTokens Content {
             get; init;
         }
 
-        /// <summary>
-        /// Accent
-        /// </summary>
-        public required AccentColors Accent {
+        public required AccentTokens Accent {
             get; init;
         }
 
-        /// <summary>
-        /// Button
-        /// </summary>
-        public required ButtonColors Button {
+        public required SemanticTokens Semantic {
             get; init;
         }
 
-        /// <summary>
-        /// Semantic
-        /// </summary>
-        public required SemanticColors Semantic {
+        public required ControlTokens Controls {
+            get; init;
+        }
+
+        public required FocusTokens Focus {
+            get; init;
+        }
+
+        public required ThemeMetrics Metrics {
             get; init;
         }
     }

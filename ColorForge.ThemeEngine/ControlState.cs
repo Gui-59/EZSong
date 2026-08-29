@@ -1,46 +1,36 @@
 ﻿using ColorForge.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ColorForge.ThemeEngine {
+namespace ColorForge.ThemeEngine;
+
+/// <summary>
+/// Visual colors used to render an interactive control.
+/// </summary>
+public sealed record ControlState {
+    /// <summary>
+    /// Background fill.
+    /// </summary>
+    public required ThemeColor Fill {
+        get; init;
+    }
 
     /// <summary>
-    /// ControlState
+    /// Border color.
     /// </summary>
-    public sealed record ControlState {
+    public required ThemeColor Border {
+        get; init;
+    }
 
-        /// <summary>
-        /// Background
-        /// </summary>
-        public required ThemeColor Background {
-            get; init;
-        }
+    /// <summary>
+    /// Foreground text.
+    /// </summary>
+    public required ThemeColor Text {
+        get; init;
+    }
 
-
-        /// <summary>
-        /// Foreground
-        /// </summary>
-        public required ThemeColor Foreground {
-            get; init;
-        }
-
-
-        /// <summary>
-        /// Border
-        /// </summary>
-        public required ThemeColor Border {
-            get; init;
-        }
-
-
-        /// <summary>
-        /// Shadow
-        /// </summary>
-        public required ThemeColor Shadow {
-            get; init;
-        }
+    /// <summary>
+    /// Icon color.
+    /// </summary>
+    public required ThemeColor Icon {
+        get; init;
     }
 }
