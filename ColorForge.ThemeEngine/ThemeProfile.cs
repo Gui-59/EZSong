@@ -10,6 +10,9 @@ namespace ColorForge.ThemeEngine {
             Name = name;
         }
 
+        /// <summary>
+        /// Gets the human-readable profile name.
+        /// </summary>
         public string Name {
             get;
         }
