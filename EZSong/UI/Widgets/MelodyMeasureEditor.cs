@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class MelodyMeasureEditor : DrawingArea {
 
+        private int _segmentIndex;
         private int _staffIndex;
         private MeasureData _measureData;
 
@@ -571,6 +572,12 @@ namespace EZSong.UI.Widgets {
             _cursorIndex = Math.Min(_widgetMelodyChords.Count, _cursorIndex + 1);
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal void RefreshDisplayedSegment(int displayedSegmentIndex, MeasureData measureData) {
+            _segmentIndex = displayedSegmentIndex;
+            _measureData = measureData;
+            RefreshDisplayedStaff(_staffIndex);
         }
 
         internal void RefreshDisplayedStaff(int displayedStaffIndex) {

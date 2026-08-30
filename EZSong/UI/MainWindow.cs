@@ -28,6 +28,8 @@ namespace EZSong.UI {
         private Entry _titleEntry;
         private Entry _artistEntry;
         private Entry _commentEntry;
+        private Label _displayedSegmentNumber;
+        private Label _displayedSegmentName;
         private Label _displayedStaffNumber;
         private Label _displayedStaffName;
         private MeasuresEditor _measuresEditor;
@@ -35,6 +37,7 @@ namespace EZSong.UI {
         private Statusbar _statusBar;
         private uint _statusBarContextId;
 
+        private int _displayedSegmentIndex = 0;
         private int _displayedStaffIndex = 0;
 
         public MainWindow() : base("EZSong") {
@@ -54,7 +57,7 @@ namespace EZSong.UI {
             _switcher = new StackSwitcher { 
                 Stack = _stack 
             };
-            _flowTabs = new FlowBox[3];
+            _flowTabs = new FlowBox[5];
             PopulateMenuTabs();         
 
             Box mainBox = new(Orientation.Vertical, 0);
@@ -86,6 +89,17 @@ namespace EZSong.UI {
 
             //Barre d'informations (portée affichée, ...)
             Box infoBox = new(Orientation.Horizontal, 0);
+
+            Label titleDisplayedSegment = new("Segment actuellement affiché :");
+            titleDisplayedSegment.StyleContext.AddClass("titleLabel");
+            _displayedSegmentNumber = new Label("?");
+            _displayedSegmentNumber.StyleContext.AddClass("infoLabel");
+            _displayedSegmentName = new Label("?");
+            _displayedSegmentName.StyleContext.AddClass("infoLabel");
+            infoBox.PackStart(titleDisplayedSegment, false, false, 0);
+            infoBox.PackStart(_displayedSegmentNumber, false, false, 0);
+            infoBox.PackStart(_displayedSegmentName, false, false, 0);
+
             Label titleDisplayedStaff = new("Portée actuellement affichée :");
             titleDisplayedStaff.StyleContext.AddClass("titleLabel");
             _displayedStaffNumber = new Label("?");
@@ -95,6 +109,8 @@ namespace EZSong.UI {
             infoBox.PackStart(titleDisplayedStaff, false, false, 0);
             infoBox.PackStart(_displayedStaffNumber, false, false, 0);
             infoBox.PackStart(_displayedStaffName, false, false, 0);
+
+
             mainBox.PackStart(infoBox, false, false, 0);
 
             // Mesures
@@ -120,6 +136,8 @@ namespace EZSong.UI {
             ApplyCss();
 
             DeleteEvent += (o, args) => Application.Quit();
+
+            GoToFirstSegment();
 
             GoToFirstStaff();
 
@@ -147,7 +165,6 @@ namespace EZSong.UI {
             };
 
             _measuresEditor.SetSong(_currentSong);
-            _measuresEditor.AppendBlankMeasures(1); // mesure par défaut
             
             Maximize(); // Démarrer en mode maximisé
         }
@@ -155,12 +172,14 @@ namespace EZSong.UI {
         private void PopulateMenuTabs() {
             _flowTabs[0] = CreateTab("file");
             _stack.AddTitled(_flowTabs[0], "file", "Fichier");
-            _flowTabs[0] = CreateTab("staffs");
-            _stack.AddTitled(_flowTabs[0], "staffs", "Portées");
-            _flowTabs[1] = CreateTab("mesures");
-            _stack.AddTitled(_flowTabs[1], "mesures", "Mesures");
-            _flowTabs[2] = CreateTab("export");
-            _stack.AddTitled(_flowTabs[2], "export", "Export");
+            _flowTabs[1] = CreateTab("segments");
+            _stack.AddTitled(_flowTabs[1], "segments", "Segments");
+            _flowTabs[2] = CreateTab("staffs");
+            _stack.AddTitled(_flowTabs[2], "staffs", "Portées");
+            _flowTabs[3] = CreateTab("mesures");
+            _stack.AddTitled(_flowTabs[3], "mesures", "Mesures");
+            _flowTabs[4] = CreateTab("export");
+            _stack.AddTitled(_flowTabs[4], "export", "Export");
         }
 
         private FlowBox CreateTab(string name) {
@@ -180,10 +199,17 @@ namespace EZSong.UI {
                     flow.Add(CreateIconButton("Enregistrer", (s, e) => SaveProject(), "file-save.svg"));
                     break;
 
+                case "segments":
+                    flow.Add(CreateIconButton("Ajouter", (s, e) => AddSegment(), "icon-placeholder.svg"));
+                    flow.Add(CreateIconButton("Aller au segment précédent", (s, e) => GoToPreviousSegment(), "icon-placeholder.svg"));
+                    flow.Add(CreateIconButton("Aller au segment suivant", (s, e) => GoToNextSegment(), "icon-placeholder.svg"));
+                    break ;
+
                 case "staffs":
                     flow.Add(CreateIconButton("Ajouter", (s, e) => AddStaff(), "icon-placeholder.svg"));
-                    flow.Add(CreateIconButton("Aller à la suivante", (s, e) => GoToNextStaff(), "icon-placeholder.svg"));
                     flow.Add(CreateIconButton("Aller à la précédente", (s, e) => GoToPreviousStaff(), "icon-placeholder.svg"));
+                    flow.Add(CreateIconButton("Aller à la suivante", (s, e) => GoToNextStaff(), "icon-placeholder.svg"));
+                    
                     break ;
 
                 case "mesures":
@@ -199,6 +225,11 @@ namespace EZSong.UI {
             return flow;
         }
 
+        private void AddSegment() {
+            _currentSong.AddSegment();
+            GoToNextSegment();
+        }
+
         private void AddStaff() {
             //TODO : faire saisir via une popup très simple
             String staffName = Settings.Constants.DefaultStaffName;
@@ -207,19 +238,45 @@ namespace EZSong.UI {
             GoToNextStaff();
         }
 
+        private void GoToFirstSegment() {
+            _displayedSegmentIndex = 0;
+            RefreshDisplayedSegment();
+        }
+
+        private void GoToNextSegment() {
+            _displayedSegmentIndex = LoopIndex(_displayedSegmentIndex, _currentSong.Segments.Count(), 1);
+            RefreshDisplayedSegment();
+        }
+
+        private void GoToPreviousSegment() {
+            _displayedSegmentIndex = LoopIndex(_displayedSegmentIndex, _currentSong.Segments.Count(), -1);
+            RefreshDisplayedSegment ();
+        }
+
         private void GoToFirstStaff() {
             _displayedStaffIndex = 0;
             RefreshDisplayedStaff();
         }
 
         private void GoToNextStaff() {
-            _displayedStaffIndex = (_displayedStaffIndex + 1) % _currentSong.SongSettings.StaffsSettings.Staffs.Count();
+            _displayedStaffIndex = LoopIndex(_displayedStaffIndex, _currentSong.SongSettings.StaffsSettings.Staffs.Count(), 1);
             RefreshDisplayedStaff();
         }
 
         private void GoToPreviousStaff() {
-            _displayedStaffIndex = (_displayedStaffIndex + 1) % _currentSong.SongSettings.StaffsSettings.Staffs.Count();
+            _displayedStaffIndex = LoopIndex(_displayedStaffIndex, _currentSong.SongSettings.StaffsSettings.Staffs.Count(), -1);
             RefreshDisplayedStaff();
+        }
+
+        private int LoopIndex(int index, int count, int offset) {
+            if (count <= 0) {
+                throw new ArgumentException("Count must be greater than zero.", nameof(count));
+            }
+            int result = (index + offset) % count;
+            if (result < 0) {
+                result += count;
+            }
+            return result;
         }
 
         private Widget CreateIconButton(string label, EventHandler onClick, string iconName = "icon-placeholder.svg") {
@@ -273,6 +330,7 @@ namespace EZSong.UI {
             FileChooserDialog dlg = new("Ouvrir projet", this, FileChooserAction.Open, "Annuler", ResponseType.Cancel, "Ouvrir", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
                 SetSong(SongPersistancyManager.Load(dlg.Filename));
+                GoToFirstSegment();
                 GoToFirstStaff();
                 RefreshUI();
             }
@@ -288,6 +346,12 @@ namespace EZSong.UI {
         private void RefreshUI() {
             UpdateSongInfoUI();
             _measuresEditor.Refresh();
+        }
+
+        private void RefreshDisplayedSegment() {
+            _displayedSegmentNumber.Text = (_displayedSegmentIndex + 1).ToString();
+            _displayedSegmentName.Text = "Segment " + (_displayedSegmentIndex + 1).ToString();
+            _measuresEditor.RefreshDisplayedSegment(_displayedSegmentIndex);
         }
 
         private void RefreshDisplayedStaff() {

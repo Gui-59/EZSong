@@ -36,7 +36,7 @@ namespace EZSong.Model {
             set;
         }
 
-        public List<MeasureDataDto> Measures { 
+        public List<SegmentDataDto> Segments { 
             get;
             set; 
         }       
@@ -47,15 +47,15 @@ namespace EZSong.Model {
             Artist = string.Empty;  
             Comment = string.Empty;
             SongSettings = new();
-            Measures = new List<MeasureDataDto>();
+            Segments = new List<SegmentDataDto>();
         }
 
-        public SongDto(String title, String artist, String comment, List<MeasureDataDto> measures, SongSettingsDto songSettings) {
+        public SongDto(String title, String artist, String comment, List<SegmentDataDto> segments, SongSettingsDto songSettings) {
             Title = title;
             Artist = artist;
             Comment = comment;
             SongSettings = songSettings;
-            Measures = measures;
+            Segments = segments;
         }
     }
 }

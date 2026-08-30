@@ -26,7 +26,7 @@ namespace EZSong.Model {
         }
 
         public SongSettings SongSettings;
-        public List<MeasureData> Measures;
+        public List<SegmentData> Segments;
 
         //Constructeur vide (requis, entre autres, pour la (dé)sérialisation JSON)
         public Song() { 
@@ -34,29 +34,30 @@ namespace EZSong.Model {
             Artist = string.Empty;
             Comment = string.Empty;
             SongSettings = new(new StaffsSettings());
-            Measures = new List<MeasureData>();
+            Segments = new List<SegmentData>();
+            Segments.Add(new SegmentData(0, SongSettings)); // Toujours au moins un segment
         }
 
-        public Song(string title, string artist, string comment, List<MeasureData> measures, SongSettings songSettings) {
+        public Song(string title, string artist, string comment, List<SegmentData> segments, SongSettings songSettings) {
             Title = title;
             Artist = artist;    
             Comment = comment;
             SongSettings = songSettings;
-            Measures = measures;
+            Segments = segments;
         }
 
         public SongDto ToDto() {
 
-            List<MeasureDataDto> measures = new();
-            foreach (MeasureData m in Measures) {
-                measures.Add(m.ToDto());
+            List<SegmentDataDto> segments = new();
+            foreach (SegmentData s in Segments) {
+                segments.Add(s.ToDto());
             }
             return 
                 new SongDto (
                     Title, 
                     Artist, 
                     Comment, 
-                    measures, 
+                    segments, 
                     SongSettings.ToDto()
                 );
         }
@@ -65,12 +66,12 @@ namespace EZSong.Model {
 
             SongSettings songSettings = SongSettings.FromDto(dto.SongSettings);
 
-            List<MeasureData> measures = new();
-            foreach (MeasureDataDto m in dto.Measures) {
-                measures.Add(MeasureData.FromDto(m, songSettings));
+            List<SegmentData> segments = new();
+            foreach (SegmentDataDto s in dto.Segments) {
+                segments.Add(SegmentData.FromDto(s, songSettings));
             }
 
-            Song song = new(dto.Title, dto.Artist, dto.Comment, measures, songSettings);
+            Song song = new(dto.Title, dto.Artist, dto.Comment, segments, songSettings);
 
             return song;
         }
@@ -89,9 +90,15 @@ namespace EZSong.Model {
         }
 
         private void AddOrRemoveMesuresStaffs(int excpectedStaffCount) {
-            foreach (MeasureData measure in Measures) {
-                measure.AddOrRemoveStaffs(excpectedStaffCount);
-            }
+
+            foreach (SegmentData segment in Segments) {
+                segment.AddOrRemoveMesuresStaffs(excpectedStaffCount);
+            }            
+        }
+
+        internal void AddSegment() {
+            SegmentData newSegement = new(Segments.Count, SongSettings);
+            Segments.Add(newSegement);
         }
     }
 

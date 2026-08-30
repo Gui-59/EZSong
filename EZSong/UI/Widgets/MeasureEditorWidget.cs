@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class MeasureEditorWidget : Frame {
 
+        private int _segmentIndex;
         private int _staffIndex;
         private MeasureData _measure;
 
@@ -27,8 +28,9 @@ namespace EZSong.UI.Widgets {
 
         public MeasureEditorWidget(MeasureData measure) {
             _measure = measure;
+            _segmentIndex = 0;  
             _staffIndex = 0; 
-            GlobalMelodyEditor = new(_staffIndex, _measure); 
+            GlobalMelodyEditor = new(_segmentIndex, _staffIndex, _measure); 
             BuildUI();
         }
 
@@ -175,6 +177,12 @@ namespace EZSong.UI.Widgets {
             Add(row);
 
             ShowAll();
+        }
+
+        internal void RefreshDisplayedSegment(int segmentIndex, MeasureData measureData) {
+            _segmentIndex = segmentIndex;
+            _measure = measureData;
+            GlobalMelodyEditor.RefreshDisplayedSegment(segmentIndex, _measure);
         }
 
         internal void RefreshDisplayedStaff(int staffIndex) {

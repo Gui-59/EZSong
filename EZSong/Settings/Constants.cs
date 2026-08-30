@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace EZSong.Settings {
     public static class Constants {
         public const int MelodyBaseOctave = 5;
-        public const int BassBaseOctave = 3;  
-        public const string DefaultStaffName = "Unnamed";  
+        public const int BassBaseOctave = 3;
+        public const string DefaultSegmentName = "Unnamed Segment";
+        public const string DefaultStaffName = "Unnamed Staff";
     }
 }

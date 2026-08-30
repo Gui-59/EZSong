@@ -15,6 +15,8 @@ namespace EZSong.UI.Widgets {
         private Song _song;
 
         private int _staffIndex;
+        
+        private int _segmentIndex;
 
         public MeasuresEditor() {
             _song = new Song();
@@ -33,14 +35,21 @@ namespace EZSong.UI.Widgets {
 
             Reindex();
 
-            for (int i = 0; i < _song.Measures.Count; i++) {
-                if (_song.Measures[i] is null) {
+            //On doit considérer ici uniquement le segment actif
+            List<MeasureData> measures = _song.Segments[_segmentIndex].Measures;
+            for (int i = 0; i < measures.Count; i++) {
+                if (measures[i] is null) {
                     return;
                 }
-                AddMeasure(_song.Measures[i]);
+                AddMeasure(measures[i]);
             }
 
             ShowAll();
+        }
+
+        internal void RefreshDisplayedSegment(int segmentIndex) {
+            _segmentIndex = segmentIndex;
+            Refresh();
         }
 
         internal void RefreshDisplayedStaff(int staffIndex) {
@@ -64,7 +73,7 @@ namespace EZSong.UI.Widgets {
             widget.WidthRequest = 200; //TODO : Ajuster la largeur en fonction du nombre de portées et de la signature rythmique
 
             widget.MeasureChanged += (MeasureData measure) => {
-                int index = _song.Measures.IndexOf(measure);
+                int index = _song.Segments[_segmentIndex].Measures.IndexOf(measure);
             };
 
             widget.InsertAfterRequested += (MeasureData measure) => {
@@ -85,52 +94,52 @@ namespace EZSong.UI.Widgets {
         public void AppendBlankMeasures(int number) {
             for (int i = 0; i < number; i++) {
                 MeasureData newMeasure = CreateEmptyMeasure(i, new TimeSignature());
-                _song.Measures.Insert(i, newMeasure);
+                _song.Segments[_segmentIndex].Measures.Insert(i, newMeasure);
             }
             Reindex();
             Refresh();
         }
 
         private void InsertAfter(MeasureData measure) {
-            int index = _song.Measures.IndexOf(measure);
+            int index = _song.Segments[_segmentIndex].Measures.IndexOf(measure);
             MeasureData newMeasure = CreateEmptyMeasure(index + 1, measure.TimeSignature);
-            _song.Measures.Insert(index + 1, newMeasure);
+            _song.Segments[_segmentIndex].Measures.Insert(index + 1, newMeasure);
             Reindex();
             Refresh();
         }
 
         private void InsertBefore(MeasureData measure) {
-            int index = _song.Measures.IndexOf(measure);
+            int index = _song.Segments[_segmentIndex].Measures.IndexOf(measure);
             MeasureData newMeasure = CreateEmptyMeasure(index, measure.TimeSignature);
-            _song.Measures.Insert(index, newMeasure);
+            _song.Segments[_segmentIndex].Measures.Insert(index, newMeasure);
             Reindex();
             Refresh();
         }
 
         private void Delete(MeasureData measure) {
-            if (_song.Measures.Count <= 1) {
+            if (_song.Segments[_segmentIndex].Measures.Count <= 1) {
                 return;
             }
-            _ = _song.Measures.Remove(measure);
+            _ = _song.Segments[_segmentIndex].Measures.Remove(measure);
             Reindex();
             Refresh();
         }
 
         private void Reindex() {
 
-            for (int i = 0; i < _song.Measures.Count; i++) {
-                _song.Measures[i].Index = i + 1;
+            for (int i = 0; i < _song.Segments[_segmentIndex].Measures.Count; i++) {
+                _song.Segments[_segmentIndex].Measures[i].Index = i + 1;
 
                 if (i > 0) {
-                    _song.Measures[i].PrecedingMeasure = _song.Measures[i - 1];
+                    _song.Segments[_segmentIndex].Measures[i].PrecedingMeasure = _song.Segments[_segmentIndex].Measures[i - 1];
                 } else {
-                    _song.Measures[i].PrecedingMeasure = null;
+                    _song.Segments[_segmentIndex].Measures[i].PrecedingMeasure = null;
                 }
 
-                if (i < _song.Measures.Count - 1) {
-                    _song.Measures[i].FollowingMeasure = _song.Measures[i + 1];
+                if (i < _song.Segments[_segmentIndex].Measures.Count - 1) {
+                    _song.Segments[_segmentIndex].Measures[i].FollowingMeasure = _song.Segments[_segmentIndex].Measures[i + 1];
                 } else {
-                    _song.Measures[i].FollowingMeasure = null;
+                    _song.Segments[_segmentIndex].Measures[i].FollowingMeasure = null;
                 }
             }
         }

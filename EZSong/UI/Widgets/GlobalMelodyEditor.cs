@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class GlobalMelodyEditor : Frame {
 
+        private int _segmentIndex;
         private int _staffIndex;
 
         public MelodyMeasureEditor MelodyMeasureEditor {
@@ -22,7 +23,8 @@ namespace EZSong.UI.Widgets {
         public event Action<int, MeasureMelody>? MelodyChanged; //Premier paramètre : l'index de la portée
         public event Action<int, MeasureRhythmPattern>? PatternChanged; //Premier paramètre : l'index de la portée
 
-        public GlobalMelodyEditor(int staffIndex, MeasureData measureData) {
+        public GlobalMelodyEditor(int segmentIndex, int staffIndex, MeasureData measureData) {
+            _segmentIndex = segmentIndex;
             _staffIndex = staffIndex;
             MelodyMeasureEditor = new();
             MelodyMeasureEditor.LoadFromModel(staffIndex, measureData);
@@ -64,6 +66,12 @@ namespace EZSong.UI.Widgets {
 
         internal void UpdateTimeSignature(TimeSignature timeSignature) {
             _rhythmEditor.UpdateTimeSignature(timeSignature);
+        }
+
+        internal void RefreshDisplayedSegment(int displayedSegmentIndex, MeasureData measureData) {
+            _segmentIndex = displayedSegmentIndex;
+            MelodyMeasureEditor.RefreshDisplayedSegment(displayedSegmentIndex, measureData);
+            _rhythmEditor.RefreshDisplayedSegment(displayedSegmentIndex);
         }
 
         internal void RefreshDisplayedStaff(int displayedStaffIndex) {

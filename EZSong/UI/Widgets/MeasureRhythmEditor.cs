@@ -15,6 +15,7 @@ namespace EZSong.UI.Widgets {
 
         const int _height = 50; //Taille fixe pour éviter les problèmes de redimensionnement
 
+        private int _segmentIndex;
         private int _staffIndex;
 
         private MeasureData? _measureData;
@@ -40,9 +41,10 @@ namespace EZSong.UI.Widgets {
             _measureData = new();
         }
 
-        public MeasureRhythmEditor(int staffIndex, MeasureData measureData) {
+        public MeasureRhythmEditor(int segmentIndex, int staffIndex, MeasureData measureData) {
             HeightRequest = _height;
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
+            _segmentIndex = segmentIndex;
             _staffIndex = staffIndex;
             _measureData = measureData;
         }
@@ -410,6 +412,11 @@ namespace EZSong.UI.Widgets {
                     QueueDraw();
                 }
             }   
+        }
+
+        internal void RefreshDisplayedSegment(int displayedSegmentIndex) {
+            _segmentIndex = displayedSegmentIndex;
+            RefreshDisplayedStaff(_staffIndex);
         }
 
         internal void RefreshDisplayedStaff(int displayedStaffIndex) {
