@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipelines;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace EZSong.Exporting.Lilypond {
@@ -56,6 +58,7 @@ namespace EZSong.Exporting.Lilypond {
             fullScript += GenerateLilypondSheetHeader();
 
             for (int segmentIndex = 0; segmentIndex < _song.Segments.Count(); segmentIndex++) {
+
                 for (int staffIndex = 0; staffIndex < _song.SongSettings.StaffsSettings.Staffs.Count(); staffIndex++) {
                     fullScript += GenerateLilypondSongmelodyVar(segmentIndex, staffIndex);
                 }
@@ -360,24 +363,43 @@ namespace EZSong.Exporting.Lilypond {
             StringBuilder sw = new();
 
 			//Code LilyPond pour l'assemblage de la partition 	
-            _ = sw.AppendLine($"{_backslash}score {_opening_bracket}");
+            
+
+            //On générer le score avec tout les segments en utilisant les variables de mélodies, d'accords et de paroles générées précédemment
+
+            foreach (SegmentData segment in _song.Segments) {
+                _ = sw.AppendLine($"{_backslash}score {_opening_bracket}");
+                _ = sw.AppendLine(GenerateLilypondSegmentAssembly(segment));
+                _ = sw.AppendLine($"{_closing_bracket}");
+            }
+
+           
+
+            return sw.ToString();
+        }
+
+        private string GenerateLilypondSegmentAssembly(SegmentData segment) {
 
             //Système de portées
             //https://lilypond.org/doc/v2.23/Documentation/learning/multiple-staves
 
-            //TODO : Générer tout les segments en utilisant les variables de mélodies, d'accords et de paroles générées précédemment
-            int segmentIndex = 0;
+            StringBuilder sw = new();
 
-            _ = sw.AppendLine($"<<"); //Début de système de mesures
-            
-            for (int staffIndex = 0; staffIndex < _song.SongSettings.StaffsSettings.Staffs.Count(); staffIndex++ ) {
+            String segmentTitle = "Segment "+ segment.Index; //Titre de segment (TODO : ajouter un champ "titre de segment" dans le modèle de données)
+            _ = sw.AppendLine("\\header {");
+            _ = sw.AppendLine("piece = \"" + segmentTitle + "\""); 
+            _ = sw.AppendLine("}");
 
-                _ = sw.AppendLine($"{_backslash}new Staff = {_dblquote}melStaff_{segmentIndex}_{staffIndex}{_dblquote} <<"); //Début de portée
+            _ = sw.AppendLine($"<<"); //Début de système de portées
+
+            for (int staffIndex = 0; staffIndex < _song.SongSettings.StaffsSettings.Staffs.Count(); staffIndex++) {
+
+                _ = sw.AppendLine($"{_backslash}new Staff = {_dblquote}melStaff_{segment.Index}_{staffIndex}{_dblquote} <<"); //Début de portée
 
                 _ = sw.AppendLine(
-                        $"{_backslash}new Voice = {_dblquote}mel_{segmentIndex}_{staffIndex}{_dblquote} " +
+                        $"{_backslash}new Voice = {_dblquote}mel_{segment.Index}_{staffIndex}{_dblquote} " +
                         $"{_opening_bracket} " +
-                        $"{_backslash}{_lilypondSongMelodies[Tuple.Create(segmentIndex, staffIndex)]} " +
+                        $"{_backslash}{_lilypondSongMelodies[Tuple.Create(segment.Index, staffIndex)]} " +
                         $"{_closing_bracket}"
                     );
 
@@ -385,7 +407,7 @@ namespace EZSong.Exporting.Lilypond {
                     _ = sw.AppendLine(
                             $" {_backslash}new Voice = {_dblquote}parolesMesures{_dblquote} " +
                             $"{_opening_bracket} " +
-                            $"{_backslash}{_lilypondSongLyrics[segmentIndex]} " +
+                            $"{_backslash}{_lilypondSongLyrics[segment.Index]} " +
                             $"{_closing_bracket}"
                         );
                 }
@@ -396,16 +418,14 @@ namespace EZSong.Exporting.Lilypond {
             _ = sw.AppendLine(
                     $"{_backslash}new ChordNames {_backslash}with " +
                     $"{_opening_bracket} " +
-                    $"alignAboveContext = {_dblquote}melStaff_{segmentIndex}_0{_dblquote} " +
+                    $"alignAboveContext = {_dblquote}melStaff_{segment.Index}_0{_dblquote} " +
                     $"{_closing_bracket} " +
                     $"{_opening_bracket} " +
-                    $"{_backslash}{_lilypondSongChords[segmentIndex]} " +
+                    $"{_backslash}{_lilypondSongChords[segment.Index]} " +
                     $"{_closing_bracket}"
                 );
 
             _ = sw.AppendLine($">>"); //Fin de système de portées
-
-            _ = sw.AppendLine($"{_closing_bracket}");
 
             return sw.ToString();
         }
