@@ -40,9 +40,9 @@ namespace EZSong.Model {
         public string ToLilyPondString() {
             string lilyPondString = "";
             foreach (ChordBeat chordBeat in ChordBeats) {
-                lilyPondString += chordBeat.ToLilyPondString() + " & "; //TODO : trouver un meilleur séparateur que " & " pour séparer les accords dans la séquence
+                lilyPondString += chordBeat.ToLilyPondString() + " ";
             }
-            return lilyPondString.Trim(); //TODO : enlever le dernier " & " de la chaîne
+            return lilyPondString.Trim();
         }
 
         public ChordSequenceDto ToDto() {

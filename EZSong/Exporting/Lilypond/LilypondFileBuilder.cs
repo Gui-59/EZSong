@@ -19,10 +19,8 @@ namespace EZSong.Exporting.Lilypond {
 
         const string _styleSheetName = "default-style"; //TODO : paramétrer le nom de la feuille de style à utiliser pour la génération du fichier .ly (la feuille de style doit se trouver dans le répertoire "Stylesheets" du projet)
 
-        const string _lilypondvarSongchords = "songchords";
-        const string _lilypondvarSonglyrics = "songlyrics";
 
-        private Dictionary<int, Dictionary<int, string>> _lilypondSongMelodies; //Segment index => (Staff index => lilypondVarName)
+        private Dictionary<Tuple<int, int>, string> _lilypondSongMelodies; //Segment index, Staff index => lilypondVarName
         private Dictionary<int, string> _lilypondSongChords; //Segment index => lilypondVarName
         private Dictionary<int, string> _lilypondSongLyrics; //Segment index => lilypondVarName
 
@@ -49,7 +47,7 @@ namespace EZSong.Exporting.Lilypond {
             }
 
             if (!Directory.Exists(directory)) {
-                throw new DirectoryNotFoundException($"Le répertoire '{directory}' n'existe pas.");
+                _ = Directory.CreateDirectory(directory);
             }
 
             String fullScript = string.Empty;
@@ -196,8 +194,8 @@ namespace EZSong.Exporting.Lilypond {
               */
 
             //Le nom de variable Lilypond ne peut pas terminer par un chiffre ; on met la lettre équivalente (via la table ASCII)
-            String lilypondVarName = "Songmelody_"+ Convert.ToChar(65 + segmentIndex) + "_" + Convert.ToChar(65 + staffIndex); 
-            _lilypondSongMelodies[segmentIndex][staffIndex] = lilypondVarName;
+            String lilypondVarName = "Songmelody_"+ Convert.ToChar(65 + segmentIndex) + "_" + Convert.ToChar(65 + staffIndex);
+            _lilypondSongMelodies[Tuple.Create(segmentIndex, staffIndex)] = lilypondVarName;
             _ = sw.AppendLine($"{lilypondVarName} = {_opening_bracket}");
 
             foreach (MeasureData m in _song.Segments[segmentIndex].Measures) {
@@ -321,13 +319,13 @@ namespace EZSong.Exporting.Lilypond {
         private string GenerateLilypondSongchordsVar(int segmentIndex) {
 
             //Le nom de variable Lilypond ne peut pas terminer par un chiffre ; on met la lettre équivalente (via la table ASCII)
-            String lilypondVarName = "Songmelody_" + Convert.ToChar(65 + segmentIndex);
+            String lilypondVarName = "Songchords_" + Convert.ToChar(65 + segmentIndex);
             _lilypondSongChords[segmentIndex] = lilypondVarName;
 
             StringBuilder sw = new();
 
 			//accords
-            _ = sw.AppendLine($"{_lilypondvarSongchords} = {_backslash}chordmode {_opening_bracket} ");
+            _ = sw.AppendLine($"{_lilypondSongChords[segmentIndex]} = {_backslash}chordmode {_opening_bracket} ");
             foreach (MeasureData m in _song.Segments[segmentIndex].Measures) {
                 _ = sw.AppendLine($"{_lilypondConverter.ChordSequenceToLilyPondString(m.ChordSequence)}");
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
@@ -341,13 +339,13 @@ namespace EZSong.Exporting.Lilypond {
         private string GenerateLilypondSonglyricsVar(int segmentIndex) {
 
             //Le nom de variable Lilypond ne peut pas terminer par un chiffre ; on met la lettre équivalente (via la table ASCII)
-            String lilypondVarName = "Songmelody_" + Convert.ToChar(65 + segmentIndex);
+            String lilypondVarName = "Songlyrics_" + Convert.ToChar(65 + segmentIndex);
             _lilypondSongLyrics[segmentIndex] = lilypondVarName;
 
             StringBuilder sw = new();
 
 			//Paroles sans découpage par syllabe (une phrase par mesure)
-            _ = sw.AppendLine($"{_lilypondvarSonglyrics} = {_opening_bracket}");
+            _ = sw.AppendLine($"{_lilypondSongLyrics[segmentIndex]} = {_opening_bracket}");
             foreach (MeasureData m in _song.Segments[segmentIndex].Measures) {
                 _ = sw.AppendLine($"s1_{_backslash}markup {_opening_bracket} {_dblquote}{m.Lyrics}{_dblquote} {_closing_bracket} ");
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
@@ -368,18 +366,18 @@ namespace EZSong.Exporting.Lilypond {
             //https://lilypond.org/doc/v2.23/Documentation/learning/multiple-staves
 
             //TODO : Générer tout les segments en utilisant les variables de mélodies, d'accords et de paroles générées précédemment
-            int sectionIndex = 0;
+            int segmentIndex = 0;
 
             _ = sw.AppendLine($"<<"); //Début de système de mesures
             
-            for (int staffIndex = 0; staffIndex < _lilypondSongMelodies.Count(); staffIndex++ ) {
+            for (int staffIndex = 0; staffIndex < _song.SongSettings.StaffsSettings.Staffs.Count(); staffIndex++ ) {
 
-                _ = sw.AppendLine($"{_backslash}new Staff = {_dblquote}melStaff_{sectionIndex}_{staffIndex}{_dblquote} <<"); //Début de portée
+                _ = sw.AppendLine($"{_backslash}new Staff = {_dblquote}melStaff_{segmentIndex}_{staffIndex}{_dblquote} <<"); //Début de portée
 
                 _ = sw.AppendLine(
-                        $"{_backslash}new Voice = {_dblquote}mel_{sectionIndex}_{staffIndex}{_dblquote} " +
+                        $"{_backslash}new Voice = {_dblquote}mel_{segmentIndex}_{staffIndex}{_dblquote} " +
                         $"{_opening_bracket} " +
-                        $"{_backslash}{_lilypondSongMelodies[staffIndex]} " +
+                        $"{_backslash}{_lilypondSongMelodies[Tuple.Create(segmentIndex, staffIndex)]} " +
                         $"{_closing_bracket}"
                     );
 
@@ -387,7 +385,7 @@ namespace EZSong.Exporting.Lilypond {
                     _ = sw.AppendLine(
                             $" {_backslash}new Voice = {_dblquote}parolesMesures{_dblquote} " +
                             $"{_opening_bracket} " +
-                            $"{_backslash}{_lilypondvarSonglyrics} " +
+                            $"{_backslash}{_lilypondSongLyrics[segmentIndex]} " +
                             $"{_closing_bracket}"
                         );
                 }
@@ -398,10 +396,10 @@ namespace EZSong.Exporting.Lilypond {
             _ = sw.AppendLine(
                     $"{_backslash}new ChordNames {_backslash}with " +
                     $"{_opening_bracket} " +
-                    $"alignAboveContext = {_dblquote}melStaff_{sectionIndex}_0{_dblquote} " +
+                    $"alignAboveContext = {_dblquote}melStaff_{segmentIndex}_0{_dblquote} " +
                     $"{_closing_bracket} " +
                     $"{_opening_bracket} " +
-                    $"{_backslash}{_lilypondvarSongchords} " +
+                    $"{_backslash}{_lilypondSongChords[segmentIndex]} " +
                     $"{_closing_bracket}"
                 );
 
