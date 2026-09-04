@@ -91,7 +91,7 @@ namespace EZSong.UI.UX {
             }
         }
 
-        private Color _naturalEvenPianoKey = Color.Yellow;
+        private Color _naturalEvenPianoKey = Color.LightYellow;
         internal Color NaturalEvenPianoKey {
             get { 
                 return _naturalEvenPianoKey; 
@@ -109,13 +109,13 @@ namespace EZSong.UI.UX {
                 return _naturalOddPianoKey; 
             }
         }
-        private Color _alteredOddPianoKey = Color.Blue;
+        private Color _alteredOddPianoKey = Color.FromArgb(255, 0, 128, 128);
         internal Color AlteredOddPianoKey {
             get { 
                 return _alteredOddPianoKey; 
             }
         }
-        private Color _pianoNoteBg = Color.Red;
+        private Color _pianoNoteBg = Color.Black;
         internal Color PianoNoteBg {
             get { 
                 return _pianoNoteBg; 
