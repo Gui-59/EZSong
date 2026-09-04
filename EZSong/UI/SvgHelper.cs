@@ -1,9 +1,9 @@
 ﻿using Gtk;
 using Gdk;
-using SkiaSharp;
 using Svg.Skia;
 using Svg.Model;
 using System.Reflection;
+using SkiaSharp;
 
 namespace EZSong.UI {
 
@@ -11,53 +11,34 @@ namespace EZSong.UI {
 
         public static Image LoadSvgAsGtkImage(string resourceName, int size) {
             Assembly asm = Assembly.GetExecutingAssembly();
+            using Stream? stream = asm.GetManifestResourceStream(resourceName)
+                ?? throw new Exception($"Ressource SVG introuvable : {resourceName}");
 
-            using Stream? stream = asm.GetManifestResourceStream(resourceName);
-            if (stream == null) {
-                throw new Exception($"Ressource SVG introuvable : {resourceName}");
-            }
-
-            SKSvg svg = new();
+            Svg.Skia.SKSvg svg = new();
             _ = svg.Load(stream);
 
-            SKBitmap bmp = new(size, size, true);
-
+            using SKBitmap bmp = new(size, size, false);
             using (SKCanvas canvas = new(bmp)) {
                 canvas.Clear(SKColors.Transparent);
-
                 SKPicture? pic = svg.Picture;
                 if (pic != null) {
-                    float scale = Math.Min(
-                        size / pic.CullRect.Width,
-                        size / pic.CullRect.Height);
-
+                    float scale = Math.Min(size / pic.CullRect.Width, size / pic.CullRect.Height);
                     float x = (size - pic.CullRect.Width * scale) / 2;
                     float y = (size - pic.CullRect.Height * scale) / 2;
-
                     canvas.Translate(x, y);
                     canvas.Scale(scale);
                     canvas.DrawPicture(pic);
                 }
             }
 
-            byte[] data = bmp.Bytes;
+            using SKData png = bmp.Encode(SKEncodedImageFormat.Png, 100);
+            byte[] pngBytes = png.ToArray();
 
-            for (int i = 0; i < data.Length; i += 4) {
-                byte b = data[i];
-                byte g = data[i + 1];
-                byte r = data[i + 2];
-                byte a = data[i + 3];
-
-                data[i] = r;
-                data[i + 1] = g;
-                data[i + 2] = b;
-                data[i + 3] = a;
-            }
-
-            Pixbuf pixbuf = new(data, true, 8,
-                bmp.Width, bmp.Height, bmp.RowBytes);
-
-            return new Image(pixbuf);
+            using Gdk.PixbufLoader loader = new();
+            _ = loader.Write(pngBytes);
+            _ = loader.Close();
+            Gdk.Pixbuf pixbuf = loader.Pixbuf;
+            return new Gtk.Image(pixbuf);
         }
 
     }
