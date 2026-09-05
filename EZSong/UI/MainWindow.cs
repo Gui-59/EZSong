@@ -114,6 +114,33 @@ namespace EZSong.UI {
             infoBox.PackStart(_displayedSegmentNumber, false, false, 0);
             infoBox.PackStart(_displayedSegmentName, false, false, 0);
 
+            //Bouton de suppression du segment
+            Button deleteCurrentSegment = new();
+            deleteCurrentSegment.Label = "Supprimer ce segment"; //TODO : icone à la place du texte
+            deleteCurrentSegment.Clicked += (o, args) => {
+                //TODO : demander confirmation avant de supprimer le segment
+                throw new NotImplementedException(); //TODO : implémenter la suppression du segment
+            };
+            infoBox.PackStart(deleteCurrentSegment, false, false, 0);
+
+            //Segment précédent
+            Button gotToPreviousSegment = new();
+            gotToPreviousSegment.Label = "⏪"; //TODO : icone à la place du texte
+            gotToPreviousSegment.Clicked += (o, args) => {
+                MainWindow mainWindow = this;
+                mainWindow.GoToPreviousSegment();
+            };
+            infoBox.PackStart(gotToPreviousSegment, false, false, 0);
+
+            //Segment suivant
+            Button gotToNextSegment = new();
+            gotToNextSegment.Label = "⏩"; //TODO : icone à la place du texte
+            gotToNextSegment.Clicked += (o, args) => {
+                MainWindow mainWindow = this;
+                mainWindow.GoToNextSegment();
+            };
+            infoBox.PackStart(gotToNextSegment, false, false, 0);
+
             Label titleDisplayedStaff = new("Portée actuellement affichée :");
             titleDisplayedStaff.StyleContext.AddClass("titleLabel");
             _displayedStaffNumber = new Label("?");
@@ -123,6 +150,33 @@ namespace EZSong.UI {
             infoBox.PackStart(titleDisplayedStaff, false, false, 0);
             infoBox.PackStart(_displayedStaffNumber, false, false, 0);
             infoBox.PackStart(_displayedStaffName, false, false, 0);
+
+            //Bouton de suppression de la portée
+            Button deleteCurrentStaff = new();
+            deleteCurrentStaff.Label = "Supprimer cette portée"; //TODO : icone à la place du texte
+            deleteCurrentStaff.Clicked += (o, args) => {
+                //TODO : demander confirmation avant de supprimer la portée
+                throw new NotImplementedException(); //TODO : implémenter la suppression de la portée
+            };
+            infoBox.PackStart(deleteCurrentStaff, false, false, 0);
+
+            //Portée précédente
+            Button gotToPreviousStaff = new();
+            gotToPreviousStaff.Label = "🔺"; //TODO : icone à la place du texte
+            gotToPreviousStaff.Clicked += (o, args) => {
+                MainWindow mainWindow = this;
+                mainWindow.GoToPreviousStaff();
+            };
+            infoBox.PackStart(gotToPreviousStaff, false, false, 0);
+
+            //Portée suivante
+            Button gotToNextStaff = new();
+            gotToNextStaff.Label = "🔻"; //TODO : icone à la place du texte
+            gotToNextStaff.Clicked += (o, args) => {
+                MainWindow mainWindow = this;
+                mainWindow.GoToNextStaff();
+            };
+            infoBox.PackStart(gotToNextStaff, false, false, 0);
 
 
             mainBox.PackStart(infoBox, false, false, 0);
@@ -215,14 +269,10 @@ namespace EZSong.UI {
 
                 case "segments":
                     flow.Add(CreateIconButton("Ajouter", (s, e) => AddSegment(), "icon-placeholder.svg"));
-                    flow.Add(CreateIconButton("Aller au segment précédent", (s, e) => GoToPreviousSegment(), "icon-placeholder.svg"));
-                    flow.Add(CreateIconButton("Aller au segment suivant", (s, e) => GoToNextSegment(), "icon-placeholder.svg"));
                     break ;
 
                 case "staffs":
                     flow.Add(CreateIconButton("Ajouter", (s, e) => AddStaff(), "icon-placeholder.svg"));
-                    flow.Add(CreateIconButton("Aller à la précédente", (s, e) => GoToPreviousStaff(), "icon-placeholder.svg"));
-                    flow.Add(CreateIconButton("Aller à la suivante", (s, e) => GoToNextStaff(), "icon-placeholder.svg"));
                     
                     break ;
 
