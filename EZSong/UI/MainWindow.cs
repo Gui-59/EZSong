@@ -3,6 +3,7 @@ using EZSong.Exporting.Lilypond;
 using EZSong.IO;
 using EZSong.MIDI;
 using EZSong.Model;
+using EZSong.Settings;
 using EZSong.UI.UX;
 using EZSong.UI.Widgets;
 using EZSong.UI.Widgets.WidgetsData;
@@ -18,7 +19,11 @@ namespace EZSong.UI {
 
         private Song _currentSong;
 
+        private UserSettings _userSettings;
+
         private MidiInputManager _midiManager;
+        private EmbeddedMidiSynth _embeddedMidiSynth; //Pour echo MIDI
+        private SoundFontManager _soundFontManager;
 
         //Pour gérer les onglets : Stack, StackSwitcher et FlowBox
         private Gtk.Stack _stack;
@@ -42,6 +47,15 @@ namespace EZSong.UI {
 
         public MainWindow() : base("EZSong") {
             _currentSong = new Song ();
+
+            _userSettings = new Settings.UserSettings();
+
+            //Synthé intégré pour l'echo MIDI
+            _soundFontManager = new();
+            _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0);
+
+            //Detection de la saisie via clavier MIDI
+            _midiManager = new MidiInputManager();
 
             SetDefaultSize(_initialWidth, _initialHeight);
             DeleteEvent += (o, e) => Application.Quit();
@@ -114,7 +128,7 @@ namespace EZSong.UI {
             mainBox.PackStart(infoBox, false, false, 0);
 
             // Mesures
-            _measuresEditor = new MeasuresEditor();
+            _measuresEditor = new MeasuresEditor(_userSettings, _embeddedMidiSynth);
             ScrolledWindow scrolled = new();
             scrolled.Add(_measuresEditor);
             mainBox.PackStart(scrolled, true, true, 0);
@@ -143,8 +157,8 @@ namespace EZSong.UI {
 
             ShowAll();
 
-            //Detection de la saisie via clavier MIDI
-            _midiManager = new MidiInputManager();
+
+
 
             string? firstDevice = MidiInputManager.GetAvailableDevices().FirstOrDefault();
             if (firstDevice != null) {
@@ -153,15 +167,15 @@ namespace EZSong.UI {
             }
 
             // Quand des notes sont jouées
-            _midiManager.NotesPlayed += notes =>  {
-                // Trouve l'éditeur de mesure actuellement focus
-                MelodyMeasureEditor? focusedEditor = _measuresEditor.GetFocusedGlobalMelodyEditor();
-                if (focusedEditor != null) {
-                    Gtk.Application.Invoke((s, e) =>  // nécessaire car le callback MIDI n’est pas sur le thread GTK
-                    {
-                        focusedEditor.OnMidiNoteReceived(notes);
-                    });
-                }
+            _midiManager.NotesPlayed += notes =>
+            {
+                Gtk.Application.Invoke((s, e) =>
+                {
+                    MelodyMeasureEditor? focusedEditor =
+                        _measuresEditor.GetFocusedMelodyMeasureEditor();
+
+                    focusedEditor?.OnMidiNoteReceived(notes);
+                });
             };
 
             _measuresEditor.SetSong(_currentSong);

@@ -41,8 +41,7 @@ namespace EZSong.MIDI {
             _embeddedMidiSynth = 
                 new(
                     soundFontManager.GetCurrentSoundFontPath(), 
-                    0, 
-                    _midiUserSettings.MidiInputDefaultVoice //TODO : Adapter l'echo à la voice de la portée ?
+                    0
                 ); 
         }
 
@@ -87,7 +86,7 @@ namespace EZSong.MIDI {
                     if (!_currentlyPressedNotes.Contains(noteOn.NoteNumber)) {
                         _currentlyPressedNotes.Add(noteOn.NoteNumber);
                         //Echo MIDI
-                        _embeddedMidiSynth.PlayNote(noteOn.NoteNumber, noteOn.Velocity);
+                        _embeddedMidiSynth.PlayNote(_midiUserSettings.MidiInputDefaultVoice, noteOn.NoteNumber, noteOn.Velocity); //TODO : utiliser la voice de la portée correspondante (ou la voice par défaut si aucune n’est définie)
                     }
                 }
 

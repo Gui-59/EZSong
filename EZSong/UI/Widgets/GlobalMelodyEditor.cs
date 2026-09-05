@@ -1,4 +1,6 @@
-﻿using EZSong.Model;
+﻿using EZSong.MIDI;
+using EZSong.Model;
+using EZSong.Settings;
 using EZSong.UI.Widgets.WidgetsData;
 using Gtk;
 using System;
@@ -13,6 +15,9 @@ namespace EZSong.UI.Widgets {
         private int _segmentIndex;
         private int _staffIndex;
 
+        private UserSettings _userSettings;
+        private EmbeddedMidiSynth _embeddedMidiSynth; //Pour echo MIDI
+
         public MelodyMeasureEditor MelodyMeasureEditor {
             get; 
             private set;
@@ -23,10 +28,12 @@ namespace EZSong.UI.Widgets {
         public event Action<int, MeasureMelody>? MelodyChanged; //Premier paramètre : l'index de la portée
         public event Action<int, MeasureRhythmPattern>? PatternChanged; //Premier paramètre : l'index de la portée
 
-        public GlobalMelodyEditor(int segmentIndex, int staffIndex, MeasureData measureData) {
+        public GlobalMelodyEditor(int segmentIndex, int staffIndex, MeasureData measureData, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth) {
             _segmentIndex = segmentIndex;
             _staffIndex = staffIndex;
-            MelodyMeasureEditor = new();
+            _userSettings = userSettings;
+            _embeddedMidiSynth = embeddedMidiSynth;
+            MelodyMeasureEditor = new(embeddedMidiSynth, userSettings);
             MelodyMeasureEditor.LoadFromModel(staffIndex, measureData);
             _rhythmEditor = new();
             _rhythmEditor.LoadFromModel(measureData);

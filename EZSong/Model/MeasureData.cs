@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Gtk;
 using EZSong.Enums;
+using EZSong.MIDI.Enums;
 
 namespace EZSong.Model {
     public class MeasureData {
@@ -134,6 +135,10 @@ namespace EZSong.Model {
             for (int staffIndex = Staffs.Count(); staffIndex < excpectedStaffCount; staffIndex++) {        
                 Staffs.Add(new MeasureGlobalMelody(staffIndex));
             }
+        }
+
+        internal GMVoice GetGMVoiceForStaff(int staffIndex) {
+            return SongSettings.GetGMVoiceForStaff(staffIndex);
         }
     }
 }

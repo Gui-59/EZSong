@@ -17,14 +17,17 @@ namespace EZSong.MIDI {
         private readonly NFluidsynth.Settings _settings;
         private readonly Synth _synth;
         private readonly AudioDriver _driver;
+        private readonly uint _voiceBank; //Voice Bank
+        private readonly uint _sfId; //Sound Font ID
 
         private readonly int _channel = 0; //TODO : rendre configurable le canal MIDI (0–15)
 
-        public EmbeddedMidiSynth(string soundFontPath, uint voiceBank, GMVoice gmVoice) {
+        public EmbeddedMidiSynth(string soundFontPath, uint voiceBank) {
             _settings = new NFluidsynth.Settings();
             _synth = new Synth(_settings);
-            uint sfId = _synth.LoadSoundFont(soundFontPath, true);          
-            _synth.ProgramSelect(_channel, sfId, voiceBank, (uint)gmVoice);
+            _voiceBank  = voiceBank;
+            _sfId = _synth.LoadSoundFont(soundFontPath, true);          
+            
             _driver = new AudioDriver(_settings, _synth);
         }
 
@@ -38,6 +41,7 @@ namespace EZSong.MIDI {
         /// Joue une note MIDI sur le canal du synthétiseur, puis l'arrête après un délai spécifié.
         /// </summary>
         public async Task EchoChordAsync(
+        GMVoice gmVoice,
         IEnumerable<int> noteNumbers,
         IEnumerable<int> velocities,
         int durationMs) {
@@ -45,6 +49,7 @@ namespace EZSong.MIDI {
             _ = _synth.AllNotesOff(_channel); // On force le silence d'abord
 
             int index = 0;
+            _synth.ProgramSelect(_channel, _sfId, _voiceBank, (uint)gmVoice);
             foreach (int noteNumber in noteNumbers) {
                 Console.WriteLine("EchoChordAsync : note=" + noteNumber);
                 _synth.NoteOn(_channel, noteNumber, velocities.ToArray()[index]);
@@ -59,8 +64,9 @@ namespace EZSong.MIDI {
         /// <summary>
         /// Joue une note MIDI sur le canal du synthétiseur.
         /// </summary>
-        public void PlayNote(int noteNumber, int velocity = 100) {
+        public void PlayNote(GMVoice gmVoice, int noteNumber, int velocity = 100) {
             Console.WriteLine("PlayNote : noteNumber=" + noteNumber);
+            _synth.ProgramSelect(_channel, _sfId, _voiceBank, (uint)gmVoice);
             _synth.NoteOn(_channel, noteNumber, velocity);
         }
 

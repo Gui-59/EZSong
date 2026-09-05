@@ -18,6 +18,8 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class MelodyMeasureEditor : DrawingArea {
 
+        private UserSettings _userSettings;
+
         private int _segmentIndex;
         private int _staffIndex;
         private MeasureData _measureData;
@@ -25,7 +27,7 @@ namespace EZSong.UI.Widgets {
         // Model: sequence of chords (positioned sequentially)
         private List<WidgetMelodyChord> _widgetMelodyChords = new();
 
-        private UserSettings _userSettings;
+        
 
         private ColorPaletteManager _colorPaletteManager = new();
 
@@ -33,7 +35,7 @@ namespace EZSong.UI.Widgets {
         private Helpers.UICompositeGlyph _noteSymbolCompositeGlyph;
         private int _noteSymbolFontSize = -1; //Will be computed
 
-        private SoundFontManager _soundFontManager;
+        
 
         // Public properties for configuration
         public int TargetedNoteSymbolHeightPx { get; set; } = 8; //Prefered : 8
@@ -56,7 +58,9 @@ namespace EZSong.UI.Widgets {
         public event EventHandler? ContentChanged; // raised when chords/cadency change
         public event EventHandler<int>? CursorChanged; // cursor index changed
 
-        private EmbeddedMidiSynth _embeddedMidiSynth; //Pour echo MIDI
+        //Pour echo MIDI
+        private EmbeddedMidiSynth _embeddedMidiSynth; 
+
 
         private void AddWidgetMelodyChord(WidgetMelodyChord widgetMelodyChord) {
             _widgetMelodyChords.Add(widgetMelodyChord);
@@ -73,12 +77,11 @@ namespace EZSong.UI.Widgets {
             _measureData.Staffs[_staffIndex].Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
         }
 
-        public MelodyMeasureEditor() {
+        public MelodyMeasureEditor(EmbeddedMidiSynth embeddedMidiSynth, UserSettings userSettings) {
 
             _measureData = new MeasureData();
 
-            _userSettings = new Settings.UserSettings();
-
+            _userSettings = userSettings;
             // Enable events
             AddEvents((int)(
                 EventMask.ButtonPressMask |
@@ -105,8 +108,7 @@ namespace EZSong.UI.Widgets {
             _cursorTimeoutId = GLib.Timeout.Add(500, OnCursorTimer);
             CanFocus = true;
 
-            _soundFontManager = new();
-            _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _userSettings.MidiInputDefaultVoice);
+            _embeddedMidiSynth = embeddedMidiSynth;
         }
 
         private void ComputeMusicalFontSize(Context cr) {
@@ -324,7 +326,6 @@ namespace EZSong.UI.Widgets {
             _measureData = measureData;
             _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.Staffs[staffIndex].Melody.ToWidgetMelodyChords();
             _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, 0));
-            _embeddedMidiSynth = new(_soundFontManager.GetCurrentSoundFontPath(), 0, _measureData.SongSettings.GetStaffVoice(0));
             QueueDraw();
             ContentChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -438,7 +439,7 @@ namespace EZSong.UI.Widgets {
                 _ = editedChord.Pitches.Remove(existingPitch);
             } else {
                 editedChord.Pitches.Add(new WidgetPitch(clickedMidiNoteNumber));
-                await _embeddedMidiSynth.EchoChordAsync(editedChord.MidiNotes, editedChord.Velocities, _userSettings.MidiInputEchoDurationMs);
+                await _embeddedMidiSynth.EchoChordAsync(_measureData.GetGMVoiceForStaff(_staffIndex), editedChord.MidiNotes, editedChord.Velocities, _userSettings.MidiInputEchoDurationMs);
             }
         }
 
@@ -548,7 +549,7 @@ namespace EZSong.UI.Widgets {
                 velocities.Add(_userSettings.MidiInputEchoVeloctiy);
             }
 
-            await _embeddedMidiSynth.EchoChordAsync(notes, velocities, _userSettings.MidiInputEchoDurationMs);
+            await _embeddedMidiSynth.EchoChordAsync(_measureData.GetGMVoiceForStaff(_staffIndex), notes, velocities, _userSettings.MidiInputEchoDurationMs);
         }
 
         // Placeholder for hooking external MIDI input. When MIDI note(s) arrive call this.

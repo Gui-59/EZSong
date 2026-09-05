@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.Settings {
-    internal class UserSettings {
+    public class UserSettings {
 
         string _musicalFontFamily = "Bravura";
         public string MusicalFontFamily {

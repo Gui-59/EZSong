@@ -1,5 +1,7 @@
 ﻿using EZSong.Enums;
+using EZSong.MIDI;
 using EZSong.Model;
+using EZSong.Settings;
 using Gtk;
 using System;
 using System.Collections.Generic;
@@ -10,6 +12,10 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class MeasuresEditor : ScrolledWindow {
 
+        private UserSettings _userSettings;
+
+        private EmbeddedMidiSynth _embeddedMidiSynth; //Pour echo MIDI
+
         private Box _container;
 
         private Song _song;
@@ -18,7 +24,9 @@ namespace EZSong.UI.Widgets {
         
         private int _segmentIndex;
 
-        public MeasuresEditor() {
+        public MeasuresEditor(UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth) {
+            _userSettings = userSettings;
+            _embeddedMidiSynth = embeddedMidiSynth;
             _song = new Song();
             _container = new Box(Orientation.Horizontal, 4);
             Add(_container);
@@ -68,7 +76,7 @@ namespace EZSong.UI.Widgets {
 
         public void AddMeasure(MeasureData measure) {
 
-            MeasureEditorWidget widget = new(measure);
+            MeasureEditorWidget widget = new(measure, _userSettings, _embeddedMidiSynth);
 
             widget.WidthRequest = 200; //TODO : Ajuster la largeur en fonction du nombre de portées et de la signature rythmique
 
@@ -159,12 +167,13 @@ namespace EZSong.UI.Widgets {
             );
         }
 
-        public MelodyMeasureEditor? GetFocusedGlobalMelodyEditor() {
-            foreach (GlobalMelodyEditor globalMelodyEditorWidget in _container.Children) {
-                if (globalMelodyEditorWidget.HasFocus) {
-                    return globalMelodyEditorWidget.MelodyMeasureEditor; 
+        public MelodyMeasureEditor? GetFocusedMelodyMeasureEditor() {
+            foreach (MeasureEditorWidget measureEditor in _container.Children) {
+                if (measureEditor.GlobalMelodyEditor.MelodyMeasureEditor.HasFocus) {
+                    return measureEditor.GlobalMelodyEditor.MelodyMeasureEditor;
                 }
             }
+
             return null;
         }
     }

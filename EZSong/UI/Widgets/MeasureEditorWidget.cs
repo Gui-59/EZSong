@@ -1,4 +1,6 @@
-﻿using EZSong.Model;
+﻿using EZSong.MIDI;
+using EZSong.Model;
+using EZSong.Settings;
 using EZSong.UI.Widgets.WidgetsData;
 using Gtk;
 using System;
@@ -26,11 +28,11 @@ namespace EZSong.UI.Widgets {
 
         private SelectableValues _selectableValues = new();
 
-        public MeasureEditorWidget(MeasureData measure) {
+        public MeasureEditorWidget(MeasureData measure, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth) {
             _measure = measure;
             _segmentIndex = 0;  
             _staffIndex = 0; 
-            GlobalMelodyEditor = new(_segmentIndex, _staffIndex, _measure); 
+            GlobalMelodyEditor = new(_segmentIndex, _staffIndex, _measure, userSettings, embeddedMidiSynth);  
             BuildUI();
         }
 
