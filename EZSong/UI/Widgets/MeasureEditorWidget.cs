@@ -36,6 +36,10 @@ namespace EZSong.UI.Widgets {
             BuildUI();
         }
 
+        public void DisposeEditors() {
+            GlobalMelodyEditor.DisposeEditors();
+        }
+
         private void BuildUI() {
 
             Box row = new(Orientation.Vertical, 0); //On met en superposé les elements qui définissent une mesure

@@ -18,6 +18,8 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class MelodyMeasureEditor : DrawingArea {
 
+        private bool _disposed;
+
         private UserSettings _userSettings;
 
         private int _segmentIndex;
@@ -109,6 +111,23 @@ namespace EZSong.UI.Widgets {
             CanFocus = true;
 
             _embeddedMidiSynth = embeddedMidiSynth;
+        }
+
+        public new void Dispose() {
+            if (_disposed) {
+                return;
+            }
+
+            _disposed = true;
+
+            StopCursorTimer();
+        }
+
+        public void StopCursorTimer() {
+            if (_cursorTimeoutId != 0) {
+                _ = GLib.Source.Remove(_cursorTimeoutId);
+                _cursorTimeoutId = 0;
+            }
         }
 
         private void ComputeMusicalFontSize(Context cr) {
@@ -542,6 +561,10 @@ namespace EZSong.UI.Widgets {
         }
 
         private async Task EchoChord(int index) {
+            if (index < 0 || index >= _widgetMelodyChords.Count) {
+                return;
+            }
+
             List<int> notes = new();
             List<int> velocities = new();
             foreach (WidgetPitch widgetPitch in _widgetMelodyChords[index].Pitches) {

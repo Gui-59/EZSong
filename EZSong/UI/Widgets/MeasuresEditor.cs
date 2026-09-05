@@ -70,7 +70,13 @@ namespace EZSong.UI.Widgets {
 
         public void Clear() {
             foreach (Widget? child in _container.Children) {
-                _container.Remove(child);
+                if (child is not MeasureEditorWidget) {
+                    continue;
+                }
+                MeasureEditorWidget measureEditor = (MeasureEditorWidget)child;
+                measureEditor.DisposeEditors();
+                _container.Remove(measureEditor);
+                measureEditor.Dispose();
             }
         }
 
