@@ -16,7 +16,7 @@ namespace EZSong.UI.Widgets {
 
         private EmbeddedMidiSynth _embeddedMidiSynth; //Pour echo MIDI
 
-        private Box _container;
+        private Box _measuresWidgets;
 
         private Song _song;
 
@@ -28,8 +28,8 @@ namespace EZSong.UI.Widgets {
             _userSettings = userSettings;
             _embeddedMidiSynth = embeddedMidiSynth;
             _song = new Song();
-            _container = new Box(Orientation.Horizontal, 4);
-            Add(_container);
+            _measuresWidgets = new Box(Orientation.Horizontal, 0);
+            Add(_measuresWidgets);
         }
 
         public void SetSong(Song song) {
@@ -62,20 +62,20 @@ namespace EZSong.UI.Widgets {
 
         internal void RefreshDisplayedStaff(int staffIndex) {
             _staffIndex = staffIndex;
-            foreach (MeasureEditorWidget measureEditorWidget in _container.Children) {
+            foreach (MeasureEditorWidget measureEditorWidget in _measuresWidgets.Children) {
                 measureEditorWidget.RefreshDisplayedStaff(staffIndex);
             }            
             ShowAll();
         }
 
         public void Clear() {
-            foreach (Widget? child in _container.Children) {
+            foreach (Widget? child in _measuresWidgets.Children) {
                 if (child is not MeasureEditorWidget) {
                     continue;
                 }
                 MeasureEditorWidget measureEditor = (MeasureEditorWidget)child;
                 measureEditor.DisposeEditors();
-                _container.Remove(measureEditor);
+                _measuresWidgets.Remove(measureEditor);
                 measureEditor.Dispose();
             }
         }
@@ -102,7 +102,7 @@ namespace EZSong.UI.Widgets {
                 Delete(measure);
             };
 
-            _container.PackStart(widget, false, false, 2);
+            _measuresWidgets.PackStart(widget, false, false, 0);
         }
 
         public void AppendBlankMeasures(int number) {
@@ -174,7 +174,7 @@ namespace EZSong.UI.Widgets {
         }
 
         public MelodyMeasureEditor? GetFocusedMelodyMeasureEditor() {
-            foreach (MeasureEditorWidget measureEditor in _container.Children) {
+            foreach (MeasureEditorWidget measureEditor in _measuresWidgets.Children) {
                 if (measureEditor.GlobalMelodyEditor.MelodyMeasureEditor.HasFocus) {
                     return measureEditor.GlobalMelodyEditor.MelodyMeasureEditor;
                 }

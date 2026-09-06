@@ -90,6 +90,24 @@ namespace EZSong.UI.Widgets {
             // Ajouter la barre de boutons en haut de la mesure
             row.PackStart(topBar, false, false, 6);
 
+            Box mesureSetupBar = new(Orientation.Horizontal, 6) {
+                Homogeneous = false
+            };
+
+            // Tonalité (ComboBoxText)
+            ComboBoxText keyCombo = new();
+            foreach (string k in _selectableValues.Tonalities.Keys) {
+                keyCombo.Append(k, _selectableValues.Tonalities[k]);
+            }
+            keyCombo.ActiveId = _measure.KeySignature.ToDropDownId() != "" ? _measure.KeySignature.ToDropDownId() : _selectableValues.DefaultKeySignature.ToDropDownId();
+            keyCombo.Changed += (o, args) => {
+                if (!string.IsNullOrEmpty(keyCombo.ActiveId) && _selectableValues.Tonalities.ContainsKey(keyCombo.ActiveId)) {
+                    _measure.KeySignature = new(keyCombo.ActiveId);
+                }
+                MeasureChanged?.Invoke(_measure);
+            };
+            mesureSetupBar.PackStart(keyCombo, false, false, 0);
+
             // Signature temporelle : Upper (ComboBoxText)
             ComboBoxText upperTimeSigCombo = new();
             foreach (int upper in _selectableValues.UpperTimeSigs) {
@@ -107,8 +125,11 @@ namespace EZSong.UI.Widgets {
                 }
                 MeasureChanged?.Invoke(_measure);
             };
-            row.PackStart(new Label("Time Sig. (Upper) :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(upperTimeSigCombo, false, false, 0);
+            mesureSetupBar.PackStart(upperTimeSigCombo, false, false, 0);
+
+            mesureSetupBar.PackStart(new Label("|") { Xalign = 0f }, false, false, 0);
+
+            
 
             // Signature temporelle : Lower (ComboBoxText)
             ComboBoxText lowerTimeSigCombo = new();
@@ -126,24 +147,11 @@ namespace EZSong.UI.Widgets {
                 }
                 MeasureChanged?.Invoke(_measure);
             };
-            row.PackStart(new Label("Time Sig. (Lower) :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(lowerTimeSigCombo, false, false, 0);
+            mesureSetupBar.PackStart(lowerTimeSigCombo, false, false, 0);
 
-            // Tonalité (ComboBoxText)
-            ComboBoxText keyCombo = new();
-            foreach (string k in _selectableValues.Tonalities.Keys) {
-                keyCombo.Append(k, _selectableValues.Tonalities[k]);
-            }
-            keyCombo.ActiveId = _measure.KeySignature.ToDropDownId() != "" ? _measure.KeySignature.ToDropDownId() : _selectableValues.DefaultKeySignature.ToDropDownId();
-            keyCombo.Changed += (o, args) => {
-                if (!string.IsNullOrEmpty(keyCombo.ActiveId) && _selectableValues.Tonalities.ContainsKey(keyCombo.ActiveId)) {
-                    _measure.KeySignature = new(keyCombo.ActiveId);
-                }
-                MeasureChanged?.Invoke(_measure);
-            };
+            mesureSetupBar.PackStart(new Label("000 bpm") { Xalign = 0f }, false, false, 0); //TODO : indiquer la vraie valeur de BPM
 
-            row.PackStart(new Label("Tonalité :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(keyCombo, false, false, 0);
+            row.PackStart(mesureSetupBar, false, false, 0);
 
             // Accords
             MeasureChordsEditor measureChordsEditor = new();
@@ -152,8 +160,20 @@ namespace EZSong.UI.Widgets {
                 _measure.ChordSequence = ChordSequence;
                 MeasureChanged?.Invoke(_measure);
             };
-            row.PackStart(new Label("Accords :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(measureChordsEditor, false, true, 0);
+            row.PackStart(measureChordsEditor, false, false, 0);
+
+            // Paroles (une saisie texte ; mots/syllabes séparés par espaces)
+            Entry lyricsEntry = new() {
+                Text = _measure.Lyrics ?? "",
+                WidthChars = 24,
+                PlaceholderText = "Paroles (séparées par espaces)"
+            };
+            lyricsEntry.Changed += (o, args) => {
+                _measure.Lyrics = lyricsEntry.Text;
+                MeasureChanged?.Invoke(_measure);
+            };
+            row.PackStart(lyricsEntry, false, false, 0);
+
 
             //Mélodie (éditeur de mélodie global [notes + rythme])
             GlobalMelodyEditor.MelodyChanged += (staffIndex, melody) => {
@@ -165,20 +185,9 @@ namespace EZSong.UI.Widgets {
                 _measure.Staffs[staffIndex].Pattern = pattern;
                 MeasureChanged?.Invoke(_measure);
             };
-            row.PackStart(GlobalMelodyEditor, true, true, 0);
+            row.PackStart(GlobalMelodyEditor, false, false, 0);
 
-            // Paroles (une saisie texte ; mots/syllabes séparés par espaces)
-            Entry lyricsEntry = new() {
-                Text = _measure.Lyrics ?? "",
-                WidthChars = 24,
-                PlaceholderText = "Paroles (séparées par espaces)"
-            };
-            lyricsEntry.Changed += (o, args) => {
-               _measure.Lyrics = lyricsEntry.Text;
-                MeasureChanged?.Invoke(_measure);
-            };
-            row.PackStart(new Label("Paroles :") { Xalign = 0f }, false, false, 0);
-            row.PackStart(lyricsEntry, true, true, 0);
+
 
             Add(row);
 
