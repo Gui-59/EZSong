@@ -74,35 +74,13 @@ namespace EZSong.UI {
             _flowTabs = new FlowBox[5];
             PopulateMenuTabs();         
 
-            Box mainBox = new(Orientation.Vertical, 0);
+            Box globalBox = new(Orientation.Vertical, 0);
 
-            // Header
-            Box headerBox = new(Orientation.Horizontal, 0);
-            _titleEntry = new Entry { 
-                PlaceholderText = "Titre du morceau" 
-            };
-            _titleEntry.Changed += (o, e) => {
-                _currentSong.Title = _titleEntry.Text;
-            };
-            headerBox.PackStart(_titleEntry, true, true, 0);
-            _artistEntry = new Entry { 
-                PlaceholderText = "Interprète" 
-            };            
-            _artistEntry.Changed += (o, e) => {
-                _currentSong.Artist = _artistEntry.Text;
-            };
-            headerBox.PackStart(_artistEntry, true, true, 0);
-            _commentEntry = new Entry { 
-                PlaceholderText = "Commentaires" 
-            };
-            _commentEntry.Changed += (o, e) => {
-                _currentSong.Comment = _commentEntry.Buffer.Text;
-            };
-            headerBox.PackStart(_commentEntry, true, true, 0);
-            mainBox.PackStart(headerBox, false, false, 0);
+            //Bloc principal
+            Box mainBox = new(Orientation.Horizontal, 0);
 
             //Barre d'informations (portée affichée, ...)
-            Box infoBox = new(Orientation.Horizontal, 0);
+            Box infoBox = new(Orientation.Vertical, 0);
 
             Label titleDisplayedSegment = new("Segment actuellement affiché :");
             titleDisplayedSegment.StyleContext.AddClass("titleLabel");
@@ -181,21 +159,57 @@ namespace EZSong.UI {
 
             mainBox.PackStart(infoBox, false, false, 0);
 
+            Gtk.Notebook tabs = new() { ShowTabs = true }   ;
+
+            //Infos du morceau
+            Box songInfoBox = new(Orientation.Vertical, 0);
+            _titleEntry = new Entry {
+                PlaceholderText = "Titre du morceau"
+            };
+            _titleEntry.Changed += (o, e) => {
+                _currentSong.Title = _titleEntry.Text;
+            };
+            songInfoBox.PackStart(_titleEntry, false, false, 0);
+            _artistEntry = new Entry {
+                PlaceholderText = "Interprète"
+            };
+            _artistEntry.Changed += (o, e) => {
+                _currentSong.Artist = _artistEntry.Text;
+            };
+            songInfoBox.PackStart(_artistEntry, false, false, 0);
+            _commentEntry = new Entry {
+                PlaceholderText = "Commentaires"
+            };
+            _commentEntry.Changed += (o, e) => {
+                _currentSong.Comment = _commentEntry.Buffer.Text;
+            };
+            songInfoBox.PackStart(_commentEntry, false, false, 0);
+
+            // Ajout de la page au Notebook (Contenu, Label de l'onglet)
+
+            _ = tabs.AppendPage(songInfoBox, new Label("Infos du morceau"));
+
             // Mesures
             _measuresEditor = new MeasuresEditor(_userSettings, _embeddedMidiSynth);
             ScrolledWindow scrolled = new();
             scrolled.Add(_measuresEditor);
-            mainBox.PackStart(scrolled, true, true, 0);
+
+            // Ajout de la page au Notebook (Contenu, Label de l'onglet)
+            _ = tabs.AppendPage(scrolled, new Label("Mesures"));
+
+            mainBox.PackStart(tabs, true, true, 0); 
+
+            globalBox.PackStart(mainBox, true, true, 0);
 
             // Barre de status
             _statusBar = new Statusbar();
             _statusBarContextId = _statusBar.GetContextId("main");
             _ = _statusBar.Push(_statusBarContextId, "Prêt.");
-            mainBox.PackStart(_statusBar, false, false, 0);
+            globalBox.PackStart(_statusBar, false, false, 0);
 
             windowBox.PackStart(_switcher, false, false, 0);
             windowBox.PackStart(_stack, false, false, 0);
-            windowBox.PackStart(mainBox, true, true, 0);
+            windowBox.PackStart(globalBox, true, true, 0);
 
             // Signal de redimensionnement
             SizeAllocated += (o, args) => UpdateCompactMode(args.Allocation.Width);
