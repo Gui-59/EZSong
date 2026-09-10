@@ -198,12 +198,22 @@ namespace EZSong.UI {
             _ = tabs.AppendPage(segmentInfoBox, new Label("Description du segment"));
 
             // Mesures
+            Box measuresGlobalBox = new(Orientation.Horizontal, 0);
+
+            Box measureActionsBox = new(Orientation.Horizontal, 0);
+            measureActionsBox.WidthRequest = 200;
+            Label measureActionsTitle = new("Portée actuellement affichée :");
+            measureActionsTitle.StyleContext.AddClass("titleLabel");
+            measureActionsBox.PackStart(measureActionsTitle, false, false, 0);
+
             _measuresEditor = new MeasuresEditor(_userSettings, _embeddedMidiSynth);
             ScrolledWindow scrolled = new();
             scrolled.Add(_measuresEditor);
+            measuresGlobalBox.PackStart(measureActionsBox, false, false, 0);
+            measuresGlobalBox.PackStart(scrolled, true, true, 0);
 
             // Ajout de la page au Notebook (Contenu, Label de l'onglet)
-            _ = tabs.AppendPage(scrolled, new Label("Transcription du segment (mesures)"));
+            _ = tabs.AppendPage(measuresGlobalBox, new Label("Transcription du segment (mesures)"));
 
             mainBox.PackStart(tabs, true, true, 0); 
 
