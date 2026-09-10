@@ -189,13 +189,21 @@ namespace EZSong.UI {
 
             _ = tabs.AppendPage(songInfoBox, new Label("Infos du morceau"));
 
+            // Ajout de la page au Notebook (Contenu, Label de l'onglet)
+            Box songSegmentsBox = new(Orientation.Vertical, 0);
+            _ = tabs.AppendPage(songSegmentsBox, new Label("Découpage en segments"));
+
+            // Ajout de la page au Notebook (Contenu, Label de l'onglet)
+            Box segmentInfoBox = new(Orientation.Vertical, 0);
+            _ = tabs.AppendPage(segmentInfoBox, new Label("Description du segment"));
+
             // Mesures
             _measuresEditor = new MeasuresEditor(_userSettings, _embeddedMidiSynth);
             ScrolledWindow scrolled = new();
             scrolled.Add(_measuresEditor);
 
             // Ajout de la page au Notebook (Contenu, Label de l'onglet)
-            _ = tabs.AppendPage(scrolled, new Label("Mesures"));
+            _ = tabs.AppendPage(scrolled, new Label("Transcription du segment (mesures)"));
 
             mainBox.PackStart(tabs, true, true, 0); 
 
