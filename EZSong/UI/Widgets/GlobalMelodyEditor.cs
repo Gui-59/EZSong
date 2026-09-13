@@ -38,6 +38,7 @@ namespace EZSong.UI.Widgets {
             _rhythmEditor = new();
             _rhythmEditor.LoadFromModel(measureData);
             BuildUI();
+            ShowAll();
         }
 
         public void DisposeEditors() {

@@ -10,13 +10,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets {
-    public class MeasuresEditor : ScrolledWindow {
+    public class MeasuresEditor : Box {
 
         private UserSettings _userSettings;
 
         private EmbeddedMidiSynth _embeddedMidiSynth; //Pour echo MIDI
 
-        private Box _measuresWidgets;
+        private bool _isPlaceHolder;
+
+        private Box _measuresWidgetsBox;
 
         private Song _song;
 
@@ -24,22 +26,46 @@ namespace EZSong.UI.Widgets {
         
         private int _segmentIndex;
 
-        public MeasuresEditor(UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth) {
-            _userSettings = userSettings;
-            _embeddedMidiSynth = embeddedMidiSynth;
-            _song = new Song();
-            _measuresWidgets = new Box(Orientation.Horizontal, 0);
-            Add(_measuresWidgets);
+        public bool IsPlaceHolder {
+            get {
+                return _isPlaceHolder;
+            }
+            internal set {
+                _isPlaceHolder = value;
+            }
         }
 
-        public void SetSong(Song song) {
-            _song = song;
+        public MeasuresEditor(UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth, Song currentSong, bool isPlaceHolder) {
+            _userSettings = userSettings;
+            _embeddedMidiSynth = embeddedMidiSynth;
+            _isPlaceHolder = isPlaceHolder;
+
+            _song = currentSong;
+
+            _measuresWidgetsBox = new Box(Orientation.Horizontal, 0);
+
             Refresh();
+        }
+
+        private void ResetContent() {
+            Clear();
+
+
+            if (_isPlaceHolder) {
+                Label placeholderLabel = new("Créez une deuxième portée pour la voir ici");
+                placeholderLabel.StyleContext.AddClass("titleLabel");
+                Add(placeholderLabel);
+            } else {
+
+                _measuresWidgetsBox = new Box(Orientation.Horizontal, 0);
+                Add(_measuresWidgetsBox);
+            }
+
         }
 
         public void Refresh() {
 
-            Clear();
+            ResetContent(); 
 
             Reindex();
 
@@ -62,21 +88,19 @@ namespace EZSong.UI.Widgets {
 
         internal void RefreshDisplayedStaff(int staffIndex) {
             _staffIndex = staffIndex;
-            foreach (MeasureEditorWidget measureEditorWidget in _measuresWidgets.Children) {
+            foreach (MeasureEditorWidget measureEditorWidget in _measuresWidgetsBox.Children) {
                 measureEditorWidget.RefreshDisplayedStaff(staffIndex);
             }            
             ShowAll();
         }
 
         public void Clear() {
-            foreach (Widget? child in _measuresWidgets.Children) {
-                if (child is not MeasureEditorWidget) {
-                    continue;
+            foreach (Widget child in _measuresWidgetsBox.Children.ToArray()) {
+                if (child is MeasureEditorWidget measureEditor) {
+                    measureEditor.DisposeEditors();
+                    _measuresWidgetsBox.Remove(measureEditor);
+                    measureEditor.Dispose();
                 }
-                MeasureEditorWidget measureEditor = (MeasureEditorWidget)child;
-                measureEditor.DisposeEditors();
-                _measuresWidgets.Remove(measureEditor);
-                measureEditor.Dispose();
             }
         }
 
@@ -102,7 +126,7 @@ namespace EZSong.UI.Widgets {
                 Delete(measure);
             };
 
-            _measuresWidgets.PackStart(widget, false, false, 0);
+            _measuresWidgetsBox.PackStart(widget, true, false, 0);
         }
 
         public void AppendBlankMeasures(int number) {
@@ -174,7 +198,7 @@ namespace EZSong.UI.Widgets {
         }
 
         public MelodyMeasureEditor? GetFocusedMelodyMeasureEditor() {
-            foreach (MeasureEditorWidget measureEditor in _measuresWidgets.Children) {
+            foreach (MeasureEditorWidget measureEditor in _measuresWidgetsBox.Children) {
                 if (measureEditor.GlobalMelodyEditor.MelodyMeasureEditor.HasFocus) {
                     return measureEditor.GlobalMelodyEditor.MelodyMeasureEditor;
                 }

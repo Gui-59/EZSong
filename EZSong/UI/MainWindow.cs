@@ -1,5 +1,6 @@
 ﻿using EZSong.Enums;
 using EZSong.Exporting.Lilypond;
+using EZSong.Helpers;
 using EZSong.IO;
 using EZSong.MIDI;
 using EZSong.Model;
@@ -33,17 +34,19 @@ namespace EZSong.UI {
         private Entry _titleEntry;
         private Entry _artistEntry;
         private Entry _commentEntry;
+
+        private GlobalSegmentEditor _globalSegmentEditor;
         private Label _displayedSegmentNumber;
         private Label _displayedSegmentName;
-        private Label _displayedStaffNumber;
-        private Label _displayedStaffName;
-        private MeasuresEditor _measuresEditor;
+
+
+
 
         private Statusbar _statusBar;
         private uint _statusBarContextId;
 
         private int _displayedSegmentIndex = 0;
-        private int _displayedStaffIndex = 0;
+
 
         public MainWindow() : base("EZSong") {
             _currentSong = new Song ();
@@ -119,42 +122,7 @@ namespace EZSong.UI {
             };
             infoBox.PackStart(gotToNextSegment, false, false, 0);
 
-            Label titleDisplayedStaff = new("Portée actuellement affichée :");
-            titleDisplayedStaff.StyleContext.AddClass("titleLabel");
-            _displayedStaffNumber = new Label("?");
-            _displayedStaffNumber.StyleContext.AddClass("infoLabel");
-            _displayedStaffName = new Label("?");
-            _displayedStaffName.StyleContext.AddClass("infoLabel");
-            infoBox.PackStart(titleDisplayedStaff, false, false, 0);
-            infoBox.PackStart(_displayedStaffNumber, false, false, 0);
-            infoBox.PackStart(_displayedStaffName, false, false, 0);
-
-            //Bouton de suppression de la portée
-            Button deleteCurrentStaff = new();
-            deleteCurrentStaff.Label = "Supprimer cette portée"; //TODO : icone à la place du texte
-            deleteCurrentStaff.Clicked += (o, args) => {
-                //TODO : demander confirmation avant de supprimer la portée
-                throw new NotImplementedException(); //TODO : implémenter la suppression de la portée
-            };
-            infoBox.PackStart(deleteCurrentStaff, false, false, 0);
-
-            //Portée précédente
-            Button gotToPreviousStaff = new();
-            gotToPreviousStaff.Label = "🔺"; //TODO : icone à la place du texte
-            gotToPreviousStaff.Clicked += (o, args) => {
-                MainWindow mainWindow = this;
-                mainWindow.GoToPreviousStaff();
-            };
-            infoBox.PackStart(gotToPreviousStaff, false, false, 0);
-
-            //Portée suivante
-            Button gotToNextStaff = new();
-            gotToNextStaff.Label = "🔻"; //TODO : icone à la place du texte
-            gotToNextStaff.Clicked += (o, args) => {
-                MainWindow mainWindow = this;
-                mainWindow.GoToNextStaff();
-            };
-            infoBox.PackStart(gotToNextStaff, false, false, 0);
+            
 
 
             mainBox.PackStart(infoBox, false, false, 0);
@@ -198,22 +166,10 @@ namespace EZSong.UI {
             _ = tabs.AppendPage(segmentInfoBox, new Label("Description du segment"));
 
             // Mesures
-            Box measuresGlobalBox = new(Orientation.Horizontal, 0);
-
-            Box measureActionsBox = new(Orientation.Horizontal, 0);
-            measureActionsBox.WidthRequest = 200;
-            Label measureActionsTitle = new("Portée actuellement affichée :");
-            measureActionsTitle.StyleContext.AddClass("titleLabel");
-            measureActionsBox.PackStart(measureActionsTitle, false, false, 0);
-
-            _measuresEditor = new MeasuresEditor(_userSettings, _embeddedMidiSynth);
-            ScrolledWindow scrolled = new();
-            scrolled.Add(_measuresEditor);
-            measuresGlobalBox.PackStart(measureActionsBox, false, false, 0);
-            measuresGlobalBox.PackStart(scrolled, true, true, 0);
+            _globalSegmentEditor = new(_currentSong, _userSettings, _embeddedMidiSynth);
 
             // Ajout de la page au Notebook (Contenu, Label de l'onglet)
-            _ = tabs.AppendPage(measuresGlobalBox, new Label("Transcription du segment (mesures)"));
+            _ = tabs.AppendPage(_globalSegmentEditor, new Label("Transcription du segment (mesures)"));
 
             mainBox.PackStart(tabs, true, true, 0); 
 
@@ -239,7 +195,7 @@ namespace EZSong.UI {
 
             GoToFirstSegment();
 
-            GoToFirstStaff();
+            _globalSegmentEditor.ResetDisplayedStaffs();
 
             ShowAll();
 
@@ -258,13 +214,11 @@ namespace EZSong.UI {
                 Gtk.Application.Invoke((s, e) =>
                 {
                     MelodyMeasureEditor? focusedEditor =
-                        _measuresEditor.GetFocusedMelodyMeasureEditor();
+                        _globalSegmentEditor.GetFocusedMelodyMeasureEditor();
 
                     focusedEditor?.OnMidiNoteReceived(notes);
                 });
             };
-
-            _measuresEditor.SetSong(_currentSong);
             
             Maximize(); // Démarrer en mode maximisé
         }
@@ -331,7 +285,7 @@ namespace EZSong.UI {
             String staffName = Settings.Constants.DefaultStaffName;
             bool isBass = false;
             _currentSong.AddStaff(staffName, isBass);
-            GoToNextStaff();
+            _globalSegmentEditor.ShowLastStaff();
         }
 
         private void GoToFirstSegment() {
@@ -340,40 +294,18 @@ namespace EZSong.UI {
         }
 
         private void GoToNextSegment() {
-            _displayedSegmentIndex = LoopIndex(_displayedSegmentIndex, _currentSong.Segments.Count(), 1);
+            _displayedSegmentIndex = MathHelper.LoopIndex(_displayedSegmentIndex, _currentSong.Segments.Count(), 1);
             RefreshDisplayedSegment();
         }
 
         private void GoToPreviousSegment() {
-            _displayedSegmentIndex = LoopIndex(_displayedSegmentIndex, _currentSong.Segments.Count(), -1);
+            _displayedSegmentIndex = MathHelper.LoopIndex(_displayedSegmentIndex, _currentSong.Segments.Count(), -1);
             RefreshDisplayedSegment ();
         }
 
-        private void GoToFirstStaff() {
-            _displayedStaffIndex = 0;
-            RefreshDisplayedStaff();
-        }
+        
 
-        private void GoToNextStaff() {
-            _displayedStaffIndex = LoopIndex(_displayedStaffIndex, _currentSong.SongSettings.StaffsSettings.Staffs.Count(), 1);
-            RefreshDisplayedStaff();
-        }
-
-        private void GoToPreviousStaff() {
-            _displayedStaffIndex = LoopIndex(_displayedStaffIndex, _currentSong.SongSettings.StaffsSettings.Staffs.Count(), -1);
-            RefreshDisplayedStaff();
-        }
-
-        private int LoopIndex(int index, int count, int offset) {
-            if (count <= 0) {
-                throw new ArgumentException("Count must be greater than zero.", nameof(count));
-            }
-            int result = (index + offset) % count;
-            if (result < 0) {
-                result += count;
-            }
-            return result;
-        }
+        
 
         private Widget CreateIconButton(string label, EventHandler onClick, string iconName = "icon-placeholder.svg") {
             Image image = SvgHelper.LoadSvgAsGtkImage("EZSong.Ressources.SVG."+iconName, 32);
@@ -426,35 +358,24 @@ namespace EZSong.UI {
             FileChooserDialog dlg = new("Ouvrir projet", this, FileChooserAction.Open, "Annuler", ResponseType.Cancel, "Ouvrir", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
                 SetSong(SongPersistancyManager.Load(dlg.Filename));
-                GoToFirstSegment();
-                GoToFirstStaff();
-                RefreshUI();
+                UpdateSongInfoUI();
+                GoToFirstSegment();                
             }
             dlg.Destroy();
         }
 
         public void SetSong(Song song) {
             _currentSong = song ?? throw new ArgumentNullException(nameof(song));
-            _measuresEditor.SetSong(_currentSong);
-            RefreshUI();
-        }
-
-        private void RefreshUI() {
-            UpdateSongInfoUI();
-            _measuresEditor.Refresh();
+            _globalSegmentEditor.SetSong(song);
         }
 
         private void RefreshDisplayedSegment() {
             _displayedSegmentNumber.Text = (_displayedSegmentIndex + 1).ToString();
             _displayedSegmentName.Text = "Segment " + (_displayedSegmentIndex + 1).ToString();
-            _measuresEditor.RefreshDisplayedSegment(_displayedSegmentIndex);
+            _globalSegmentEditor.RefreshDisplayedSegment(_displayedSegmentIndex);
         }
 
-        private void RefreshDisplayedStaff() {
-            _displayedStaffNumber.Text = (_displayedStaffIndex + 1).ToString();
-            _displayedStaffName.Text = _currentSong.SongSettings.StaffsSettings.Staffs[_displayedStaffIndex].Name;
-            _measuresEditor.RefreshDisplayedStaff(_displayedStaffIndex);
-        }
+
 
         private void UpdateSongInfoUI() {
             if (_currentSong != null) {
