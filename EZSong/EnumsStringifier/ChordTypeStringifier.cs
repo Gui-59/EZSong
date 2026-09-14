@@ -72,7 +72,7 @@ namespace EZSong.EnumsStringifier {
                 case ChordType.SeventhPlusFive:
                     return "7+5";
                 case ChordType.MinorSeventhFlatFive:
-                    return "m7b5";
+                    return "m7b5"; //TODO : mettre un vrai symbole de bémol
                 default:
                     throw new ArgumentOutOfRangeException();
             }
