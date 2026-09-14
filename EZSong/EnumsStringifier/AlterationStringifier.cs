@@ -10,11 +10,11 @@ namespace EZSong.EnumsStringifier {
         public static string ToHumanString(Alteration alteration) {
             switch (alteration) {
                 case Alteration.flat:
-                    return "b";
+                    return "b"; //TODO : mettre un vrai flat unicode
                 case Alteration.neutral:
                     return "";
                 case Alteration.sharp:
-                    return "#";
+                    return "#"; //TODO : mettre un vrai sharp unicode
             }
             return "?";
         }
