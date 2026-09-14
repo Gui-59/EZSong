@@ -51,7 +51,6 @@ namespace EZSong.MIDI {
             int index = 0;
             _synth.ProgramSelect(_channel, _sfId, _voiceBank, (uint)gmVoice);
             foreach (int noteNumber in noteNumbers) {
-                Console.WriteLine("EchoChordAsync : note=" + noteNumber);
                 _synth.NoteOn(_channel, noteNumber, velocities.ToArray()[index]);
                 index++;
             }
@@ -65,7 +64,6 @@ namespace EZSong.MIDI {
         /// Joue une note MIDI sur le canal du synthétiseur.
         /// </summary>
         public void PlayNote(GMVoice gmVoice, int noteNumber, int velocity = 100) {
-            Console.WriteLine("PlayNote : noteNumber=" + noteNumber);
             _synth.ProgramSelect(_channel, _sfId, _voiceBank, (uint)gmVoice);
             _synth.NoteOn(_channel, noteNumber, velocity);
         }
