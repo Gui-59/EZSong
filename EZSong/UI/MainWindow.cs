@@ -45,7 +45,7 @@ namespace EZSong.UI {
         private Statusbar _statusBar;
         private uint _statusBarContextId;
 
-        private int _displayedSegmentIndex = 0;
+        
 
 
         public MainWindow() : base("EZSong") {
@@ -289,18 +289,18 @@ namespace EZSong.UI {
         }
 
         private void GoToFirstSegment() {
-            _displayedSegmentIndex = 0;
-            RefreshDisplayedSegment();
+            _globalSegmentEditor.DisplayedSegmentIndex = 0;
+            RefreshDisplayedSegmentInfos();
         }
 
         private void GoToNextSegment() {
-            _displayedSegmentIndex = MathHelper.LoopIndex(_displayedSegmentIndex, _currentSong.Segments.Count(), 1);
-            RefreshDisplayedSegment();
+            _globalSegmentEditor.DisplayedSegmentIndex = MathHelper.LoopIndex(_globalSegmentEditor.DisplayedSegmentIndex, _currentSong.Segments.Count(), 1);
+            RefreshDisplayedSegmentInfos();
         }
 
         private void GoToPreviousSegment() {
-            _displayedSegmentIndex = MathHelper.LoopIndex(_displayedSegmentIndex, _currentSong.Segments.Count(), -1);
-            RefreshDisplayedSegment ();
+            _globalSegmentEditor.DisplayedSegmentIndex = MathHelper.LoopIndex(_globalSegmentEditor.DisplayedSegmentIndex, _currentSong.Segments.Count(), -1);
+            RefreshDisplayedSegmentInfos ();
         }
 
         
@@ -369,10 +369,9 @@ namespace EZSong.UI {
             _globalSegmentEditor.SetSong(song);
         }
 
-        private void RefreshDisplayedSegment() {
-            _displayedSegmentNumber.Text = (_displayedSegmentIndex + 1).ToString();
-            _displayedSegmentName.Text = "Segment " + (_displayedSegmentIndex + 1).ToString();
-            _globalSegmentEditor.RefreshDisplayedSegment(_displayedSegmentIndex);
+        private void RefreshDisplayedSegmentInfos() {
+            _displayedSegmentNumber.Text = (_globalSegmentEditor.DisplayedSegmentIndex + 1).ToString();
+            _displayedSegmentName.Text = "Segment " + (_globalSegmentEditor.DisplayedSegmentIndex + 1).ToString();
         }
 
 

@@ -1,4 +1,5 @@
-﻿using EZSong.MIDI;
+﻿using EZSong.Enums;
+using EZSong.MIDI;
 using EZSong.Model;
 using EZSong.Settings;
 using Gtk;
@@ -11,17 +12,34 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     internal class GlobalSegmentEditor:Box {
 
-        
+        private int _displayedSegmentIndex = 0;
+        public int DisplayedSegmentIndex {
+            get {
+                return _displayedSegmentIndex;
+            }
+            set {
+                _displayedSegmentIndex = value;
+                RefreshDisplayedSegment();
+            }
+        }
+
+        private Song _currentSong;
+        private UserSettings _userSettings;
+        private EmbeddedMidiSynth _embeddedMidiSynth;
 
         private GlobalMeasuresEditor _globalMeasuresEditor1;
         private GlobalMeasuresEditor _globalMeasuresEditor2;
 
-        public GlobalSegmentEditor(Song _currentSong, UserSettings _userSettings, EmbeddedMidiSynth _embeddedMidiSynth) : base(Orientation.Vertical, 0) {
+        public GlobalSegmentEditor(Song currentSong, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth) : base(Orientation.Vertical, 0) {
 
-            _globalMeasuresEditor1 = new(_currentSong, _userSettings, _embeddedMidiSynth, false);
+            _currentSong = currentSong;
+            _userSettings = userSettings;
+            _embeddedMidiSynth = embeddedMidiSynth;
+
+            _globalMeasuresEditor1 = new(this, currentSong, userSettings, embeddedMidiSynth, _displayedSegmentIndex, false);
             PackStart(_globalMeasuresEditor1, true, true, 0);
 
-            _globalMeasuresEditor2 = new(_currentSong, _userSettings, _embeddedMidiSynth, true);
+            _globalMeasuresEditor2 = new(this, currentSong, userSettings, embeddedMidiSynth, _displayedSegmentIndex, true);
             PackStart(_globalMeasuresEditor2, true, true, 0);
 
             ShowAll();
@@ -41,9 +59,9 @@ namespace EZSong.UI.Widgets {
             _globalMeasuresEditor2.Refresh();
         }
 
-        internal void RefreshDisplayedSegment(int displayedSegmentIndex) {
-            _globalMeasuresEditor1.RefreshDisplayedSegment(displayedSegmentIndex);
-            _globalMeasuresEditor2.RefreshDisplayedSegment(displayedSegmentIndex);
+        internal void RefreshDisplayedSegment() {
+            _globalMeasuresEditor1.RefreshDisplayedSegment(_displayedSegmentIndex);
+            _globalMeasuresEditor2.RefreshDisplayedSegment(_displayedSegmentIndex);
         }
 
         internal void ResetDisplayedStaffs() {
@@ -58,6 +76,68 @@ namespace EZSong.UI.Widgets {
 
         internal void ShowLastStaff() {
             _globalMeasuresEditor2.GoToLastStaff();
+        }
+
+        internal void AddMeasure(MeasureData measure) {
+
+            _globalMeasuresEditor1.AddMeasure(this, measure);
+            _globalMeasuresEditor2.AddMeasure(this, measure);
+
+            
+        }
+
+        internal void AppendBlankMeasures(int number) {
+            for (int i = 0; i < number; i++) {
+                MeasureData newMeasure = CreateEmptyMeasure(i, new TimeSignature());
+                _currentSong.Segments[_displayedSegmentIndex].Measures.Insert(i, newMeasure);
+            }
+            Reindex();
+            Refresh();
+        }
+
+        private void Reindex() {
+            _globalMeasuresEditor1.Reindex();
+            _globalMeasuresEditor2.Reindex();
+        }
+
+        internal void InsertAfter(MeasureData measure) {
+            int index = _currentSong.Segments[_displayedSegmentIndex].Measures.IndexOf(measure);
+            MeasureData newMeasure = CreateEmptyMeasure(index + 1, measure.TimeSignature);
+            _currentSong.Segments[_displayedSegmentIndex].Measures.Insert(index + 1, newMeasure);
+            Reindex();
+            Refresh();
+        }
+
+        internal void InsertBefore(MeasureData measure) {
+            int index = _currentSong.Segments[_displayedSegmentIndex].Measures.IndexOf(measure);
+            MeasureData newMeasure = CreateEmptyMeasure(index, measure.TimeSignature);
+            _currentSong.Segments[_displayedSegmentIndex].Measures.Insert(index, newMeasure);
+            Reindex();
+            Refresh();
+        }
+
+        internal void Delete(MeasureData measure) {
+            if (_currentSong.Segments[_displayedSegmentIndex].Measures.Count <= 1) {
+                return;
+            }
+            _ = _currentSong.Segments[_displayedSegmentIndex].Measures.Remove(measure);
+            Reindex();
+            Refresh();
+        }
+
+        internal MeasureData CreateEmptyMeasure(int index, TimeSignature ts) {
+            List<MeasureGlobalMelody> staffs = new();
+            staffs.Add(new MeasureGlobalMelody(0)); //Toujours au moins une portée
+            //TODO : S'assurer d'jouter le bon nombre de portées
+            return new MeasureData(
+                index,
+                _currentSong.SongSettings,
+                ts,
+                new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major),
+                new ChordSequence(),
+                staffs,
+                ""
+            );
         }
     }
 }

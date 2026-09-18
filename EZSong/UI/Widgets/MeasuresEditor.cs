@@ -10,7 +10,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets {
-    public class MeasuresEditor : Box {
+    internal class MeasuresEditor : Box {
+
+        private GlobalSegmentEditor _globalSegmentEditor;
 
         private UserSettings _userSettings;
 
@@ -35,7 +37,10 @@ namespace EZSong.UI.Widgets {
             }
         }
 
-        public MeasuresEditor(UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth, Song currentSong, bool isPlaceHolder) {
+        public MeasuresEditor(GlobalSegmentEditor globalSegmentEditor, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth, Song currentSong, bool isPlaceHolder) {
+
+            _globalSegmentEditor = globalSegmentEditor;
+
             _userSettings = userSettings;
             _embeddedMidiSynth = embeddedMidiSynth;
             _isPlaceHolder = isPlaceHolder;
@@ -75,7 +80,7 @@ namespace EZSong.UI.Widgets {
                 if (measures[i] is null) {
                     return;
                 }
-                AddMeasure(measures[i]);
+                _globalSegmentEditor.AddMeasure(measures[i]);
             }
 
             ShowAll();
@@ -104,66 +109,7 @@ namespace EZSong.UI.Widgets {
             }
         }
 
-        public void AddMeasure(MeasureData measure) {
-
-            MeasureEditorWidget widget = new(measure, _userSettings, _embeddedMidiSynth);
-
-            widget.WidthRequest = 200; //TODO : Ajuster la largeur en fonction du nombre de portées et de la signature rythmique
-
-            widget.MeasureChanged += (MeasureData measure) => {
-                int index = _song.Segments[_segmentIndex].Measures.IndexOf(measure);
-            };
-
-            widget.InsertAfterRequested += (MeasureData measure) => {
-                InsertAfter(measure);
-            };
-
-            widget.InsertBeforeRequested += (MeasureData measure) => {
-                InsertBefore(measure);
-            };
-
-            widget.DeleteRequested += (MeasureData measure) => {
-                Delete(measure);
-            };
-
-            _measuresWidgetsBox.PackStart(widget, true, false, 0);
-        }
-
-        public void AppendBlankMeasures(int number) {
-            for (int i = 0; i < number; i++) {
-                MeasureData newMeasure = CreateEmptyMeasure(i, new TimeSignature());
-                _song.Segments[_segmentIndex].Measures.Insert(i, newMeasure);
-            }
-            Reindex();
-            Refresh();
-        }
-
-        private void InsertAfter(MeasureData measure) {
-            int index = _song.Segments[_segmentIndex].Measures.IndexOf(measure);
-            MeasureData newMeasure = CreateEmptyMeasure(index + 1, measure.TimeSignature);
-            _song.Segments[_segmentIndex].Measures.Insert(index + 1, newMeasure);
-            Reindex();
-            Refresh();
-        }
-
-        private void InsertBefore(MeasureData measure) {
-            int index = _song.Segments[_segmentIndex].Measures.IndexOf(measure);
-            MeasureData newMeasure = CreateEmptyMeasure(index, measure.TimeSignature);
-            _song.Segments[_segmentIndex].Measures.Insert(index, newMeasure);
-            Reindex();
-            Refresh();
-        }
-
-        private void Delete(MeasureData measure) {
-            if (_song.Segments[_segmentIndex].Measures.Count <= 1) {
-                return;
-            }
-            _ = _song.Segments[_segmentIndex].Measures.Remove(measure);
-            Reindex();
-            Refresh();
-        }
-
-        private void Reindex() {
+        internal void Reindex() {
 
             for (int i = 0; i < _song.Segments[_segmentIndex].Measures.Count; i++) {
                 _song.Segments[_segmentIndex].Measures[i].Index = i + 1;
@@ -182,21 +128,6 @@ namespace EZSong.UI.Widgets {
             }
         }
 
-        private MeasureData CreateEmptyMeasure(int index, TimeSignature ts) {
-            List<MeasureGlobalMelody> staffs = new();
-            staffs.Add(new MeasureGlobalMelody(0)); //Toujours au moins une portée
-            //TODO : S'assurer d'jouter le bon nombre de portées
-            return new MeasureData(
-                index,
-                _song.SongSettings,
-                ts,
-                new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major),
-                new ChordSequence(),
-                staffs,
-                ""
-            );
-        }
-
         public MelodyMeasureEditor? GetFocusedMelodyMeasureEditor() {
             foreach (MeasureEditorWidget measureEditor in _measuresWidgetsBox.Children) {
                 if (measureEditor.GlobalMelodyEditor.MelodyMeasureEditor.HasFocus) {
@@ -205,6 +136,10 @@ namespace EZSong.UI.Widgets {
             }
 
             return null;
+        }
+
+        internal void AddMeasure(MeasureEditorWidget widget) {
+            _measuresWidgetsBox.PackStart(widget, true, false, 0);
         }
     }
 }
