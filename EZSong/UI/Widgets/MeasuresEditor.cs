@@ -33,26 +33,27 @@ namespace EZSong.UI.Widgets {
                 return _isPlaceHolder;
             }
             internal set {
+                bool shouldReinitialize = _isPlaceHolder != value;
                 _isPlaceHolder = value;
+                if (shouldReinitialize) {
+                    Refresh();
+                }
             }
         }
 
         public MeasuresEditor(GlobalSegmentEditor globalSegmentEditor, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth, Song currentSong, bool isPlaceHolder) {
 
             _globalSegmentEditor = globalSegmentEditor;
-
             _userSettings = userSettings;
             _embeddedMidiSynth = embeddedMidiSynth;
             _isPlaceHolder = isPlaceHolder;
-
             _song = currentSong;
-
             _measuresWidgetsBox = new Box(Orientation.Horizontal, 0);
 
-            Refresh();
+            //Refresh();
         }
 
-        private void ResetContent() {
+        private void InitializeComponent() {
             Clear();
 
 
@@ -70,7 +71,7 @@ namespace EZSong.UI.Widgets {
 
         public void Refresh() {
 
-            ResetContent(); 
+            InitializeComponent();
 
             Reindex();
 
@@ -100,13 +101,24 @@ namespace EZSong.UI.Widgets {
         }
 
         public void Clear() {
-            foreach (Widget child in _measuresWidgetsBox.Children.ToArray()) {
-                if (child is MeasureEditorWidget measureEditor) {
-                    measureEditor.DisposeEditors();
-                    _measuresWidgetsBox.Remove(measureEditor);
-                    measureEditor.Dispose();
+
+            if (Children.Count() > 0 && Children[0] == _measuresWidgetsBox) {
+                foreach (Widget child in _measuresWidgetsBox.Children.ToArray()) {
+                    if (child is MeasureEditorWidget measureEditor) {
+                        measureEditor.DisposeEditors();
+                        _measuresWidgetsBox.Remove(measureEditor);
+                        measureEditor.Dispose();
+                    }
+                }
+
+            } else {
+                //Cas du placeholder
+                foreach (Widget child in Children.ToArray()) {
+                    Remove(child);
+                    child.Dispose();
                 }
             }
+
         }
 
         internal void Reindex() {

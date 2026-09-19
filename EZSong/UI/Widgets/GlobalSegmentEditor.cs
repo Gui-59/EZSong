@@ -42,6 +42,9 @@ namespace EZSong.UI.Widgets {
             _globalMeasuresEditor2 = new(this, currentSong, userSettings, embeddedMidiSynth, _displayedSegmentIndex, true);
             PackStart(_globalMeasuresEditor2, true, true, 0);
 
+            _globalMeasuresEditor1.Refresh(); // Appel différé, après que le champ du parent soit assigné
+            _globalMeasuresEditor2.Refresh(); // Appel différé, après que le champ du parent soit assigné
+
             ShowAll();
         }
 
@@ -60,8 +63,14 @@ namespace EZSong.UI.Widgets {
         }
 
         internal void RefreshDisplayedSegment() {
-            _globalMeasuresEditor1.RefreshDisplayedSegment(_displayedSegmentIndex);
-            _globalMeasuresEditor2.RefreshDisplayedSegment(_displayedSegmentIndex);
+
+            bool useSecondary = false;
+            if (_currentSong.SongSettings.StaffsSettings.Staffs.Count > 1) {
+                useSecondary = true;
+            }
+
+            _globalMeasuresEditor1.RefreshDisplayedSegment(_displayedSegmentIndex, false);
+            _globalMeasuresEditor2.RefreshDisplayedSegment(_displayedSegmentIndex, !useSecondary);
         }
 
         internal void ResetDisplayedStaffs() {
@@ -138,6 +147,10 @@ namespace EZSong.UI.Widgets {
                 staffs,
                 ""
             );
+        }
+
+        internal void UseSecondaryStaff() {
+            _globalMeasuresEditor2.IsPlaceHolder = false;
         }
     }
 }

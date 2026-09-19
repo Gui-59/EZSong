@@ -12,13 +12,27 @@ namespace EZSong.UI.Widgets {
         private GlobalMeasuresEditor _globalMeasuresEditor;
         private Song _currentSong;
 
+        private int _displayedStaffIndex;
         private Label _displayedStaffNumber;
         private Label _displayedStaffName;
         private bool _isPlaceHolder;
 
-        public MeasuresEditorHeader(GlobalMeasuresEditor globalMeasuresEditor, Song currentSong, bool isPlaceHolder) : base(Orientation.Vertical, 0) {
+        public MeasuresEditorHeader(GlobalMeasuresEditor globalMeasuresEditor, Song currentSong, int displayedStaffIndex,  bool isPlaceHolder) : base(Orientation.Vertical, 0) {
             _globalMeasuresEditor = globalMeasuresEditor;
             _currentSong = currentSong; 
+            _displayedStaffIndex = displayedStaffIndex;
+
+            _isPlaceHolder = isPlaceHolder;
+
+            _displayedStaffNumber = new Label("" + (displayedStaffIndex + 1));
+            _displayedStaffName = new Label("?");
+
+            InitializeComponent();
+        }
+
+        private void InitializeComponent() {
+
+            Clear();
 
             WidthRequest = 200;
             _displayedStaffNumber = new Label("?");
@@ -26,7 +40,7 @@ namespace EZSong.UI.Widgets {
             _displayedStaffName = new Label("?");
             _displayedStaffName.StyleContext.AddClass("infoLabel");
 
-            if (isPlaceHolder) {
+            if (_isPlaceHolder) {
                 Label placeholderLabel = new("Créez une deuxième portée pour la voir ici");
                 placeholderLabel.StyleContext.AddClass("titleLabel");
                 PackStart(placeholderLabel, false, false, 0);
@@ -61,9 +75,16 @@ namespace EZSong.UI.Widgets {
             Button gotToNextStaff = new();
             gotToNextStaff.Label = "🔻"; //TODO : icone à la place du texte
             gotToNextStaff.Clicked += (o, args) => {
-                _globalMeasuresEditor.GoToNextStaff(); 
+                _globalMeasuresEditor.GoToNextStaff();
             };
             PackStart(gotToNextStaff, false, false, 0);
+        }
+
+        private void Clear() {
+            foreach (Widget child in Children) {
+                Remove(child);
+            }
+
         }
 
         public bool IsPlaceHolder {
@@ -71,11 +92,18 @@ namespace EZSong.UI.Widgets {
                 return _isPlaceHolder;
             }
             internal set {
+                bool shouldReinitialize = _isPlaceHolder != value;
                 _isPlaceHolder = value;
+                if (shouldReinitialize) {
+                    InitializeComponent();
+                }
             }
         }
 
         internal void RefreshDisplayedStaff(int displayedStaffIndex) {
+
+           
+
             _displayedStaffNumber.Text = (displayedStaffIndex + 1).ToString();
             _displayedStaffName.Text = _currentSong.SongSettings.StaffsSettings.Staffs[displayedStaffIndex].Name;
         }

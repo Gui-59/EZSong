@@ -26,7 +26,15 @@ namespace EZSong.UI.Widgets {
 
         private int _displayedStaffIndex = 0;
 
-
+        public bool IsPlaceHolder {
+            get {
+                return _measuresEditorHeader.IsPlaceHolder || _measuresEditor.IsPlaceHolder;
+            }
+            internal set {
+                _measuresEditorHeader.IsPlaceHolder = value;
+                _measuresEditor.IsPlaceHolder = value;
+            }
+        }
 
         public GlobalMeasuresEditor(GlobalSegmentEditor globalSegmentEditor, Song currentSong, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth, int displayedSegmentIndex, bool isSecondary) {
 
@@ -43,15 +51,10 @@ namespace EZSong.UI.Widgets {
                 throw new Exception("Aucune portée définie, on ne peut pas afficher l'éditeur de mesures");
             }
             if (isSecondary) {
-                if (_currentSong.SongSettings.StaffsSettings.Staffs.Count() == 1) {
-                    _measuresEditorHeader = new(this, _currentSong, true);
-                    _measuresEditor = new MeasuresEditor(_globalSegmentEditor, userSettings, embeddedMidiSynth, _currentSong, true);
-                } else {
-                    _measuresEditorHeader = new(this, _currentSong, false);
-                    _measuresEditor = new MeasuresEditor(_globalSegmentEditor, userSettings, embeddedMidiSynth, _currentSong, false);
-                }
+                _measuresEditorHeader = new(this, _currentSong, _displayedStaffIndex, true);
+                _measuresEditor = new MeasuresEditor(_globalSegmentEditor, userSettings, embeddedMidiSynth, _currentSong, IsPlaceHolder);
             } else {
-                _measuresEditorHeader = new(this, _currentSong, false);
+                _measuresEditorHeader = new(this, _currentSong, _displayedStaffIndex, false);
                 _measuresEditor = new MeasuresEditor(_globalSegmentEditor, userSettings, embeddedMidiSynth, _currentSong, false);
             }
 
@@ -114,14 +117,14 @@ namespace EZSong.UI.Widgets {
             if (_isSecondary) {
 
                 if (_currentSong.SongSettings.StaffsSettings.Staffs.Count() < 2) {
-                    _measuresEditorHeader = new MeasuresEditorHeader(this, _currentSong, true); 
+                    _measuresEditorHeader = new MeasuresEditorHeader(this, _currentSong, _displayedStaffIndex, true); 
                     _measuresEditor = new MeasuresEditor(_globalSegmentEditor, _userSettings, _embeddedMidiSynth, _currentSong, true);
                 } else {
-                    _measuresEditorHeader = new MeasuresEditorHeader(this, _currentSong, false);
+                    _measuresEditorHeader = new MeasuresEditorHeader(this, _currentSong, _displayedStaffIndex, false);
                     _measuresEditor = new MeasuresEditor(_globalSegmentEditor, _userSettings, _embeddedMidiSynth, _currentSong, false);
                 }
             } else {
-                _measuresEditorHeader = new MeasuresEditorHeader(this, _currentSong, false);
+                _measuresEditorHeader = new MeasuresEditorHeader(this, _currentSong, _displayedStaffIndex, false);
                 _measuresEditor = new MeasuresEditor(_globalSegmentEditor, _userSettings, _embeddedMidiSynth, _currentSong, false);
             }
 
@@ -134,18 +137,13 @@ namespace EZSong.UI.Widgets {
         }
 
         internal void Refresh() {
-            if (_measuresEditor.IsPlaceHolder) {
-                return;
-            }
             _measuresEditorHeader.RefreshDisplayedStaff(_displayedStaffIndex);
             _measuresEditor.Refresh();
         }
 
-        internal void RefreshDisplayedSegment(int displayedSegmentIndex) {
+        internal void RefreshDisplayedSegment(int displayedSegmentIndex, bool isPlaceHolder) {
             _displayedSegmentIndex = displayedSegmentIndex;
-            if (_measuresEditor.IsPlaceHolder) {
-                return;
-            }
+            _measuresEditor.IsPlaceHolder = isPlaceHolder;
             _measuresEditor.RefreshDisplayedSegment(displayedSegmentIndex);
         }
 
