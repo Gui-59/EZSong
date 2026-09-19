@@ -15,6 +15,11 @@ namespace EZSong.UI.Widgets {
         private int _segmentIndex;
         private int _staffIndex;
         private MeasureData _measure;
+        internal MeasureData Measure {
+            get {
+                return _measure;
+            }
+        }
 
         public GlobalMelodyEditor GlobalMelodyEditor { 
             get; 
@@ -28,10 +33,13 @@ namespace EZSong.UI.Widgets {
 
         private SelectableValues _selectableValues = new();
 
-        public MeasureEditorWidget(MeasureData measure, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth) {
+        public MeasureEditorWidget(MeasureData measure, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth,
+            int segmentIndex,
+            int staffIndex
+        ) {
             _measure = measure;
-            _segmentIndex = 0;  
-            _staffIndex = 0; 
+            _segmentIndex = segmentIndex;
+            _staffIndex = staffIndex;
             GlobalMelodyEditor = new(_segmentIndex, _staffIndex, _measure, userSettings, embeddedMidiSynth);  
             BuildUI();
         }
@@ -203,6 +211,18 @@ namespace EZSong.UI.Widgets {
         internal void RefreshDisplayedStaff(int staffIndex) {
             _staffIndex = staffIndex;
             GlobalMelodyEditor.RefreshDisplayedStaff(staffIndex);
+        }
+
+        internal void RefreshFromModel() {
+            DisposeEditors();
+
+            foreach (Widget child in Children.ToArray()) {
+                Remove(child);
+                child.Dispose();
+            }
+
+            BuildUI();
+            ShowAll();
         }
     }
 }

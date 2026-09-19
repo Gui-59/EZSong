@@ -163,5 +163,16 @@ namespace EZSong.UI.Widgets {
 
             _measuresWidgetsBox.PackStart(widget, true, false, 0);
         }
+
+        internal void RefreshMeasure(MeasureData measure) {
+
+            foreach (MeasureEditorWidget widget in
+                     _measuresWidgetsBox.Children) {
+                if (ReferenceEquals(widget.Measure, measure)) {
+                    widget.RefreshFromModel();
+                    return;
+                }
+            }
+        }
     }
 }

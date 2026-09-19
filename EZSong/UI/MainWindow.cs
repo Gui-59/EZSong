@@ -288,7 +288,6 @@ namespace EZSong.UI {
             if (_currentSong.SongSettings.StaffsSettings.Staffs.Count > 1) {
                 _globalSegmentEditor.UseSecondaryStaff();
             }
-            _globalSegmentEditor.ShowLastStaff();
         }
 
         private void GoToFirstSegment() {

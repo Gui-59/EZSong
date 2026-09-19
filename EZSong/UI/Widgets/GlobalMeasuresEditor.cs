@@ -31,13 +31,13 @@ namespace EZSong.UI.Widgets {
                 return _measuresEditorHeader.IsPlaceHolder || _measuresEditor.IsPlaceHolder;
             }
             internal set {
-                bool shouldRefresh = IsPlaceHolder != value;
+                bool changed = IsPlaceHolder != value;
 
                 _measuresEditorHeader.IsPlaceHolder = value;
                 _measuresEditor.IsPlaceHolder = value;
 
-                if (shouldRefresh) {
-                    _measuresEditor.Refresh();
+                if (changed && !value) {
+                    RefreshDisplayedStaff();
                 }
             }
         }
@@ -164,7 +164,7 @@ namespace EZSong.UI.Widgets {
             _measuresEditor.IsPlaceHolder = isPlaceHolder;
             _measuresEditor.RefreshDisplayedSegment(displayedSegmentIndex);
             if (!isPlaceHolder) {
-                _measuresEditorHeader.RefreshDisplayedStaff(_displayedStaffIndex);
+                RefreshDisplayedStaff();
             }
         }
 
@@ -186,7 +186,7 @@ namespace EZSong.UI.Widgets {
         internal MeasureEditorWidget CreateMeasureEditorWidget(
     MeasureData measure) {
             MeasureEditorWidget widget =
-                new(measure, _userSettings, _embeddedMidiSynth);
+                new(measure, _userSettings, _embeddedMidiSynth, _displayedSegmentIndex, _displayedStaffIndex);
 
             widget.WidthRequest = 200;
             // TODO : Ajuster la largeur en fonction du nombre
@@ -194,10 +194,9 @@ namespace EZSong.UI.Widgets {
 
             widget.MeasureChanged += (MeasureData changedMeasure) =>
             {
-                _ = _currentSong
-                    .Segments[_displayedSegmentIndex]
-                    .Measures
-                    .IndexOf(changedMeasure);
+                _globalSegmentEditor.NotifyMeasureChanged(
+                    changedMeasure,
+                    this);
             };
 
             widget.InsertAfterRequested += (MeasureData requestedMeasure) =>
@@ -220,6 +219,14 @@ namespace EZSong.UI.Widgets {
 
         internal void Reindex() {
             _measuresEditor.Reindex();
+        }
+
+        internal void RefreshMeasure(MeasureData measure) {
+            if (IsPlaceHolder) {
+                return;
+            }
+
+            _measuresEditor.RefreshMeasure(measure);
         }
     }
 }

@@ -161,7 +161,17 @@ namespace EZSong.UI.Widgets {
         }
 
         internal void UseSecondaryStaff() {
+            _globalMeasuresEditor2.GoToLastStaff();
             _globalMeasuresEditor2.IsPlaceHolder = false;
+        }
+
+        internal void NotifyMeasureChanged(MeasureData measure, GlobalMeasuresEditor source) {
+            if (source != _globalMeasuresEditor1) {
+                _globalMeasuresEditor1.RefreshMeasure(measure);
+            }
+            if (source != _globalMeasuresEditor2) {
+                _globalMeasuresEditor2.RefreshMeasure(measure);
+            }
         }
     }
 }
