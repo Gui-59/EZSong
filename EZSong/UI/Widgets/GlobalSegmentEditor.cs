@@ -89,8 +89,8 @@ namespace EZSong.UI.Widgets {
 
         internal void AddMeasure(MeasureData measure) {
 
-            _globalMeasuresEditor1.AddMeasure(this, measure);
-            _globalMeasuresEditor2.AddMeasure(this, measure);
+            _globalMeasuresEditor1.AddMeasure(measure);
+            _globalMeasuresEditor2.AddMeasure(measure);
 
             
         }
@@ -136,13 +136,24 @@ namespace EZSong.UI.Widgets {
 
         internal MeasureData CreateEmptyMeasure(int index, TimeSignature ts) {
             List<MeasureGlobalMelody> staffs = new();
-            staffs.Add(new MeasureGlobalMelody(0)); //Toujours au moins une portée
-            //TODO : S'assurer d'jouter le bon nombre de portées
+
+            int staffCount =
+                _currentSong.SongSettings.StaffsSettings.Staffs.Count;
+
+            for (int staffIndex = 0;
+                 staffIndex < staffCount;
+                 staffIndex++) {
+                staffs.Add(new MeasureGlobalMelody(staffIndex));
+            }
+
             return new MeasureData(
                 index,
                 _currentSong.SongSettings,
                 ts,
-                new KeySignature(NoteStep.C, Alteration.neutral, SongMode.major),
+                new KeySignature(
+                    NoteStep.C,
+                    Alteration.neutral,
+                    SongMode.major),
                 new ChordSequence(),
                 staffs,
                 ""

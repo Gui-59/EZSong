@@ -44,6 +44,7 @@ namespace EZSong.UI.Widgets {
                 Label placeholderLabel = new("Créez une deuxième portée pour la voir ici");
                 placeholderLabel.StyleContext.AddClass("titleLabel");
                 PackStart(placeholderLabel, false, false, 0);
+                ShowAll();
                 return;
             }
 
@@ -78,6 +79,8 @@ namespace EZSong.UI.Widgets {
                 _globalMeasuresEditor.GoToNextStaff();
             };
             PackStart(gotToNextStaff, false, false, 0);
+
+            ShowAll();
         }
 
         private void Clear() {
@@ -102,7 +105,16 @@ namespace EZSong.UI.Widgets {
 
         internal void RefreshDisplayedStaff(int displayedStaffIndex) {
 
-           
+            if (_isPlaceHolder) {
+                return;
+            }
+
+            if (displayedStaffIndex < 0 ||
+                displayedStaffIndex >= _currentSong.SongSettings.StaffsSettings.Staffs.Count) {
+                return;
+            }
+
+            _displayedStaffIndex = displayedStaffIndex;
 
             _displayedStaffNumber.Text = (displayedStaffIndex + 1).ToString();
             _displayedStaffName.Text = _currentSong.SongSettings.StaffsSettings.Staffs[displayedStaffIndex].Name;

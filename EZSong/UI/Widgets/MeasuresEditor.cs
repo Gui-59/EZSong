@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     internal class MeasuresEditor : Box {
 
-        private GlobalSegmentEditor _globalSegmentEditor;
+        private GlobalMeasuresEditor _globalMeasuresEditor;
 
         private UserSettings _userSettings;
 
@@ -33,17 +33,13 @@ namespace EZSong.UI.Widgets {
                 return _isPlaceHolder;
             }
             internal set {
-                bool shouldReinitialize = _isPlaceHolder != value;
                 _isPlaceHolder = value;
-                if (shouldReinitialize) {
-                    Refresh();
-                }
             }
         }
 
-        public MeasuresEditor(GlobalSegmentEditor globalSegmentEditor, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth, Song currentSong, bool isPlaceHolder) {
+        public MeasuresEditor(GlobalMeasuresEditor globalMeasuresEditor, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth, Song currentSong, bool isPlaceHolder) {
 
-            _globalSegmentEditor = globalSegmentEditor;
+            _globalMeasuresEditor = globalMeasuresEditor;
             _userSettings = userSettings;
             _embeddedMidiSynth = embeddedMidiSynth;
             _isPlaceHolder = isPlaceHolder;
@@ -62,26 +58,34 @@ namespace EZSong.UI.Widgets {
                 placeholderLabel.StyleContext.AddClass("titleLabel");
                 Add(placeholderLabel);
             } else {
-
-                _measuresWidgetsBox = new Box(Orientation.Horizontal, 0);
                 Add(_measuresWidgetsBox);
             }
 
         }
 
         public void Refresh() {
-
             InitializeComponent();
+
+            if (_isPlaceHolder) {
+                ShowAll();
+                return;
+            }
 
             Reindex();
 
-            //On doit considérer ici uniquement le segment actif
-            List<MeasureData> measures = _song.Segments[_segmentIndex].Measures;
+            // On doit considérer ici uniquement le segment actif.
+            List<MeasureData> measures =
+                _song.Segments[_segmentIndex].Measures;
+
             for (int i = 0; i < measures.Count; i++) {
                 if (measures[i] is null) {
-                    return;
+                    continue;
                 }
-                _globalSegmentEditor.AddMeasure(measures[i]);
+
+                MeasureEditorWidget widget =
+                    _globalMeasuresEditor.CreateMeasureEditorWidget(measures[i]);
+
+                AddMeasure(widget);
             }
 
             ShowAll();
@@ -101,24 +105,23 @@ namespace EZSong.UI.Widgets {
         }
 
         public void Clear() {
-
-            if (Children.Count() > 0 && Children[0] == _measuresWidgetsBox) {
-                foreach (Widget child in _measuresWidgetsBox.Children.ToArray()) {
-                    if (child is MeasureEditorWidget measureEditor) {
-                        measureEditor.DisposeEditors();
-                        _measuresWidgetsBox.Remove(measureEditor);
-                        measureEditor.Dispose();
-                    }
+            foreach (Widget child in _measuresWidgetsBox.Children.ToArray()) {
+                if (child is MeasureEditorWidget measureEditor) {
+                    measureEditor.DisposeEditors();
                 }
 
-            } else {
-                //Cas du placeholder
-                foreach (Widget child in Children.ToArray()) {
-                    Remove(child);
-                    child.Dispose();
-                }
+                _measuresWidgetsBox.Remove(child);
+                child.Dispose();
             }
 
+            foreach (Widget child in Children.ToArray()) {
+                if (child == _measuresWidgetsBox) {
+                    continue;
+                }
+
+                Remove(child);
+                child.Dispose();
+            }
         }
 
         internal void Reindex() {
@@ -151,6 +154,13 @@ namespace EZSong.UI.Widgets {
         }
 
         internal void AddMeasure(MeasureEditorWidget widget) {
+
+            if (_isPlaceHolder) { //Ce garde-fou évite de construire des widgets dans un conteneur qui n'est pas affiché.
+                widget.DisposeEditors();
+                widget.Dispose();
+                return;
+            }
+
             _measuresWidgetsBox.PackStart(widget, true, false, 0);
         }
     }

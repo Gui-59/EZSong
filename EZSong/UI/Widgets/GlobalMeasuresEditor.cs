@@ -31,8 +31,14 @@ namespace EZSong.UI.Widgets {
                 return _measuresEditorHeader.IsPlaceHolder || _measuresEditor.IsPlaceHolder;
             }
             internal set {
+                bool shouldRefresh = IsPlaceHolder != value;
+
                 _measuresEditorHeader.IsPlaceHolder = value;
                 _measuresEditor.IsPlaceHolder = value;
+
+                if (shouldRefresh) {
+                    _measuresEditor.Refresh();
+                }
             }
         }
 
@@ -44,6 +50,10 @@ namespace EZSong.UI.Widgets {
             _userSettings = userSettings;
             _embeddedMidiSynth = embeddedMidiSynth;
             _displayedSegmentIndex = displayedSegmentIndex;
+            _displayedStaffIndex =
+                isSecondary
+                    ? _currentSong.SongSettings.StaffsSettings.Staffs.Count - 1
+                    : 0;
             _isSecondary = isSecondary;
 
             if (_currentSong.SongSettings.StaffsSettings.Staffs.Count() == 0) {
@@ -52,10 +62,10 @@ namespace EZSong.UI.Widgets {
             }
             if (isSecondary) {
                 _measuresEditorHeader = new(this, _currentSong, _displayedStaffIndex, true);
-                _measuresEditor = new MeasuresEditor(_globalSegmentEditor, userSettings, embeddedMidiSynth, _currentSong, IsPlaceHolder);
+                _measuresEditor = new MeasuresEditor(this, userSettings, embeddedMidiSynth, _currentSong, IsPlaceHolder);
             } else {
                 _measuresEditorHeader = new(this, _currentSong, _displayedStaffIndex, false);
-                _measuresEditor = new MeasuresEditor(_globalSegmentEditor, userSettings, embeddedMidiSynth, _currentSong, false);
+                _measuresEditor = new MeasuresEditor(this, userSettings, embeddedMidiSynth, _currentSong, false);
             }
 
             ScrolledWindow scrolled = new();
@@ -109,6 +119,11 @@ namespace EZSong.UI.Widgets {
         internal void SetSong(Song currentSong) {
             _currentSong = currentSong;
 
+            _displayedStaffIndex =
+               _isSecondary
+                   ? _currentSong.SongSettings.StaffsSettings.Staffs.Count - 1
+                   : 0;
+
             Clear();
 
             if (_currentSong.SongSettings.StaffsSettings.Staffs.Count() == 0) {
@@ -118,14 +133,14 @@ namespace EZSong.UI.Widgets {
 
                 if (_currentSong.SongSettings.StaffsSettings.Staffs.Count() < 2) {
                     _measuresEditorHeader = new MeasuresEditorHeader(this, _currentSong, _displayedStaffIndex, true); 
-                    _measuresEditor = new MeasuresEditor(_globalSegmentEditor, _userSettings, _embeddedMidiSynth, _currentSong, true);
+                    _measuresEditor = new MeasuresEditor(this, _userSettings, _embeddedMidiSynth, _currentSong, true);
                 } else {
                     _measuresEditorHeader = new MeasuresEditorHeader(this, _currentSong, _displayedStaffIndex, false);
-                    _measuresEditor = new MeasuresEditor(_globalSegmentEditor, _userSettings, _embeddedMidiSynth, _currentSong, false);
+                    _measuresEditor = new MeasuresEditor(this, _userSettings, _embeddedMidiSynth, _currentSong, false);
                 }
             } else {
                 _measuresEditorHeader = new MeasuresEditorHeader(this, _currentSong, _displayedStaffIndex, false);
-                _measuresEditor = new MeasuresEditor(_globalSegmentEditor, _userSettings, _embeddedMidiSynth, _currentSong, false);
+                _measuresEditor = new MeasuresEditor(this, _userSettings, _embeddedMidiSynth, _currentSong, false);
             }
 
             ScrolledWindow scrolled = new();
@@ -137,14 +152,20 @@ namespace EZSong.UI.Widgets {
         }
 
         internal void Refresh() {
-            _measuresEditorHeader.RefreshDisplayedStaff(_displayedStaffIndex);
+            if (!IsPlaceHolder) {
+                _measuresEditorHeader.RefreshDisplayedStaff(_displayedStaffIndex);
+            }
             _measuresEditor.Refresh();
         }
 
         internal void RefreshDisplayedSegment(int displayedSegmentIndex, bool isPlaceHolder) {
             _displayedSegmentIndex = displayedSegmentIndex;
+            _measuresEditorHeader.IsPlaceHolder = isPlaceHolder;
             _measuresEditor.IsPlaceHolder = isPlaceHolder;
             _measuresEditor.RefreshDisplayedSegment(displayedSegmentIndex);
+            if (!isPlaceHolder) {
+                _measuresEditorHeader.RefreshDisplayedStaff(_displayedStaffIndex);
+            }
         }
 
         internal MelodyMeasureEditor? GetFocusedMelodyMeasureEditor() {
@@ -154,28 +175,47 @@ namespace EZSong.UI.Widgets {
             return _measuresEditor.GetFocusedMelodyMeasureEditor();
         }
 
-        internal void AddMeasure(GlobalSegmentEditor globalSegmentEditor , MeasureData measure) {
-            MeasureEditorWidget widget = new(measure, _userSettings, _embeddedMidiSynth);
+        internal void AddMeasure(MeasureData measure) {
+            if (IsPlaceHolder) {
+                return;
+            }
 
-            widget.WidthRequest = 200; //TODO : Ajuster la largeur en fonction du nombre de portées et de la signature rythmique
+            _measuresEditor.AddMeasure(CreateMeasureEditorWidget(measure));
+        }
 
-            widget.MeasureChanged += (MeasureData measure) => {
-                int index = _currentSong.Segments[_displayedSegmentIndex].Measures.IndexOf(measure);
+        internal MeasureEditorWidget CreateMeasureEditorWidget(
+    MeasureData measure) {
+            MeasureEditorWidget widget =
+                new(measure, _userSettings, _embeddedMidiSynth);
+
+            widget.WidthRequest = 200;
+            // TODO : Ajuster la largeur en fonction du nombre
+            // de portées et de la signature rythmique.
+
+            widget.MeasureChanged += (MeasureData changedMeasure) =>
+            {
+                _ = _currentSong
+                    .Segments[_displayedSegmentIndex]
+                    .Measures
+                    .IndexOf(changedMeasure);
             };
 
-            widget.InsertAfterRequested += (MeasureData measure) => {
-                globalSegmentEditor.InsertAfter(measure);
+            widget.InsertAfterRequested += (MeasureData requestedMeasure) =>
+            {
+                _globalSegmentEditor.InsertAfter(requestedMeasure);
             };
 
-            widget.InsertBeforeRequested += (MeasureData measure) => {
-                globalSegmentEditor.InsertBefore(measure);
+            widget.InsertBeforeRequested += (MeasureData requestedMeasure) =>
+            {
+                _globalSegmentEditor.InsertBefore(requestedMeasure);
             };
 
-            widget.DeleteRequested += (MeasureData measure) => {
-                globalSegmentEditor.Delete(measure);
+            widget.DeleteRequested += (MeasureData requestedMeasure) =>
+            {
+                _globalSegmentEditor.Delete(requestedMeasure);
             };
 
-            _measuresEditor.AddMeasure(widget);
+            return widget;
         }
 
         internal void Reindex() {
