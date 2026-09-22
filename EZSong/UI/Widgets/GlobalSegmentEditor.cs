@@ -173,5 +173,19 @@ namespace EZSong.UI.Widgets {
                 _globalMeasuresEditor2.RefreshMeasure(measure);
             }
         }
+
+        internal void NotifyStaffChanged(MeasureData measure, int staffIndex, GlobalMeasuresEditor source) {
+            if (source != _globalMeasuresEditor1) {
+                _globalMeasuresEditor1.RefreshMeasureStaff(
+                    measure,
+                    staffIndex);
+            }
+
+            if (source != _globalMeasuresEditor2) {
+                _globalMeasuresEditor2.RefreshMeasureStaff(
+                    measure,
+                    staffIndex);
+            }
+        }
     }
 }

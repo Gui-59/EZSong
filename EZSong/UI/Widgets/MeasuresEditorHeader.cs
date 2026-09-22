@@ -86,6 +86,7 @@ namespace EZSong.UI.Widgets {
         private void Clear() {
             foreach (Widget child in Children) {
                 Remove(child);
+                child.Dispose();
             }
 
         }

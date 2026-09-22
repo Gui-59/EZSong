@@ -340,13 +340,15 @@ namespace EZSong.UI.Widgets {
         }
 
         // PUBLIC API: load external model into widget
-        public void LoadFromModel(int staffIndex, MeasureData measureData) {
+        public void LoadFromModel(int staffIndex, MeasureData measureData, bool notify = true) {
             _staffIndex = staffIndex;
             _measureData = measureData;
             _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.Staffs[staffIndex].Melody.ToWidgetMelodyChords();
             _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, 0));
             QueueDraw();
-            ContentChanged?.Invoke(this, EventArgs.Empty);
+            if (notify) {
+                ContentChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         private WidgetMelodyChord DeepCopyChord(WidgetMelodyChord s) {

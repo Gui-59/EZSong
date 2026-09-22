@@ -91,5 +91,17 @@ namespace EZSong.UI.Widgets {
             MelodyMeasureEditor.RefreshDisplayedStaff(displayedStaffIndex);
             _rhythmEditor.RefreshDisplayedStaff(displayedStaffIndex);
         }
+
+        internal void RefreshFromModel(MeasureData measureData) {
+            MelodyMeasureEditor.LoadFromModel(
+                _staffIndex,
+                measureData,
+                false);
+
+            _rhythmEditor.LoadFromModel(measureData);
+
+            MelodyMeasureEditor.QueueDraw();
+            _rhythmEditor.QueueDraw();
+        }
     }
 }

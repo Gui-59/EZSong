@@ -61,6 +61,8 @@ namespace EZSong.UI.Widgets {
                 Add(_measuresWidgetsBox);
             }
 
+            ShowAll();
+
         }
 
         public void Refresh() {
@@ -105,6 +107,8 @@ namespace EZSong.UI.Widgets {
         }
 
         public void Clear() {
+            // Supprime les widgets de mesures contenus dans le box,
+            // mais conserve le box lui-même pour le réutiliser.
             foreach (Widget child in _measuresWidgetsBox.Children.ToArray()) {
                 if (child is MeasureEditorWidget measureEditor) {
                     measureEditor.DisposeEditors();
@@ -114,13 +118,15 @@ namespace EZSong.UI.Widgets {
                 child.Dispose();
             }
 
+            // Supprime tous les enfants directs de MeasuresEditor.
+            // Le _measuresWidgetsBox est conservé en mémoire, mais retiré
+            // du parent comme les autres widgets.
             foreach (Widget child in Children.ToArray()) {
-                if (child == _measuresWidgetsBox) {
-                    continue;
-                }
-
                 Remove(child);
-                child.Dispose();
+
+                if (child != _measuresWidgetsBox) {
+                    child.Dispose();
+                }
             }
         }
 
@@ -165,11 +171,20 @@ namespace EZSong.UI.Widgets {
         }
 
         internal void RefreshMeasure(MeasureData measure) {
-
             foreach (MeasureEditorWidget widget in
                      _measuresWidgetsBox.Children) {
                 if (ReferenceEquals(widget.Measure, measure)) {
-                    widget.RefreshFromModel();
+                    widget.RefreshSharedFromModel();
+                    return;
+                }
+            }
+        }
+
+        internal void RefreshMeasureStaff(MeasureData measure) {
+            foreach (MeasureEditorWidget widget in
+                     _measuresWidgetsBox.Children) {
+                if (ReferenceEquals(widget.Measure, measure)) {
+                    widget.RefreshStaffFromModel();
                     return;
                 }
             }

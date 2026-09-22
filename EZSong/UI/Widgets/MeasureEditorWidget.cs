@@ -12,6 +12,12 @@ using System.Threading.Tasks;
 namespace EZSong.UI.Widgets {
     public class MeasureEditorWidget : Frame {
 
+        private ComboBoxText _keyCombo;
+        private ComboBoxText _upperTimeSigCombo;
+        private ComboBoxText _lowerTimeSigCombo;
+        private MeasureChordsEditor _measureChordsEditor;
+        private Entry _lyricsEntry;
+
         private int _segmentIndex;
         private int _staffIndex;
         private MeasureData _measure;
@@ -27,6 +33,9 @@ namespace EZSong.UI.Widgets {
         }
 
         public event System.Action<MeasureData>? MeasureChanged;
+
+        public event System.Action<MeasureData, int>? StaffChanged;
+
         public event System.Action<MeasureData>? InsertBeforeRequested;
         public event System.Action<MeasureData>? InsertAfterRequested;
         public event System.Action<MeasureData>? DeleteRequested;
@@ -40,7 +49,16 @@ namespace EZSong.UI.Widgets {
             _measure = measure;
             _segmentIndex = segmentIndex;
             _staffIndex = staffIndex;
-            GlobalMelodyEditor = new(_segmentIndex, _staffIndex, _measure, userSettings, embeddedMidiSynth);  
+            GlobalMelodyEditor = new(_segmentIndex, _staffIndex, _measure, userSettings, embeddedMidiSynth);
+            _keyCombo = new();
+            _upperTimeSigCombo = new();
+            _lowerTimeSigCombo = new();
+            _measureChordsEditor = new();
+            _lyricsEntry = new() {
+                Text = _measure.Lyrics ?? "",
+                WidthChars = 24,
+                PlaceholderText = "Paroles (séparées par espaces)"
+            };
             BuildUI();
         }
 
@@ -103,95 +121,92 @@ namespace EZSong.UI.Widgets {
             };
 
             // Tonalité (ComboBoxText)
-            ComboBoxText keyCombo = new();
+            
             foreach (string k in _selectableValues.Tonalities.Keys) {
-                keyCombo.Append(k, _selectableValues.Tonalities[k]);
+                _keyCombo.Append(k, _selectableValues.Tonalities[k]);
             }
-            keyCombo.ActiveId = _measure.KeySignature.ToDropDownId() != "" ? _measure.KeySignature.ToDropDownId() : _selectableValues.DefaultKeySignature.ToDropDownId();
-            keyCombo.Changed += (o, args) => {
-                if (!string.IsNullOrEmpty(keyCombo.ActiveId) && _selectableValues.Tonalities.ContainsKey(keyCombo.ActiveId)) {
-                    _measure.KeySignature = new(keyCombo.ActiveId);
+            _keyCombo.ActiveId = _measure.KeySignature.ToDropDownId() != "" ? _measure.KeySignature.ToDropDownId() : _selectableValues.DefaultKeySignature.ToDropDownId();
+            _keyCombo.Changed += (o, args) => {
+                if (!string.IsNullOrEmpty(_keyCombo.ActiveId) && _selectableValues.Tonalities.ContainsKey(_keyCombo.ActiveId)) {
+                    _measure.KeySignature = new(_keyCombo.ActiveId);
                 }
                 MeasureChanged?.Invoke(_measure);
             };
-            mesureSetupBar.PackStart(keyCombo, false, false, 0);
+            mesureSetupBar.PackStart(_keyCombo, false, false, 0);
 
             // Signature temporelle : Upper (ComboBoxText)
-            ComboBoxText upperTimeSigCombo = new();
+            
             foreach (int upper in _selectableValues.UpperTimeSigs) {
-                upperTimeSigCombo.Append(upper.ToString(), upper.ToString());
+                _upperTimeSigCombo.Append(upper.ToString(), upper.ToString());
             }
             int tsuIndex = Array.IndexOf(_selectableValues.UpperTimeSigs, _measure.TimeSignature.Beats);
-            upperTimeSigCombo.Active = tsuIndex >= 0 ? tsuIndex : Array.IndexOf(_selectableValues.UpperTimeSigs, _selectableValues.DefaultUpperTimeSig);
+            _upperTimeSigCombo.Active = tsuIndex >= 0 ? tsuIndex : Array.IndexOf(_selectableValues.UpperTimeSigs, _selectableValues.DefaultUpperTimeSig);
 
-            upperTimeSigCombo.Changed += (o, args) => {
-                if (!string.IsNullOrEmpty(upperTimeSigCombo.ActiveId)) {
-                    _measure.TimeSignature.Beats = Int32.Parse(upperTimeSigCombo.ActiveId);
+            _upperTimeSigCombo.Changed += (o, args) => {
+                if (!string.IsNullOrEmpty(_upperTimeSigCombo.ActiveId)) {
+                    _measure.TimeSignature.Beats = Int32.Parse(_upperTimeSigCombo.ActiveId);
 
                     //Mise à jour de la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
                     GlobalMelodyEditor.UpdateTimeSignature(_measure.TimeSignature);
                 }
                 MeasureChanged?.Invoke(_measure);
             };
-            mesureSetupBar.PackStart(upperTimeSigCombo, false, false, 0);
+            mesureSetupBar.PackStart(_upperTimeSigCombo, false, false, 0);
 
             mesureSetupBar.PackStart(new Label("|") { Xalign = 0f }, false, false, 0);
 
             
 
             // Signature temporelle : Lower (ComboBoxText)
-            ComboBoxText lowerTimeSigCombo = new();
+            
             foreach (int lower in _selectableValues.LowerTimeSigs) {
-                lowerTimeSigCombo.Append(lower.ToString(), lower.ToString());
+                _lowerTimeSigCombo.Append(lower.ToString(), lower.ToString());
             }
             int tslIndex = Array.IndexOf(_selectableValues.LowerTimeSigs, _measure.TimeSignature.BeatUnit);
-            lowerTimeSigCombo.Active = tslIndex >= 0 ? tslIndex : Array.IndexOf(_selectableValues.LowerTimeSigs, _selectableValues.DefaultLowerTimeSig);
+            _lowerTimeSigCombo.Active = tslIndex >= 0 ? tslIndex : Array.IndexOf(_selectableValues.LowerTimeSigs, _selectableValues.DefaultLowerTimeSig);
 
-            lowerTimeSigCombo.Changed += (o, args) => {
-                if (!string.IsNullOrEmpty(lowerTimeSigCombo.ActiveId)) {
-                    _measure.TimeSignature.BeatUnit = Int32.Parse(lowerTimeSigCombo.ActiveId);
+            _lowerTimeSigCombo.Changed += (o, args) => {
+                if (!string.IsNullOrEmpty(_lowerTimeSigCombo.ActiveId)) {
+                    _measure.TimeSignature.BeatUnit = Int32.Parse(_lowerTimeSigCombo.ActiveId);
                     //Mise à jour de la signature temporelle de l'éditeur de cadence pour qu'il puisse recalculer la grille de temps
                     GlobalMelodyEditor.UpdateTimeSignature(_measure.TimeSignature);
                 }
                 MeasureChanged?.Invoke(_measure);
             };
-            mesureSetupBar.PackStart(lowerTimeSigCombo, false, false, 0);
+            mesureSetupBar.PackStart(_lowerTimeSigCombo, false, false, 0);
 
             mesureSetupBar.PackStart(new Label("000 bpm") { Xalign = 0f }, false, false, 0); //TODO : indiquer la vraie valeur de BPM
 
             row.PackStart(mesureSetupBar, false, false, 0);
 
             // Accords
-            MeasureChordsEditor measureChordsEditor = new();
-            measureChordsEditor.LoadFromModel(_measure);
-            measureChordsEditor.ChordsChanged += (ChordSequence) => {
+            
+            _measureChordsEditor.LoadFromModel(_measure);
+            _measureChordsEditor.ChordsChanged += (ChordSequence) => {
                 _measure.ChordSequence = ChordSequence;
                 MeasureChanged?.Invoke(_measure);
             };
-            row.PackStart(measureChordsEditor, false, false, 0);
+            row.PackStart(_measureChordsEditor, false, false, 0);
 
             // Paroles (une saisie texte ; mots/syllabes séparés par espaces)
-            Entry lyricsEntry = new() {
-                Text = _measure.Lyrics ?? "",
-                WidthChars = 24,
-                PlaceholderText = "Paroles (séparées par espaces)"
-            };
-            lyricsEntry.Changed += (o, args) => {
-                _measure.Lyrics = lyricsEntry.Text;
+            
+            _lyricsEntry.Changed += (o, args) => {
+                _measure.Lyrics = _lyricsEntry.Text;
                 MeasureChanged?.Invoke(_measure);
             };
-            row.PackStart(lyricsEntry, false, false, 0);
+            row.PackStart(_lyricsEntry, false, false, 0);
 
 
             //Mélodie (éditeur de mélodie global [notes + rythme])
             GlobalMelodyEditor.MelodyChanged += (staffIndex, melody) => {
                 _measure.Staffs[staffIndex].Melody = melody;
 
-                MeasureChanged?.Invoke(_measure);
+                StaffChanged?.Invoke(_measure, staffIndex);
             };
             GlobalMelodyEditor.PatternChanged += (staffIndex, pattern) => {
                 _measure.Staffs[staffIndex].Pattern = pattern;
-                MeasureChanged?.Invoke(_measure);
+
+                StaffChanged?.Invoke(_measure, staffIndex);
             };
             row.PackStart(GlobalMelodyEditor, false, false, 0);
 
@@ -213,16 +228,44 @@ namespace EZSong.UI.Widgets {
             GlobalMelodyEditor.RefreshDisplayedStaff(staffIndex);
         }
 
-        internal void RefreshFromModel() {
-            DisposeEditors();
+        internal void RefreshSharedFromModel() {
+            _keyCombo.ActiveId =
+                _measure.KeySignature.ToDropDownId();
 
-            foreach (Widget child in Children.ToArray()) {
-                Remove(child);
-                child.Dispose();
-            }
+            int upperIndex =
+                Array.IndexOf(
+                    _selectableValues.UpperTimeSigs,
+                    _measure.TimeSignature.Beats);
 
-            BuildUI();
-            ShowAll();
+            _upperTimeSigCombo.Active =
+                upperIndex >= 0
+                    ? upperIndex
+                    : Array.IndexOf(
+                        _selectableValues.UpperTimeSigs,
+                        _selectableValues.DefaultUpperTimeSig);
+
+            int lowerIndex =
+                Array.IndexOf(
+                    _selectableValues.LowerTimeSigs,
+                    _measure.TimeSignature.BeatUnit);
+
+            _lowerTimeSigCombo.Active =
+                lowerIndex >= 0
+                    ? lowerIndex
+                    : Array.IndexOf(
+                        _selectableValues.LowerTimeSigs,
+                        _selectableValues.DefaultLowerTimeSig);
+
+            _measureChordsEditor.LoadFromModel(_measure);
+
+            _lyricsEntry.Text = _measure.Lyrics ?? "";
+
+            GlobalMelodyEditor.UpdateTimeSignature(
+                _measure.TimeSignature);
+        }
+
+        internal void RefreshStaffFromModel() {
+            GlobalMelodyEditor.RefreshFromModel(_measure);
         }
     }
 }

@@ -25,6 +25,11 @@ namespace EZSong.UI.Widgets {
         private MeasuresEditor _measuresEditor;
 
         private int _displayedStaffIndex = 0;
+        internal int DisplayedStaffIndex {
+            get {
+                return _displayedStaffIndex;
+            }
+        }
 
         public bool IsPlaceHolder {
             get {
@@ -37,6 +42,11 @@ namespace EZSong.UI.Widgets {
                 _measuresEditor.IsPlaceHolder = value;
 
                 if (changed && !value) {
+                    // Le changement d'état doit reconstruire le contenu,
+                    // sinon le placeholder reste affiché.
+                    _measuresEditor.Refresh();
+
+                    // Applique ensuite l'index de portée au header et aux widgets.
                     RefreshDisplayedStaff();
                 }
             }
@@ -199,6 +209,14 @@ namespace EZSong.UI.Widgets {
                     this);
             };
 
+            widget.StaffChanged += (MeasureData changedMeasure, int staffIndex) =>
+            {
+                _globalSegmentEditor.NotifyStaffChanged(
+                    changedMeasure,
+                    staffIndex,
+                    this);
+            };
+
             widget.InsertAfterRequested += (MeasureData requestedMeasure) =>
             {
                 _globalSegmentEditor.InsertAfter(requestedMeasure);
@@ -227,6 +245,18 @@ namespace EZSong.UI.Widgets {
             }
 
             _measuresEditor.RefreshMeasure(measure);
+        }
+
+        internal void RefreshMeasureStaff(MeasureData measure, int staffIndex) {
+            if (IsPlaceHolder) {
+                return;
+            }
+
+            if (_displayedStaffIndex != staffIndex) {
+                return;
+            }
+
+            _measuresEditor.RefreshMeasureStaff(measure);
         }
     }
 }
