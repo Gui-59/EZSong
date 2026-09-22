@@ -65,9 +65,16 @@ namespace EZSong.Model {
 
         public static SegmentData FromDto(SegmentDataDto dto, SongSettings songSettings) {
 
+            int expectedStaffCount = songSettings.StaffsSettings.Staffs.Count;
+
             List<MeasureData> measures = new();
-            foreach (MeasureDataDto measure in dto.MeasureData) {
-                measures.Add(MeasureData.FromDto(measure, songSettings));
+            foreach (MeasureDataDto measureDto in dto.MeasureData) {
+
+                MeasureData measure = MeasureData.FromDto(measureDto, songSettings);
+
+                measure.AddOrRemoveStaffs(expectedStaffCount);
+
+                measures.Add(measure);
             }
 
             SegmentData segment =

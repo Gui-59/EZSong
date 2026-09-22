@@ -64,6 +64,8 @@ namespace EZSong.UI.Widgets {
 
         internal void RefreshDisplayedSegment() {
 
+            EnsureDisplayedSegmentStaffs();
+
             bool useSecondary = false;
             if (_currentSong.SongSettings.StaffsSettings.Staffs.Count > 1) {
                 useSecondary = true;
@@ -186,6 +188,16 @@ namespace EZSong.UI.Widgets {
                     measure,
                     staffIndex);
             }
+        }
+
+        private void EnsureDisplayedSegmentStaffs() {
+            int expectedStaffCount =
+                _currentSong.SongSettings.StaffsSettings.Staffs.Count;
+
+            SegmentData segment =
+                _currentSong.Segments[_displayedSegmentIndex];
+
+            segment.AddOrRemoveMesuresStaffs(expectedStaffCount);
         }
     }
 }

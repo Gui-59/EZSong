@@ -341,10 +341,23 @@ namespace EZSong.UI.Widgets {
 
         // PUBLIC API: load external model into widget
         public void LoadFromModel(int staffIndex, MeasureData measureData, bool notify = true) {
+
+            if (measureData == null) {
+                throw new ArgumentNullException(nameof(measureData));
+            }
+
+            if (staffIndex < 0 ||
+                staffIndex >= measureData.Staffs.Count) {
+                throw new InvalidOperationException(
+                    $"Impossible d'afficher la portée d'index {staffIndex} " +
+                    $"dans la mesure {measureData.Index} : " +
+                    $"la mesure ne contient que {measureData.Staffs.Count} portée(s).");
+            }
+
             _staffIndex = staffIndex;
             _measureData = measureData;
             _widgetMelodyChords = (List<WidgetMelodyChord>)measureData.Staffs[staffIndex].Melody.ToWidgetMelodyChords();
-            _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, 0));
+            _cursorIndex = 0;
             QueueDraw();
             if (notify) {
                 ContentChanged?.Invoke(this, EventArgs.Empty);
@@ -609,7 +622,7 @@ namespace EZSong.UI.Widgets {
         internal void RefreshDisplayedStaff(int displayedStaffIndex) {
             _staffIndex = displayedStaffIndex;
             _widgetMelodyChords = (List<WidgetMelodyChord>)_measureData.Staffs[_staffIndex].Melody.ToWidgetMelodyChords();
-            _cursorIndex = Math.Max(0, Math.Min(_widgetMelodyChords.Count, 0));
+            _cursorIndex = 0;
             QueueDraw();
         }
     }
