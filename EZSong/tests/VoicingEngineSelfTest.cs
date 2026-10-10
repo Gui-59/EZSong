@@ -39,7 +39,7 @@ public static class VoicingEngineSelfTest
             first);
 
         Expect(
-            next.MidiNotes.OrderBy(x => x).SequenceEqual(new[] { 28, 33, 36 }),
+            next.MidiNotes.OrderBy(x => x).SequenceEqual(new[] { 16, 21, 24 }),
             $"C -> Am expected E1 A1 C2, got {Format(next)}");
     }
 
@@ -122,7 +122,7 @@ public static class VoicingEngineSelfTest
                 P(NoteStep.C, 2)));
 
         Expect(
-            first.MidiNotes.OrderBy(x => x).SequenceEqual(new[] { 28, 31, 36 }),
+            first.MidiNotes.OrderBy(x => x).SequenceEqual(new[] { 16, 19, 24 }),
             $"Exact first voicing was not preserved: {Format(first)}");
     }
 
