@@ -1,4 +1,4 @@
-﻿using EZSong.Enums;
+using EZSong.Enums;
 
 namespace EZSong.Model {
 
@@ -35,6 +35,16 @@ namespace EZSong.Model {
             get; 
             set; 
         }
+
+        public NoteStep? BassNote {
+            get;
+            set;
+        }
+
+        public Alteration BassNoteAlteration {
+            get;
+            set;
+        }
         
         //Constructeur vide (requis pour la sérialisation JSON)
         public ChordDto() {
@@ -44,13 +54,17 @@ namespace EZSong.Model {
                 RhythmRationalDuration duration,
                 NoteStep rootNote,
                 Alteration rootNoteAlteration,
-                ChordType chordType
+                ChordType chordType,
+                NoteStep? bassNote = null,
+                Alteration bassNoteAlteration = Alteration.neutral
         ) {
             IsSilentChord = isSilentChord; 
             Duration = duration;
             RootNote = rootNote;
             RootNoteAlteration = rootNoteAlteration;
             ChordType = chordType;
+            BassNote = bassNote;
+            BassNoteAlteration = bassNoteAlteration;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using EZSong.Enums;
+using EZSong.Enums;
 using EZSong.EnumsStringifier;
 using EZSong.Exporting.Lilypond;
 using System;
@@ -56,6 +56,20 @@ namespace EZSong.Model {
             set;
         }
 
+        /// <summary>
+        /// Optional bass note for slash chords. This does not alter the chord
+        /// tones; it only constrains the lowest note of a voicing.
+        /// </summary>
+        public NoteStep? BassNote {
+            get;
+            set;
+        }
+
+        public Alteration BassNoteAlteration {
+            get;
+            set;
+        }
+
         //Constructeur vide (requis pour la (dé)sérialisation JSON)
         public Chord() {
             IsSilentChord = false;
@@ -64,6 +78,8 @@ namespace EZSong.Model {
             //TODO (par défaut on met la durée d'une noire non pointée)
             Duration = new(1, 4, 0); 
             ChordType = ChordType.NoneOrMajor;
+            BassNote = null;
+            BassNoteAlteration = Alteration.neutral;
         }
 
         public Chord(
@@ -71,13 +87,17 @@ namespace EZSong.Model {
             RhythmRationalDuration duration, 
             NoteStep rootNote, 
             Alteration rootNoteAlteration,
-            ChordType chordType
+            ChordType chordType,
+            NoteStep? bassNote = null,
+            Alteration bassNoteAlteration = Alteration.neutral
         ) {
             IsSilentChord = isSilentChord;
             Duration = duration;    
             RootNote = rootNote;    
             RootNoteAlteration = rootNoteAlteration;    
             ChordType = chordType;
+            BassNote = bassNote;
+            BassNoteAlteration = bassNoteAlteration;
         }
 
         public string ToLilyPondString() {
@@ -195,7 +215,12 @@ namespace EZSong.Model {
 
             }
 
-            return lilyPondString.Trim(':');
+            lilyPondString = lilyPondString.Trim(':');
+            if (BassNote is not null) {
+                lilyPondString += "/" + _lilypondConverter.NoteStepToLilyPondString(BassNote.Value);
+                lilyPondString += _lilypondConverter.AlterationToLilyPondString(BassNoteAlteration);
+            }
+            return lilyPondString;
         }
 
         public string ToHumanString() {
@@ -209,6 +234,12 @@ namespace EZSong.Model {
                     humanString += AlterationStringifier.ToHumanString(RootNoteAlteration);
                 }
                 humanString += ChordTypeStringifier.ToHumanString(ChordType);
+                if (BassNote is not null) {
+                    humanString += "/" + NoteStepStringifier.ToHumanString(BassNote.Value, false);
+                    if (BassNoteAlteration != Alteration.neutral) {
+                        humanString += AlterationStringifier.ToHumanString(BassNoteAlteration);
+                    }
+                }
             }
             return humanString;
         }
@@ -219,7 +250,9 @@ namespace EZSong.Model {
                 Duration, 
                 RootNote, 
                 RootNoteAlteration, 
-                ChordType
+                ChordType,
+                BassNote,
+                BassNoteAlteration
             );
         }
 
@@ -229,7 +262,9 @@ namespace EZSong.Model {
                 chordDto.Duration,
                 chordDto.RootNote,
                 chordDto.RootNoteAlteration,
-                chordDto.ChordType
+                chordDto.ChordType,
+                chordDto.BassNote,
+                chordDto.BassNoteAlteration
             );
         }
     }

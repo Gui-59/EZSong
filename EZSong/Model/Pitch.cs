@@ -78,12 +78,37 @@ namespace EZSong.Model {
         }
 
         internal WidgetPitch ToWidgetPitch() {
-            int midiNoteNumber = (MidiOctave * 12) + ((int)Note) + ((int)Alteration);
-            return new WidgetPitch(midiNoteNumber);
+            return new WidgetPitch(ToMidiNoteNumber());
+        }
+
+        public int ToMidiNoteNumber() {
+            return (MidiOctave * 12) + ((int)Note) + ((int)Alteration);
         }
 
         internal PitchDto ToDto() {
             return new PitchDto(Note, Alteration, MidiOctave);
+        }
+
+        public static Pitch FromMidi(int midi) {
+            int pc = midi % 12;
+            NoteStep note;
+            Alteration alteration;
+            (note, alteration) = pc switch {
+                0 => (NoteStep.C, Alteration.neutral),
+                1 => (NoteStep.C, Alteration.sharp),
+                2 => (NoteStep.D, Alteration.neutral),
+                3 => (NoteStep.D, Alteration.sharp),
+                4 => (NoteStep.E, Alteration.neutral),
+                5 => (NoteStep.F, Alteration.neutral),
+                6 => (NoteStep.F, Alteration.sharp),
+                7 => (NoteStep.G, Alteration.neutral),
+                8 => (NoteStep.G, Alteration.sharp),
+                9 => (NoteStep.A, Alteration.neutral),
+                10 => (NoteStep.A, Alteration.sharp),
+                11 => (NoteStep.B, Alteration.neutral),
+                _ => throw new System.Diagnostics.UnreachableException()
+            };
+            return new Pitch(note, alteration, midi / 12);
         }
     }
 }
