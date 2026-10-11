@@ -74,50 +74,75 @@ public sealed class ChordVoicingEngine
         return new ChordVoicing(request.Chord, best);
     }
 
+    public VoicingTransitionAnalysis AnalyzeTransition(
+        ChordVoicing previous,
+        ChordVoicingRequest request,
+        IReadOnlyList<Model.Pitch> candidate)
+    {
+        ArgumentNullException.ThrowIfNull(previous);
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(candidate);
+
+        Model.Pitch[] previousNotes = previous.Pitches.OrderBy(x => x).ToArray();
+        Model.Pitch[] newNotes = candidate.OrderBy(x => x).ToArray();
+
+        int nbCommon = previousNotes.Intersect(newNotes).Count();
+        (int TotalMovement, bool IsValid) matching =
+            MinimumMovementMatching(previousNotes, newNotes, _settings.MaxVoiceMovement);
+
+        if (!matching.IsValid)
+        {
+            return new VoicingTransitionAnalysis(
+                previousNotes.Intersect(newNotes).OrderBy(x => x).ToArray(),
+                0,
+                0,
+                int.MaxValue,
+                false);
+        }
+
+        int bassMovement = Math.Abs(newNotes[0] - previousNotes[0]);
+        if (bassMovement > _settings.MaxVoiceMovement)
+        {
+            return new VoicingTransitionAnalysis(
+                previousNotes.Intersect(newNotes).OrderBy(x => x).ToArray(),
+                matching.TotalMovement,
+                bassMovement,
+                int.MaxValue,
+                false);
+        }
+
+        int score =
+            -nbCommon * _settings.CommonNoteWeight
+            + matching.TotalMovement * _settings.MovementWeight
+            + bassMovement * _settings.BassMovementWeight;
+
+        if (_preferences is not null)
+        {
+            foreach (VoicingPreference preference in _preferences.Find(previous.Chord, request.Chord))
+            {
+                if (preference.SecondChord is not null &&
+                    preference.SecondChord.Pitches.SequenceEqual(newNotes))
+                {
+                    score -= _settings.UserPreferenceWeight;
+                    break;
+                }
+            }
+        }
+
+        return new VoicingTransitionAnalysis(
+            previousNotes.Intersect(newNotes).OrderBy(x => x).ToArray(),
+            matching.TotalMovement,
+            bassMovement,
+            score,
+            true);
+    }
+
     private int ScoreTransition(
         ChordVoicing previous,
         ChordVoicingRequest request,
         IReadOnlyList<Model.Pitch> candidate)
     {
-        Model.Pitch[] previousNotes = previous.Pitches.OrderBy(x => x).ToArray();
-        Model.Pitch[] newNotes = candidate.OrderBy(x => x).ToArray();
-
-        int score = 0;
-
-        // Strong preference for keys that remain physically held.
-        int nbCommon = previousNotes.Intersect(newNotes).Count();
-        score -= nbCommon * _settings.CommonNoteWeight;
-
-        // Match notes between the two sets so that movement is minimal.
-        (int TotalMovement, bool IsValid) matching = MinimumMovementMatching(previousNotes, newNotes, _settings.MaxVoiceMovement);
-        if (!matching.IsValid) {
-            return int.MaxValue;
-        }
-
-        score += matching.TotalMovement * _settings.MovementWeight;
-
-        // The lowest note is especially important for left-hand arranger playing.
-        int bassMovement = Math.Abs(newNotes[0] - previousNotes[0]);
-        if (bassMovement > _settings.MaxVoiceMovement) {
-            return int.MaxValue;
-        }
-
-        score += bassMovement * _settings.BassMovementWeight;
-
-        // A user preference is a strong bonus, but never overrides hard constraints.
-        if (_preferences is not null)
-        {
-            Model.Chord from = previous.Chord;
-            Model.Chord to = request.Chord;
-            foreach (VoicingPreference preference in _preferences.Find(from, to))
-            {
-                if (preference.SecondChord is not null && preference.SecondChord.Pitches.SequenceEqual(newNotes)) {
-                    score -= _settings.UserPreferenceWeight;
-                }
-            }
-        }
-
-        return score;
+        return AnalyzeTransition(previous, request, candidate).Score;
     }
 
     private List<Model.Pitch[]> GenerateCandidates(ChordVoicingRequest request)
@@ -305,16 +330,48 @@ public sealed class ChordVoicingEngine
         IReadOnlyList<Model.Pitch> current,
         int maxMovement)
     {
+        if (previous.Count == 0 || current.Count == 0)
+        {
+            return (0, false);
+        }
+
+        // When the number of voices changes, the added/removed voices must
+        // still be physically reachable from the previous/next hand position.
+        // This prevents a newly added voice from appearing an octave or more
+        // away just because the existing voices can be matched successfully.
+        if (current.Count > previous.Count)
+        {
+            foreach (Model.Pitch added in current)
+            {
+                if (!previous.Any(old => Math.Abs(old - added) <= maxMovement))
+                {
+                    return (0, false);
+                }
+            }
+        }
+        else if (previous.Count > current.Count)
+        {
+            foreach (Model.Pitch removed in previous)
+            {
+                if (!current.Any(next => Math.Abs(removed - next) <= maxMovement))
+                {
+                    return (0, false);
+                }
+            }
+        }
+
         int[,] memo = new int[previous.Count + 1, 1 << current.Count];
         bool[,] seen = new bool[previous.Count + 1, 1 << current.Count];
 
         int Solve(int index, int usedMask)
         {
-            if (index == previous.Count) {
+            if (index == previous.Count)
+            {
                 return 0;
             }
 
-            if (seen[index, usedMask]) {
+            if (seen[index, usedMask])
+            {
                 return memo[index, usedMask];
             }
 
@@ -323,24 +380,28 @@ public sealed class ChordVoicingEngine
             const int Impossible = 1_000_000;
             int best = Impossible;
 
-            // This previous note may disappear when the new chord has fewer tones.
-            if (previous.Count > current.Count) {
+            // A previous note may disappear when the new chord has fewer tones.
+            if (previous.Count > current.Count)
+            {
                 best = Math.Min(best, Solve(index + 1, usedMask));
             }
 
             for (int j = 0; j < current.Count; j++)
             {
-                if ((usedMask & (1 << j)) != 0) {
+                if ((usedMask & (1 << j)) != 0)
+                {
                     continue;
                 }
 
                 int distance = Math.Abs(previous[index] - current[j]);
-                if (distance > maxMovement) {
+                if (distance > maxMovement)
+                {
                     continue;
                 }
 
                 int remainder = Solve(index + 1, usedMask | (1 << j));
-                if (remainder < Impossible) {
+                if (remainder < Impossible)
+                {
                     best = Math.Min(best, distance + remainder);
                 }
             }
