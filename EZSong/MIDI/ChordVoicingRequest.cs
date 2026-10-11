@@ -35,6 +35,11 @@ public sealed class ChordVoicingRequest
     }
 
     public static ChordVoicingRequest FromExactVoicing(
+        ChordVoicing voicing) {
+        return new(voicing.Chord, exactVoicing: voicing.Pitches);
+    }
+
+    public static ChordVoicingRequest FromExactVoicing(
         Chord chord,
         params Pitch[] notes) {
         return new(chord, exactVoicing: notes);
@@ -50,9 +55,9 @@ public sealed class ChordVoicingRequest
 
 public readonly record struct PitchClass(NoteStep Note, Alteration Alteration)
 {
-    public int ChromaticValue {
+    public Pitch ChromaticPitch {
         get {
-            return ((int)Note + (int)Alteration + 12) % 12;
+            return Pitch.FromMidi(((int)Note + (int)Alteration + 12) % 12);
         }
     }
 }

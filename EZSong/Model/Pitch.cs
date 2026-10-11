@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 
 namespace EZSong.Model {
 
-    public class Pitch {
+    public class Pitch : IEquatable<Pitch>, IComparable<Pitch> {
 
         public NoteStep Note {
-            get; 
+            get;
             set;
         }
 
@@ -27,6 +27,14 @@ namespace EZSong.Model {
             get;
             set;
         }
+        public static Pitch MinValue {
+            get;
+            internal set;
+        } = new Pitch(NoteStep.C, Alteration.neutral, 0);
+        public static Pitch MaxValue {
+            get;
+            internal set;
+        } = new Pitch(NoteStep.G, Alteration.neutral, 10);
 
         private readonly ILilypondConverter _lilypondConverter;
 
@@ -109,6 +117,196 @@ namespace EZSong.Model {
                 _ => throw new System.Diagnostics.UnreachableException()
             };
             return new Pitch(note, alteration, midi / 12);
+        }
+
+        // Opérateurs pour manipuler les hauteurs (en demi-tons)
+        public static Pitch operator +(Pitch p, int semitones) {
+            if (p is null) {
+                throw new ArgumentNullException(nameof(p));
+            }
+
+            return FromMidi(p.ToMidiNoteNumber() + semitones);
+        }
+
+        public static Pitch operator +(int semitones, Pitch p) {
+            return p + semitones;
+        }
+
+        public static Pitch operator -(Pitch p, int semitones) {
+            if (p is null) {
+                throw new ArgumentNullException(nameof(p));
+            }
+
+            return FromMidi(p.ToMidiNoteNumber() - semitones);
+        }
+
+        // Soustraction entre deux Pitch renvoie la différence en demi-tons (int)
+        public static int operator -(Pitch left, Pitch right) {
+            if (left is null) {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right is null) {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            return left.ToMidiNoteNumber() - right.ToMidiNoteNumber();
+        }
+
+        // Modulo : permet d'obtenir le reste de la division utilisant la valeur MIDI
+        public static Pitch operator %(Pitch left, int modulus) {
+            if (left is null) {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (modulus == 0) {
+                throw new DivideByZeroException("Modulo by zero.");
+            }
+
+            return FromMidi(left.ToMidiNoteNumber() % modulus);
+        }
+
+        public static int operator %(int value, Pitch p) {
+            if (p is null) {
+                throw new ArgumentNullException(nameof(p));
+            }
+
+            int modulus = p.ToMidiNoteNumber();
+            if (modulus == 0) {
+                throw new DivideByZeroException("Modulo by zero.");
+            }
+
+            return value % modulus;
+        }
+
+        public static int operator %(Pitch left, Pitch right) {
+            if (left is null) {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right is null) {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            int modulus = right.ToMidiNoteNumber();
+            if (modulus == 0) {
+                throw new DivideByZeroException("Modulo by zero.");
+            }
+
+            return left.ToMidiNoteNumber() % modulus;
+        }
+
+        // Comparaisons basées sur la valeur MIDI
+        public static bool operator >(Pitch left, Pitch right) {
+            if (left is null) {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right is null) {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            return left.ToMidiNoteNumber() > right.ToMidiNoteNumber();
+        }
+
+        public static bool operator <(Pitch left, Pitch right) {
+            if (left is null) {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right is null) {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            return left.ToMidiNoteNumber() < right.ToMidiNoteNumber();
+        }
+
+        public static bool operator >=(Pitch left, Pitch right) {
+            if (left is null) {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right is null) {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            return left.ToMidiNoteNumber() >= right.ToMidiNoteNumber();   
+        }
+
+        public static bool operator <=(Pitch left, Pitch right) {
+            if (left is null) {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right is null) {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            return left.ToMidiNoteNumber() <= right.ToMidiNoteNumber();
+        }
+
+        public static bool operator ==(Pitch left, Pitch right) {
+            if (ReferenceEquals(left, right)) {
+                return true;
+            }
+
+            if (left is null || right is null) {
+                return false;
+            }
+
+            return left.ToMidiNoteNumber() == right.ToMidiNoteNumber();
+        }
+
+        // Opérateur != implémenté
+        public static bool operator !=(Pitch left, Pitch right) {
+            if (ReferenceEquals(left, right)) {
+                return false;
+            }
+
+            if (left is null || right is null) {
+                return true;
+            }
+
+            return left.ToMidiNoteNumber() != right.ToMidiNoteNumber();
+        }
+
+        public bool Equals(Pitch? other) {
+            // vérifier explicitement la nullité de other
+            if (other is null) {
+                return false;
+            }
+            return this == other;
+        }
+
+        public override bool Equals(object? obj) {
+            if (obj is Pitch p) {
+                return Equals(p);
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode() {
+            return ToMidiNoteNumber();
+        }
+
+        public int CompareTo(Pitch? other)
+        {
+            if (other is null) {
+                return 1;
+            }
+
+            return ToMidiNoteNumber().CompareTo(other.ToMidiNoteNumber());
+        }
+
+        internal string ToHumanString() {
+            string humanString = string.Empty;
+
+            humanString += NoteStepStringifier.ToHumanString(Note, true);
+            humanString += AlterationStringifier.ToHumanString(Alteration);
+            humanString += MidiOctave.ToString();
+
+            return humanString;
         }
     }
 }

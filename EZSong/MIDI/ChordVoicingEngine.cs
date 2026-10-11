@@ -1,5 +1,6 @@
 using EZSong.Enums;
 using EZSong.Model;
+using System.Collections.Generic;
 
 namespace EZSong.MIDI;
 
@@ -29,7 +30,7 @@ public sealed class ChordVoicingEngine
             return ValidateExactVoicing(request);
         }
 
-        List<int[]> candidates = GenerateCandidates(request);
+        List<Model.Pitch[]> candidates = GenerateCandidates(request);
         if (candidates.Count == 0) {
             throw new InvalidOperationException($"No valid voicing found for {request.Chord.ToHumanString()}.");
         }
@@ -39,7 +40,7 @@ public sealed class ChordVoicingEngine
             .OrderBy(v => Span(v))
             .ThenBy(v => v.Max())
             .ThenBy(v => v.Min())
-            .Select(v => new ChordVoicing(request.Chord, v.Select(Pitch.FromMidi)))
+            .Select(v => new ChordVoicing(request.Chord, v))
             .First();
     }
 
@@ -48,15 +49,15 @@ public sealed class ChordVoicingEngine
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(previous);
 
-        List<int[]> candidates = GenerateCandidates(request);
+        List<Model.Pitch[]> candidates = GenerateCandidates(request);
         if (candidates.Count == 0) {
             throw new InvalidOperationException($"No valid voicing found for {request.Chord.ToHumanString()} after {previous.Chord.ToHumanString()}.");
         }
 
         int bestScore = int.MaxValue;
-        int[]? best = null;
+        Model.Pitch[]? best = null;
 
-        foreach (int[] candidate in candidates)
+        foreach (Model.Pitch[] candidate in candidates)
         {
             int score = ScoreTransition(previous, request, candidate);
             if (score < bestScore)
@@ -70,22 +71,22 @@ public sealed class ChordVoicingEngine
             throw new InvalidOperationException("No valid voicing transition found.");
         }
 
-        return new ChordVoicing(request.Chord, best.Select(Pitch.FromMidi));
+        return new ChordVoicing(request.Chord, best);
     }
 
     private int ScoreTransition(
         ChordVoicing previous,
         ChordVoicingRequest request,
-        IReadOnlyList<int> candidate)
+        IReadOnlyList<Model.Pitch> candidate)
     {
-        int[] previousNotes = previous.MidiNotes.OrderBy(x => x).ToArray();
-        int[] newNotes = candidate.OrderBy(x => x).ToArray();
+        Model.Pitch[] previousNotes = previous.Pitches.OrderBy(x => x).ToArray();
+        Model.Pitch[] newNotes = candidate.OrderBy(x => x).ToArray();
 
         int score = 0;
 
         // Strong preference for keys that remain physically held.
-        int common = previousNotes.Intersect(newNotes).Count();
-        score -= common * _settings.CommonNoteWeight;
+        int nbCommon = previousNotes.Intersect(newNotes).Count();
+        score -= nbCommon * _settings.CommonNoteWeight;
 
         // Match notes between the two sets so that movement is minimal.
         (int TotalMovement, bool IsValid) matching = MinimumMovementMatching(previousNotes, newNotes, _settings.MaxVoiceMovement);
@@ -106,11 +107,11 @@ public sealed class ChordVoicingEngine
         // A user preference is a strong bonus, but never overrides hard constraints.
         if (_preferences is not null)
         {
-            string from = previous.Chord.ToHumanString();
-            string to = request.Chord.ToHumanString();
+            Model.Chord from = previous.Chord;
+            Model.Chord to = request.Chord;
             foreach (VoicingPreference preference in _preferences.Find(from, to))
             {
-                if (preference.ToMidiNotes.SequenceEqual(newNotes)) {
+                if (preference.SecondChord is not null && preference.SecondChord.Pitches.SequenceEqual(newNotes)) {
                     score -= _settings.UserPreferenceWeight;
                 }
             }
@@ -119,9 +120,9 @@ public sealed class ChordVoicingEngine
         return score;
     }
 
-    private List<int[]> GenerateCandidates(ChordVoicingRequest request)
+    private List<Model.Pitch[]> GenerateCandidates(ChordVoicingRequest request)
     {
-        int[] pitchClasses = GetChordPitchClasses(request.Chord)
+        Model.Pitch[] pitchClasses = GetChordPitchClasses(request.Chord)
             .Distinct()
             .OrderBy(x => x)
             .ToArray();
@@ -130,29 +131,29 @@ public sealed class ChordVoicingEngine
             throw new InvalidOperationException("A chord must contain at least two distinct notes.");
         }
 
-        if (pitchClasses.Length > _settings.MaxVoices) {
-            pitchClasses = ReduceToMaximumVoices(request.Chord, pitchClasses, _settings.MaxVoices);
+        if (pitchClasses.Length > _settings.ChordMaxKeyCount) {
+            pitchClasses = ReduceToMaximumVoices(request.Chord, pitchClasses, _settings.ChordMaxKeyCount);
         }
 
-        if (request.Bass is not null && !pitchClasses.Contains(request.Bass.Value.ChromaticValue)) {
+        if (request.Bass is not null && !pitchClasses.Contains(request.Bass.Value.ChromaticPitch)) {
             throw new InvalidOperationException(
                 $"Bass {request.Bass.Value.Note} is not a note of chord {request.Chord.ToHumanString()}.");
         }
 
-        List<int[]> options = new();
-        int[] partial = new int[pitchClasses.Length];
-        GenerateAscending(0, int.MinValue, pitchClasses, request.Bass, partial, new bool[pitchClasses.Length], options);
+        List<Model.Pitch[]> options = new();
+        Model.Pitch[] partial = new Model.Pitch[pitchClasses.Length];
+        GenerateAscending(0, Pitch.MinValue, pitchClasses, request.Bass, partial, new bool[pitchClasses.Length], options);
         return options;
     }
 
     private void GenerateAscending(
         int index,
-        int previousMidi,
-        int[] pitchClasses,
+        Model.Pitch previousMidi,
+        Model.Pitch[] pitchClasses,
         PitchClass? bass,
-        int[] partial,
+        Model.Pitch[] partial,
         bool[] usedPitchClasses,
-        List<int[]> result)
+        List<Model.Pitch[]> result)
     {
         if (index == pitchClasses.Length)
         {
@@ -171,12 +172,12 @@ public sealed class ChordVoicingEngine
             // pitch class; the remaining chord tones remain completely free.
             if (index == 0 &&
                 bass is not null &&
-                pitchClasses[pitchClassIndex] != bass.Value.ChromaticValue)
+                pitchClasses[pitchClassIndex] != bass.Value.ChromaticPitch)
             {
                 continue;
             }
 
-            foreach (int midi in EnumerateMidiNotes(pitchClasses[pitchClassIndex]))
+            foreach (Model.Pitch midi in EnumerateMidiNotes(pitchClasses[pitchClassIndex]))
             {
                 // previousMidi is the last note already placed in the
                 // ascending candidate. This gives every voicing one canonical
@@ -202,28 +203,28 @@ public sealed class ChordVoicingEngine
         }
     }
 
-    private IEnumerable<int> EnumerateMidiNotes(int pitchClass)
+    private IEnumerable<Model.Pitch> EnumerateMidiNotes(Model.Pitch pitchClass)
     {
-        int first = _settings.MinChordNote.ToMidiNoteNumber() + Mod(pitchClass - _settings.MinChordNote.ToMidiNoteNumber(), 12);
-        for (int midi = first; midi <= _settings.MaxChordNote.ToMidiNoteNumber(); midi += 12) {
+        Model.Pitch first = _settings.MinChordAreaNote + ((pitchClass - _settings.MinChordAreaNote) % 12 + 12) % 12;
+        for (Model.Pitch midi = first; midi <= _settings.MaxChordAreaNote; midi += 12) {
             yield return midi;
         }
     }
 
     private ChordVoicing ValidateExactVoicing(ChordVoicingRequest request)
     {
-        int[] notes = request.ExactVoicing!.Select(p => p.ToMidiNoteNumber()).OrderBy(x => x).ToArray();
+        Model.Pitch[] notes = request.ExactVoicing!.Select(p => p).OrderBy(x => x).ToArray();
         ValidateVoicingNotes(request, notes);
         return new ChordVoicing(request.Chord, request.ExactVoicing!);
     }
 
-    private void ValidateVoicingNotes(ChordVoicingRequest request, IReadOnlyList<int> notes)
+    private void ValidateVoicingNotes(ChordVoicingRequest request, IReadOnlyList<Model.Pitch> notes)
     {
-        if (notes.Count < 2 || notes.Count > _settings.MaxVoices) {
+        if (notes.Count < 2 || notes.Count > _settings.ChordMaxKeyCount) {
             throw new ArgumentException("A voicing must contain between 2 and 5 notes.");
         }
 
-        if (notes.Any(n => n < _settings.MinChordNote.ToMidiNoteNumber() || n > _settings.MaxChordNote.ToMidiNoteNumber())) {
+        if (notes.Any(n => n < _settings.MinChordAreaNote || n > _settings.MaxChordAreaNote)) {
             throw new ArgumentException("The exact voicing is outside the configured register.");
         }
 
@@ -231,22 +232,22 @@ public sealed class ChordVoicingEngine
             throw new ArgumentException("A voicing may not contain duplicated MIDI notes.");
         }
 
-        HashSet<int> chordPitchClasses = GetChordPitchClasses(request.Chord).ToHashSet();
-        if (notes.Any(n => !chordPitchClasses.Contains(Mod(n, 12)))) {
+        HashSet<Model.Pitch> chordPitchClasses = GetChordPitchClasses(request.Chord).ToHashSet();
+        if (notes.Any(n => !chordPitchClasses.Contains(n % 12))) {
             throw new ArgumentException("The exact voicing contains a note that does not belong to the chord.");
         }
 
-        if (request.Bass is not null && Mod(notes[0], 12) != request.Bass.Value.ChromaticValue) {
+        if (request.Bass is not null && notes[0] % 12 != request.Bass.Value.ChromaticPitch) {
             throw new ArgumentException("The exact voicing does not respect the requested bass note.");
         }
     }
 
-    private static int[] ReduceToMaximumVoices(Chord chord, int[] pitchClasses, int maxVoices)
+    private static Model.Pitch[] ReduceToMaximumVoices(Chord chord, Model.Pitch[] pitchClasses, int maxVoices)
     {
         // Keep root, third (when present), seventh (when present), then remaining chord tones.
         // This is deliberately conservative: future versions can expose an explicit omission policy.
-        int root = Mod((int)chord.RootNote + (int)chord.RootNoteAlteration, 12);
-        int[] ordered = pitchClasses
+        Model.Pitch root = Pitch.FromMidi(((int)chord.RootNote + (int)chord.RootNoteAlteration) % 12);
+        Model.Pitch[] ordered = pitchClasses
             .OrderBy(pc => pc == root ? 0 : 1)
             .ThenBy(pc => pc)
             .Take(maxVoices)
@@ -254,9 +255,9 @@ public sealed class ChordVoicingEngine
         return ordered;
     }
 
-    private static IEnumerable<int> GetChordPitchClasses(Chord chord)
+    private static IEnumerable<Model.Pitch> GetChordPitchClasses(Chord chord)
     {
-        int root = Mod((int)chord.RootNote + (int)chord.RootNoteAlteration, 12);
+        int root = ((int)chord.RootNote + (int)chord.RootNoteAlteration) %  12;
         int[] intervals = chord.ChordType switch
         {
             ChordType.NoneOrMajor => [0, 4, 7],
@@ -294,12 +295,14 @@ public sealed class ChordVoicingEngine
             _ => throw new ArgumentOutOfRangeException(nameof(chord.ChordType))
         };
 
-        return intervals.Select(interval => Mod(root + interval, 12)).Distinct();
+        IEnumerable <Model.Pitch> chordPitchClasses = intervals.Select(interval => (root + interval) % 12).Select(Pitch.FromMidi);
+
+        return chordPitchClasses;
     }
 
     private static (int TotalMovement, bool IsValid) MinimumMovementMatching(
-        IReadOnlyList<int> previous,
-        IReadOnlyList<int> current,
+        IReadOnlyList<Model.Pitch> previous,
+        IReadOnlyList<Model.Pitch> current,
         int maxMovement)
     {
         int[,] memo = new int[previous.Count + 1, 1 << current.Count];
@@ -350,15 +353,7 @@ public sealed class ChordVoicingEngine
         return (movement, movement < 1_000_000);
     }
 
-    private static int Span(IReadOnlyList<int> notes) {
+    private static int Span(IReadOnlyList<Model.Pitch> notes) {
         return notes[^1] - notes[0];
-    }
-
-    
-
-    
-
-    private static int Mod(int value, int modulo) {
-        return (value % modulo + modulo) % modulo;
     }
 }

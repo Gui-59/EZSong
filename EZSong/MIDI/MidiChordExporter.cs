@@ -18,40 +18,43 @@ public static class MidiChordExporter
         int velocity = 90)
     {
         ArgumentNullException.ThrowIfNull(voicedChords);
-        if (voicedChords.Count == 0)
+        if (voicedChords.Count == 0) {
             throw new ArgumentException("At least one chord is required.", nameof(voicedChords));
-        if (velocity < 1 || velocity > 127)
-            throw new ArgumentOutOfRangeException(nameof(velocity));
+        }
 
-        var track = new TrackChunk();
-        var events = new List<(long AbsoluteTick, int Order, MidiEvent Event)>();
+        if (velocity < 1 || velocity > 127) {
+            throw new ArgumentOutOfRangeException(nameof(velocity));
+        }
+
+        TrackChunk track = new();
+        List<(long AbsoluteTick, int Order, MidiEvent Event)> events = new();
 
         long position = 0;
         int order = 0;
         foreach (ChordVoicing voicedChord in voicedChords)
         {
             long end = position + DurationToTicks(voicedChord.Chord.Duration);
-            foreach (int midiNote in voicedChord.MidiNotes)
+            foreach (Model.Pitch midiNote in voicedChord.Pitches)
             {
                 events.Add((position, order++, new NoteOnEvent(
-                    (SevenBitNumber)midiNote,
+                    (SevenBitNumber)midiNote.ToMidiNoteNumber(),
                     (SevenBitNumber)velocity)));
                 events.Add((end, order++, new NoteOffEvent(
-                    (SevenBitNumber)midiNote,
+                    (SevenBitNumber)midiNote.ToMidiNoteNumber(),
                     (SevenBitNumber)0)));
             }
             position = end;
         }
 
         long previousAbsolute = 0;
-        foreach (var positioned in events.OrderBy(e => e.AbsoluteTick).ThenBy(e => e.Order))
+        foreach ((long AbsoluteTick, int Order, MidiEvent Event) positioned in events.OrderBy(e => e.AbsoluteTick).ThenBy(e => e.Order))
         {
             positioned.Event.DeltaTime = positioned.AbsoluteTick - previousAbsolute;
             previousAbsolute = positioned.AbsoluteTick;
             track.Events.Add(positioned.Event);
         }
 
-        var midiFile = new MidiFile(track);
+        MidiFile midiFile = new(track);
         midiFile.TimeDivision = new TicksPerQuarterNoteTimeDivision(TicksPerQuarterNote);
         midiFile.Write(outputPath, overwriteFile: true);
     }

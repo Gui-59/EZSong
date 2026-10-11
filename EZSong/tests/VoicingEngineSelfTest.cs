@@ -27,20 +27,36 @@ public static class VoicingEngineSelfTest
         Chord c = Major(NoteStep.C);
         Chord am = Minor(NoteStep.A);
 
-        ChordVoicing first = engine.GenerateFirst(
-            ChordVoicingRequest.FromExactVoicing(
-                c,
+        ChordVoicing c_voicing = new(
+            c,
+            new[] {
                 P(NoteStep.E, 1),
                 P(NoteStep.G, 1),
-                P(NoteStep.C, 2)));
+                P(NoteStep.C, 2)
+            });
+
+        ChordVoicing am_expectedvoicing = new(
+            am,
+            new[] {
+                P(NoteStep.E, 1),
+                P(NoteStep.A, 1),
+                P(NoteStep.C, 2)
+            });
+
+        ChordVoicing first = engine.GenerateFirst(
+            ChordVoicingRequest.FromExactVoicing(
+                c_voicing
+                )
+            );
 
         ChordVoicing next = engine.GenerateNext(
             new ChordVoicingRequest(am),
             first);
 
         Expect(
-            next.MidiNotes.OrderBy(x => x).SequenceEqual(new[] { 16, 21, 24 }),
-            $"C -> Am expected E1 A1 C2, got {Format(next)}");
+            next == am_expectedvoicing,
+            $"C -> Am : expected {Format(am_expectedvoicing)}, got {Format(next)}"
+        );
     }
 
     private static void SlashChordKeepsRequestedBass()
@@ -67,16 +83,17 @@ public static class VoicingEngineSelfTest
             new ChordVoicingRequest(gOverB),
             first);
 
+        int minMidi = next.Pitches.Min(p => p.ToMidiNoteNumber());
         Expect(
-            next.MidiNotes.Min() % 12 == 11,
-            $"G/B expected B as the lowest note, got {Format(next)}");
+            minMidi % 12 == 11,
+            $"G/B : expected B as the lowest note, got {Format(next)}");
     }
 
     private static void LargeVoiceMovementIsRejected()
     {
         VoicingSettings settings = CreateSettings();
-        settings.MinChordNote = new Model.Pitch(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 3);
-        settings.MaxChordNote = new Model.Pitch(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 5);
+        settings.MinChordAreaNote = new Model.Pitch(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 3);
+        settings.MaxChordAreaNote = new Model.Pitch(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 5);
         settings.MaxVoiceMovement = 11;
 
         ChordVoicingEngine engine = new(settings);
@@ -98,9 +115,9 @@ public static class VoicingEngineSelfTest
             new ChordVoicingRequest(am),
             first);
 
-        foreach (int previous in first.MidiNotes)
+        foreach (Model.Pitch previous in first.Pitches)
         {
-            bool hasCloseSuccessor = next.MidiNotes.Any(current =>
+            bool hasCloseSuccessor = next.Pitches.Any(current =>
                 Math.Abs(previous - current) <= settings.MaxVoiceMovement);
 
             Expect(
@@ -114,28 +131,35 @@ public static class VoicingEngineSelfTest
         ChordVoicingEngine engine = CreateEngine();
         Chord c = Major(NoteStep.C);
 
-        ChordVoicing first = engine.GenerateFirst(
-            ChordVoicingRequest.FromExactVoicing(
-                c,
+        ChordVoicing c_voicing = new(
+            c,
+            new[] {
                 P(NoteStep.E, 1),
                 P(NoteStep.G, 1),
-                P(NoteStep.C, 2)));
+                P(NoteStep.C, 2)
+            });
+
+        ChordVoicing first = engine.GenerateFirst(
+            ChordVoicingRequest.FromExactVoicing(
+                c_voicing
+                )
+            );
 
         Expect(
-            first.MidiNotes.OrderBy(x => x).SequenceEqual(new[] { 16, 19, 24 }),
-            $"Exact first voicing was not preserved: {Format(first)}");
+            first == c_voicing,
+            $"Exact first voicing ({Format(c_voicing)}) was not preserved: {Format(first)}");
     }
 
     private static VoicingSettings CreateSettings() {
         return new() {
-            MinChordNote = new Model.Pitch(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 1), 
-            MaxChordNote = new Model.Pitch(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 3),
+            MinChordAreaNote = new Model.Pitch(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 1), 
+            MaxChordAreaNote = new Model.Pitch(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 3),
             MaxVoiceMovement = 11,
             CommonNoteWeight = 100,
             MovementWeight = 1,
             BassMovementWeight = 3,
             UserPreferenceWeight = 75,
-            MaxVoices = 5
+            ChordMaxKeyCount = 5
         };
     }
 
@@ -183,6 +207,18 @@ public static class VoicingEngineSelfTest
     }
 
     private static string Format(ChordVoicing voicing) {
-        return $"{voicing.Chord.ToHumanString()} [{string.Join(", ", voicing.MidiNotes.OrderBy(x => x))}]";
+
+        String formated;
+
+        formated = voicing.Chord.ToHumanString();
+        String voicingStr = String.Empty;
+        foreach (Pitch pitch in voicing.Pitches) {
+            voicingStr += pitch.ToHumanString() + " ";
+        }
+        formated += "{" + voicingStr + "}";
+            
+
+
+        return formated;
     }
 }

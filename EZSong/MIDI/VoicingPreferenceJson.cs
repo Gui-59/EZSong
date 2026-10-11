@@ -4,7 +4,7 @@ namespace EZSong.MIDI;
 
 public static class VoicingPreferenceJson
 {
-    private static readonly JsonSerializerOptions Options = new()
+    private static readonly JsonSerializerOptions _options = new()
     {
         WriteIndented = true,
         PropertyNameCaseInsensitive = true
@@ -12,11 +12,12 @@ public static class VoicingPreferenceJson
 
     public static VoicingPreferenceStore Load(string path)
     {
-        if (!File.Exists(path))
+        if (!File.Exists(path)) {
             return new VoicingPreferenceStore();
+        }
 
         string json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<VoicingPreferenceStore>(json, Options)
+        return JsonSerializer.Deserialize<VoicingPreferenceStore>(json, _options)
                ?? new VoicingPreferenceStore();
     }
 
@@ -24,9 +25,10 @@ public static class VoicingPreferenceJson
     {
         ArgumentNullException.ThrowIfNull(store);
         string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
-        if (!string.IsNullOrEmpty(directory))
-            Directory.CreateDirectory(directory);
+        if (!string.IsNullOrEmpty(directory)) {
+            _ = Directory.CreateDirectory(directory);
+        }
 
-        File.WriteAllText(path, JsonSerializer.Serialize(store, Options));
+        File.WriteAllText(path, JsonSerializer.Serialize(store, _options));
     }
 }
