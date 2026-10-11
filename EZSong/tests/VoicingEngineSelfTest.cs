@@ -13,11 +13,13 @@ public static class VoicingEngineSelfTest
     public static void RunAll()
     {
         CToAmKeepsTwoKeys();
+        CToBWithNoCommonNotesIsValid();
         CommonTransitionsAreValid();
         SlashChordKeepsRequestedBass();
         VoiceCountCanIncreaseAndDecrease();
         LargeVoiceMovementIsRejected();
         ExactFirstVoicingIsPreserved();
+        ChordProgressionParserWorks();
 
         Console.WriteLine("VoicingEngineSelfTest: ALL OK");
     }
@@ -39,6 +41,34 @@ public static class VoicingEngineSelfTest
         ChordVoicing expected = new(am, new[] { P(NoteStep.E, 1), P(NoteStep.A, 1), P(NoteStep.C, 2) });
 
         Expect(next == expected, $"C -> Am : expected {Format(expected)}, got {Format(next)}");
+        PrintTransition(first, next, engine);
+    }
+
+    private static void CToBWithNoCommonNotesIsValid()
+    {
+        ChordVoicingEngine engine = CreateEngine();
+        Chord c = Major(NoteStep.C);
+        Chord b = Major(NoteStep.B);
+
+        ChordVoicing first = engine.GenerateFirst(
+            ChordVoicingRequest.FromExactVoicing(
+                c,
+                P(NoteStep.E, 1),
+                P(NoteStep.G, 1),
+                P(NoteStep.C, 2)));
+
+        ChordVoicing next = engine.GenerateNext(new ChordVoicingRequest(b), first);
+        VoicingTransitionAnalysis analysis = engine.AnalyzeTransition(
+            first,
+            new ChordVoicingRequest(b),
+            next.Pitches);
+
+        Expect(analysis.IsValid, $"C -> B should be valid even with no common notes: {Format(next)}");
+        Expect(analysis.CommonNotes.Count == 0,
+            $"C -> B should have no common notes: {Format(next)}");
+        Expect(analysis.TotalMovement <= 33,
+            $"C -> B has an unexpectedly large total movement: {analysis.TotalMovement}");
+
         PrintTransition(first, next, engine);
     }
 
@@ -144,6 +174,44 @@ public static class VoicingEngineSelfTest
         Expect(analysis.TotalMovement <= 33,
             $"Unexpectedly large total movement: {analysis.TotalMovement} in {Format(next)}");
         PrintTransition(first, next, engine);
+    }
+
+    private static void ChordProgressionParserWorks()
+    {
+        ChordVoicingEngine engine = CreateEngine();
+        ChordProgressionParser parser = new(engine);
+
+        IReadOnlyList<ChordVoicing> voicings = parser.ParseToVoicings("""
+C
+G/B
+Am
+F
+G7
+C
+""");
+
+        Expect(voicings.Count == 6, $"Expected 6 voicings, got {voicings.Count}.");
+        Expect(voicings[0].Chord.RootNote == NoteStep.C, "First chord should be C.");
+        Expect(voicings[1].Chord.BassNote == NoteStep.B, "G/B should have B as bass.");
+        Expect(voicings[1].Pitches[0].ToMidiNoteNumber() % 12 == 11, $"G/B should start on B: {Format(voicings[1])}");
+        Expect(voicings[2].Chord.ChordType == ChordType.Minor, "Am should be parsed as minor.");
+        Expect(voicings[4].Chord.ChordType == ChordType.Seventh, "G7 should be parsed as seventh.");
+
+        Console.WriteLine("Parser: C -> G/B -> Am -> F -> G7 -> C OK");
+
+        Chord c69 = ChordProgressionParser.ParseChord("C6/9");
+        Expect(c69.ChordType == ChordType.SixthNinth, "C6/9 should be parsed as sixth-ninth.");
+
+        Chord bb = ChordProgressionParser.ParseChord("Bbmaj7");
+        Expect(bb.RootNote == NoteStep.B && bb.RootNoteAlteration == Alteration.flat,
+            "Bbmaj7 should parse the flat root.");
+
+        Chord m7Upper = ChordProgressionParser.ParseChord("CM7");
+        Expect(m7Upper.ChordType == ChordType.MajorSeventh, "CM7 should be parsed as major seventh.");
+
+        Pitch[] exact = [P(NoteStep.E, 1), P(NoteStep.G, 1), P(NoteStep.C, 2)];
+        IReadOnlyList<ChordVoicing> exactProgression = parser.ParseToVoicings("C\nAm", exact);
+        Expect(exactProgression[0].Pitches.SequenceEqual(exact), "Exact first voicing should be preserved by parser.");
     }
 
     private static void ExactFirstVoicingIsPreserved()
