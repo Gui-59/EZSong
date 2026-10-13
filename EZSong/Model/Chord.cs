@@ -229,13 +229,13 @@ namespace EZSong.Model {
             if (IsSilentChord) {
                 humanString += "¤"; //TODO : gérer les silences d'accords dans la représentation humaine (peut-être avec un symbole spécial)
             } else {
-                humanString += NoteStepStringifier.ToHumanString(RootNote, false); //TODO : gérer la notation internationale (avec un paramètre de configuration)
+                humanString += NoteStepStringifier.ToHumanString(RootNote, true); //TODO : gérer la notation internationale (avec un paramètre de configuration)
                 if (RootNoteAlteration != Alteration.neutral) {
                     humanString += AlterationStringifier.ToHumanString(RootNoteAlteration);
                 }
                 humanString += ChordTypeStringifier.ToHumanString(ChordType);
                 if (BassNote is not null) {
-                    humanString += "/" + NoteStepStringifier.ToHumanString(BassNote.Value, false);
+                    humanString += "/" + NoteStepStringifier.ToHumanString(BassNote.Value, true); //TODO : gérer la notation internationale (avec un paramètre de configuration)
                     if (BassNoteAlteration != Alteration.neutral) {
                         humanString += AlterationStringifier.ToHumanString(BassNoteAlteration);
                     }

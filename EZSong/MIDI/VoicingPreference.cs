@@ -1,3 +1,4 @@
+using EZSong.Model;
 
 namespace EZSong.MIDI;
 
@@ -14,10 +15,25 @@ public sealed class VoicingPreferenceStore
 {
     public List<VoicingPreference> Preferences { get; set; } = new();
 
-    public IEnumerable<VoicingPreference> Find(Model.Chord firstChord, Model.Chord secondChord)
+    public IEnumerable<VoicingPreference> Find(Chord firstChord, Chord secondChord)
     {
+        ArgumentNullException.ThrowIfNull(firstChord);
+        ArgumentNullException.ThrowIfNull(secondChord);
+
         return Preferences.Where(p =>
-            p.FirstChord?.Chord == firstChord &&
-            p.SecondChord?.Chord == secondChord);
+            p.FirstChord is not null &&
+            p.SecondChord is not null &&
+            SameChord(p.FirstChord.Chord, firstChord) &&
+            SameChord(p.SecondChord.Chord, secondChord));
+    }
+
+    private static bool SameChord(Chord a, Chord b)
+    {
+        return a.IsSilentChord == b.IsSilentChord &&
+               a.RootNote == b.RootNote &&
+               a.RootNoteAlteration == b.RootNoteAlteration &&
+               a.ChordType == b.ChordType &&
+               a.BassNote == b.BassNote &&
+               a.BassNoteAlteration == b.BassNoteAlteration;
     }
 }

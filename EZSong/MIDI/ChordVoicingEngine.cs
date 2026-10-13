@@ -250,7 +250,9 @@ public sealed class ChordVoicingEngine
         {
             foreach (VoicingPreference preference in _preferences.Find(previous.Chord, request.Chord))
             {
-                if (preference.SecondChord is not null &&
+                if (preference.FirstChord is not null &&
+                    preference.SecondChord is not null &&
+                    preference.FirstChord.Pitches.SequenceEqual(previousNotes) &&
                     preference.SecondChord.Pitches.SequenceEqual(newNotes))
                 {
                     score -= _settings.UserPreferenceWeight;
