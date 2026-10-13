@@ -182,12 +182,12 @@ public static class VoicingEngineSelfTest
         ChordProgressionParser parser = new(engine);
 
         IReadOnlyList<ChordVoicing> voicings = parser.ParseToVoicings("""
-C
-G/B
-Am
-F
-G7
-C
+| C   4 |
+| G/B 4 |
+| Am  4 |
+| F   4 |
+| G7  4 |
+| C   4 |
 """);
 
         Expect(voicings.Count == 6, $"Expected 6 voicings, got {voicings.Count}.");
@@ -196,8 +196,24 @@ C
         Expect(voicings[1].Pitches[0].ToMidiNoteNumber() % 12 == 11, $"G/B should start on B: {Format(voicings[1])}");
         Expect(voicings[2].Chord.ChordType == ChordType.Minor, "Am should be parsed as minor.");
         Expect(voicings[4].Chord.ChordType == ChordType.Seventh, "G7 should be parsed as seventh.");
+        Expect(voicings[0].Chord.Duration.Equals(new RhythmRationalDuration(1, 4, 0)), "C duration should be a quarter note.");
+        Expect(voicings[1].Chord.Duration.Equals(new RhythmRationalDuration(1, 4, 0)), "G/B duration should be a quarter note.");
 
-        Console.WriteLine("Parser: C -> G/B -> Am -> F -> G7 -> C OK");
+        RhythmSimpleElement dotted = ChordProgressionParser.ParseDuration("4.");
+        Expect(dotted.GetEffectiveDuration().Equals(new RhythmRationalDuration(3, 8, 0)), "4. should represent a dotted quarter note.");
+
+        bool missingBarsRejected = false;
+        try
+        {
+            _ = parser.ParseToVoicings("C 4");
+        }
+        catch (FormatException)
+        {
+            missingBarsRejected = true;
+        }
+        Expect(missingBarsRejected, "A progression without measure bars should be rejected.");
+
+        Console.WriteLine("Parser: bars + durations + C -> G/B -> Am -> F -> G7 -> C OK");
 
         Chord c69 = ChordProgressionParser.ParseChord("C6/9");
         Expect(c69.ChordType == ChordType.SixthNinth, "C6/9 should be parsed as sixth-ninth.");
@@ -209,8 +225,8 @@ C
         Chord m7Upper = ChordProgressionParser.ParseChord("CM7");
         Expect(m7Upper.ChordType == ChordType.MajorSeventh, "CM7 should be parsed as major seventh.");
 
-        Pitch[] exact = [P(NoteStep.E, 1), P(NoteStep.G, 1), P(NoteStep.C, 2)];
-        IReadOnlyList<ChordVoicing> exactProgression = parser.ParseToVoicings("C\nAm", exact);
+        Pitch[] exact = { P(NoteStep.E, 1), P(NoteStep.G, 1), P(NoteStep.C, 2) };
+        IReadOnlyList<ChordVoicing> exactProgression = parser.ParseToVoicings("|C 4 |\n|Am 4 |", exact);
         Expect(exactProgression[0].Pitches.SequenceEqual(exact), "Exact first voicing should be preserved by parser.");
     }
 
