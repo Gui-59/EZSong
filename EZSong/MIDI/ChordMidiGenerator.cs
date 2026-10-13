@@ -27,15 +27,12 @@ public sealed class ChordMidiGenerator
         ArgumentNullException.ThrowIfNull(followingChords);
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
 
-        List<ChordVoicing> result = new();
-        ChordVoicing current = _voicingEngine.GenerateFirst(firstChord);
-        result.Add(current);
+        ChordVoicingRequest[] requests = new[] { firstChord }
+            .Concat(followingChords)
+            .ToArray();
 
-        foreach (ChordVoicingRequest request in followingChords)
-        {
-            current = _voicingEngine.GenerateNext(request, current);
-            result.Add(current);
-        }
+        IReadOnlyList<ChordVoicing> result =
+            _voicingEngine.GenerateProgression(requests);
 
         MidiChordExporter.Export(result, outputPath, velocity);
         return result;

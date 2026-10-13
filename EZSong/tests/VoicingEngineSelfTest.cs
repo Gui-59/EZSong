@@ -1,6 +1,7 @@
 using EZSong.Enums;
 using EZSong.MIDI;
 using EZSong.Model;
+using Melanchall.DryWetMidi.Core;
 
 namespace EZSong.Tests;
 
@@ -20,6 +21,7 @@ public static class VoicingEngineSelfTest
         LargeVoiceMovementIsRejected();
         ExactFirstVoicingIsPreserved();
         ChordProgressionParserWorks();
+        ChordMidiGeneratorExportsGlobalVoicingAndRhythm();
 
         Console.WriteLine("VoicingEngineSelfTest: ALL OK");
     }
@@ -228,6 +230,113 @@ public static class VoicingEngineSelfTest
         Pitch[] exact = { P(NoteStep.E, 1), P(NoteStep.G, 1), P(NoteStep.C, 2) };
         IReadOnlyList<ChordVoicing> exactProgression = parser.ParseToVoicings("|C 4 |\n|Am 4 |", exact);
         Expect(exactProgression[0].Pitches.SequenceEqual(exact), "Exact first voicing should be preserved by parser.");
+    }
+
+    private static void ChordMidiGeneratorExportsGlobalVoicingAndRhythm()
+    {
+        string outputPath = Path.Combine(
+            Path.GetTempPath(),
+            $"EZSong-voicing-test-{Guid.NewGuid():N}.mid");
+
+        try
+        {
+            VoicingSettings settings = CreateSettings();
+            ChordVoicingEngine engine = new(settings);
+            ChordMidiGenerator generator = new(settings);
+
+            Chord c = Major(NoteStep.C);
+            Chord gOverB = Major(NoteStep.G, NoteStep.B);
+            Chord am = Minor(NoteStep.A);
+
+            c.Duration = new RhythmRationalDuration(1, 4, 0);
+            gOverB.Duration = new RhythmRationalDuration(1, 2, 0);
+            am.Duration = new RhythmRationalDuration(3, 8, 0);
+
+            ChordVoicingRequest first = ChordVoicingRequest.FromExactVoicing(
+                c,
+                P(NoteStep.E, 1),
+                P(NoteStep.G, 1),
+                P(NoteStep.C, 2));
+
+            IReadOnlyList<ChordVoicing> expected = engine.GenerateProgression(
+            [
+                first,
+                new ChordVoicingRequest(gOverB),
+                new ChordVoicingRequest(am)
+            ]);
+
+            IReadOnlyList<ChordVoicing> generated = generator.Generate(
+                first,
+                [
+                    new ChordVoicingRequest(gOverB),
+                    new ChordVoicingRequest(am)
+                ],
+                outputPath);
+
+            Expect(generated.Count == 3, $"Expected 3 generated voicings, got {generated.Count}.");
+            Expect(generated.SequenceEqual(expected),
+                "ChordMidiGenerator should use the same global progression optimisation as ChordVoicingEngine.");
+
+            Expect(File.Exists(outputPath), "MIDI output file was not created.");
+
+            MidiFile midiFile = MidiFile.Read(outputPath);
+            TrackChunk track = midiFile.GetTrackChunks().Single();
+            List<(long Tick, bool On)> notes = new();
+            long absoluteTick = 0;
+
+            foreach (MidiEvent midiEvent in track.Events)
+            {
+                absoluteTick += midiEvent.DeltaTime;
+
+                if (midiEvent is NoteOnEvent noteOn)
+                {
+                    notes.Add((absoluteTick, noteOn.Velocity > 0));
+                }
+                else if (midiEvent is NoteOffEvent noteOff)
+                {
+                    notes.Add((absoluteTick, false));
+                }
+            }
+
+            int expectedNoteCount = generated.Sum(v => v.Pitches.Count);
+            Expect(notes.Count == expectedNoteCount * 2,
+                $"Expected {expectedNoteCount * 2} note events, got {notes.Count}.");
+
+            int firstChordNoteCount = generated[0].Pitches.Count;
+            int secondChordNoteCount = generated[1].Pitches.Count;
+            int thirdChordNoteCount = generated[2].Pitches.Count;
+
+            long firstEnd = MidiChordExporter.TicksPerQuarterNote;
+            long secondEnd = firstEnd + MidiChordExporter.TicksPerQuarterNote * 2L;
+            long thirdEnd = secondEnd + MidiChordExporter.TicksPerQuarterNote * 3L / 2L;
+
+            int firstStarts = notes.Count(n => n.On && n.Tick == 0);
+            int secondStarts = notes.Count(n => n.On && n.Tick == firstEnd);
+            int thirdStarts = notes.Count(n => n.On && n.Tick == secondEnd);
+
+            Expect(firstStarts == firstChordNoteCount,
+                $"Expected {firstChordNoteCount} note-ons at tick 0, got {firstStarts}.");
+            Expect(secondStarts == secondChordNoteCount,
+                $"Expected {secondChordNoteCount} note-ons at tick {firstEnd}, got {secondStarts}.");
+            Expect(thirdStarts == thirdChordNoteCount,
+                $"Expected {thirdChordNoteCount} note-ons at tick {secondEnd}, got {thirdStarts}.");
+
+            Expect(notes.Count(n => !n.On && n.Tick == firstEnd) == firstChordNoteCount,
+                "The first chord should end after one quarter note.");
+            Expect(notes.Count(n => !n.On && n.Tick == secondEnd) == secondChordNoteCount,
+                "The second chord should end after two quarter notes.");
+            Expect(notes.Count(n => !n.On && n.Tick == thirdEnd) == thirdChordNoteCount,
+                "The third chord should end after a dotted quarter note.");
+
+            Console.WriteLine("MIDI: global voicing + durations + note timing OK");
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+            {
+                File.Delete(outputPath);
+            }
+        }
     }
 
     private static void ExactFirstVoicingIsPreserved()
