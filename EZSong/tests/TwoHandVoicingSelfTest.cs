@@ -26,8 +26,28 @@ public static class TwoHandVoicingSelfTest
             MaxTotalVoices = 3
         };
 
+        // Exercise the public high-level API as well as the underlying engine.
+        // This is important: GenerateTwoHands must be part of the tested path,
+        // not just a dead API that happens to compile.
         TwoHandVoicingEngine engine = new(settings);
-        IReadOnlyList<TwoHandChordVoicing> result = engine.GenerateProgression(requests);
+        IReadOnlyList<TwoHandChordVoicing> engineResult = engine.GenerateProgression(requests);
+
+        ChordMidiGenerator generator = new();
+        MidiChordExportSettings export = new();
+        IReadOnlyList<TwoHandChordVoicing> result = generator.GenerateTwoHands(
+            requests[0],
+            requests.Skip(1),
+            outputPath,
+            settings,
+            export);
+
+        Expect(result.Count == engineResult.Count,
+            "The high-level two-hand generator returned an unexpected number of voicings.");
+        for (int i = 0; i < result.Count; i++)
+        {
+            Expect(result[i].Pitches.SequenceEqual(engineResult[i].Pitches),
+                "The high-level two-hand generator produced a different progression than the engine.");
+        }
         Expect(result.Count == 2, "Expected two two-hand voicings.");
         foreach (TwoHandChordVoicing v in result)
         {
@@ -38,8 +58,6 @@ public static class TwoHandVoicingSelfTest
             Expect(v.RightHand.All(p => p >= settings.MinRightHandNote && p <= settings.MaxRightHandNote), "Right-hand note outside range.");
         }
 
-        MidiChordExportSettings export = new();
-        TwoHandMidiExporter.Export(result, outputPath, export);
         MidiFile midi = MidiFile.Read(outputPath);
         Expect(midi.GetTrackChunks().Count() == 2, "Expected two MIDI tracks.");
         Console.WriteLine("TwoHandVoicingSelfTest: ALL OK");
