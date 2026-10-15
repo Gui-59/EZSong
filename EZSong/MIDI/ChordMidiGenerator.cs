@@ -77,4 +77,31 @@ public sealed class ChordMidiGenerator
 
         return Generate(firstChord, requests.Skip(1), outputPath, velocity);
     }
+    /// <summary>Generates a progression using independent left/right hand ranges.</summary>
+    public IReadOnlyList<TwoHandChordVoicing> GenerateTwoHands(
+        ChordVoicingRequest firstChord,
+        IEnumerable<ChordVoicingRequest> followingChords,
+        string outputPath,
+        TwoHandVoicingSettings voicingSettings,
+        MidiChordExportSettings exportSettings,
+        int velocity = 90,
+        VoicingPreferenceStore? preferences = null)
+    {
+        ArgumentNullException.ThrowIfNull(firstChord);
+        ArgumentNullException.ThrowIfNull(followingChords);
+        ArgumentNullException.ThrowIfNull(voicingSettings);
+        ArgumentNullException.ThrowIfNull(exportSettings);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+
+        ChordVoicingRequest[] requests = new[] { firstChord }
+            .Concat(followingChords)
+            .ToArray();
+
+        TwoHandVoicingEngine engine = new(voicingSettings, preferences);
+        IReadOnlyList<TwoHandChordVoicing> result = engine.GenerateProgression(requests);
+        TwoHandMidiExporter.Export(result, outputPath, exportSettings, velocity);
+        return result;
+    }
+
 }
+
