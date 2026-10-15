@@ -39,6 +39,29 @@ public sealed class ChordMidiGenerator
     }
 
     public IReadOnlyList<ChordVoicing> Generate(
+        ChordVoicingRequest firstChord,
+        IEnumerable<ChordVoicingRequest> followingChords,
+        string outputPath,
+        MidiChordExportSettings exportSettings,
+        int velocity = 90)
+    {
+        ArgumentNullException.ThrowIfNull(exportSettings);
+        ArgumentNullException.ThrowIfNull(firstChord);
+        ArgumentNullException.ThrowIfNull(followingChords);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+
+        ChordVoicingRequest[] requests = new[] { firstChord }
+            .Concat(followingChords)
+            .ToArray();
+
+        IReadOnlyList<ChordVoicing> result =
+            _voicingEngine.GenerateProgression(requests);
+
+        MidiChordExporter.Export(result, outputPath, exportSettings, velocity);
+        return result;
+    }
+
+    public IReadOnlyList<ChordVoicing> Generate(
         ChordSequence sequence,
         ChordVoicingRequest firstChord,
         string outputPath,
