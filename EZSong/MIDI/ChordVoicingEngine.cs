@@ -291,7 +291,12 @@ public sealed class ChordVoicingEngine
         }
 
         if (pitchClasses.Length > _settings.ChordMaxKeyCount) {
-            pitchClasses = ReduceToMaximumVoices(request.Chord, pitchClasses, _settings.ChordMaxKeyCount);
+            pitchClasses = ChordToneSelector.Select(
+                request.Chord,
+                pitchClasses,
+                _settings.ChordMaxKeyCount,
+                request.Bass,
+                _settings.ChordTonePriorityPolicy);
         }
 
         if (request.Bass is not null && !pitchClasses.Contains(request.Bass.Value.ChromaticPitch)) {
@@ -399,19 +404,6 @@ public sealed class ChordVoicingEngine
         if (request.Bass is not null && notes[0] % 12 != request.Bass.Value.ChromaticPitch) {
             throw new ArgumentException("The exact voicing does not respect the requested bass note.");
         }
-    }
-
-    private static Model.Pitch[] ReduceToMaximumVoices(Chord chord, Model.Pitch[] pitchClasses, int maxVoices)
-    {
-        // Keep root, third (when present), seventh (when present), then remaining chord tones.
-        // This is deliberately conservative: future versions can expose an explicit omission policy.
-        Model.Pitch root = Pitch.FromMidi(((int)chord.RootNote + (int)chord.RootNoteAlteration) % 12);
-        Model.Pitch[] ordered = pitchClasses
-            .OrderBy(pc => pc == root ? 0 : 1)
-            .ThenBy(pc => pc)
-            .Take(maxVoices)
-            .ToArray();
-        return ordered;
     }
 
     private static IEnumerable<Model.Pitch> GetChordPitchClasses(Chord chord)

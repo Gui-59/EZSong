@@ -19,6 +19,9 @@ public sealed class TwoHandVoicingSettings
     public int MaxRightHandVoices { get; set; } = 4;
     public int MaxTotalVoices { get; set; } = 5;
 
+    /// <summary>Policy used when a chord contains more tones than MaxTotalVoices.</summary>
+    public ChordTonePriorityPolicy ChordTonePriorityPolicy { get; set; } = ChordTonePriorityPolicy.EssentialsThenExtensions;
+
     public int MaxVoiceMovement { get; set; } = 11;
     public int CommonNoteWeight { get; set; } = 100;
     public int MovementWeight { get; set; } = 1;

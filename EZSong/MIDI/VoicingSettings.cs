@@ -35,6 +35,9 @@ public sealed class VoicingSettings
     /// <summary>Hard limit for the number of chord tones.</summary>
     public int ChordMaxKeyCount { get; set; } = 5;
 
+    /// <summary>Policy used when a chord contains more tones than ChordMaxKeyCount.</summary>
+    public ChordTonePriorityPolicy ChordTonePriorityPolicy { get; set; } = ChordTonePriorityPolicy.EssentialsThenExtensions;
+
     public void Validate()
     {
         if (MinChordAreaNote < Model.Pitch.MinValue || MinChordAreaNote > Model.Pitch.MaxValue) {

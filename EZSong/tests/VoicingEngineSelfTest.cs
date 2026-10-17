@@ -23,8 +23,56 @@ public static class VoicingEngineSelfTest
         ChordProgressionParserWorks();
         VoicingPreferenceJsonWorks();
         VoiceIdentityIsExplicit();
+        IntelligentExtendedChordReduction();
+        SlashBassSurvivesExtendedChordReduction();
 
         Console.WriteLine("VoicingEngineSelfTest: ALL OK");
+    }
+
+    private static void IntelligentExtendedChordReduction()
+    {
+        Chord c13 = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.C, Alteration.neutral, ChordType.Thirteenth);
+
+        ChordVoicingEngine richEngine = new(new VoicingSettings
+        {
+            MinChordAreaNote = P(NoteStep.C, 1),
+            MaxChordAreaNote = P(NoteStep.C, 3),
+            ChordMaxKeyCount = 5,
+            ChordTonePriorityPolicy = ChordTonePriorityPolicy.EssentialsThenExtensions
+        });
+
+        ChordVoicing rich = richEngine.GenerateFirst(new ChordVoicingRequest(c13));
+        int[] expectedRich = { 0, 2, 4, 9, 10 };
+        Expect(rich.Pitches.Select(p => p.ToMidiNoteNumber() % 12).OrderBy(x => x).SequenceEqual(expectedRich),
+            $"C13 intelligent reduction should keep root, 3rd, 7th, 9th and 13th: {Format(rich)}");
+
+        ChordVoicingEngine traditionalEngine = new(new VoicingSettings
+        {
+            MinChordAreaNote = P(NoteStep.C, 1),
+            MaxChordAreaNote = P(NoteStep.C, 3),
+            ChordMaxKeyCount = 5,
+            ChordTonePriorityPolicy = ChordTonePriorityPolicy.EssentialsThenFifth
+        });
+
+        ChordVoicing traditional = traditionalEngine.GenerateFirst(new ChordVoicingRequest(c13));
+        int[] expectedTraditional = { 0, 2, 4, 7, 10 };
+        Expect(traditional.Pitches.Select(p => p.ToMidiNoteNumber() % 12).OrderBy(x => x).SequenceEqual(expectedTraditional),
+            $"C13 traditional reduction should keep the 5th before the 13th: {Format(traditional)}");
+
+        Console.WriteLine("V14: intelligent extended-chord omission policy OK");
+    }
+
+    private static void SlashBassSurvivesExtendedChordReduction()
+    {
+        Chord c13OverG = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.C, Alteration.neutral, ChordType.Thirteenth, NoteStep.G);
+        ChordVoicingEngine engine = CreateEngine();
+        ChordVoicing voicing = engine.GenerateFirst(new ChordVoicingRequest(c13OverG));
+
+        Expect(voicing.Pitches[0].ToMidiNoteNumber() % 12 == 7,
+            $"C13/G must keep G as the lowest note after tone reduction: {Format(voicing)}");
+        Expect(voicing.Pitches.Count == 5, "C13/G should still use the configured five voices.");
+
+        Console.WriteLine("V14: slash bass preservation during reduction OK");
     }
 
     private static void CToAmKeepsTwoKeys()

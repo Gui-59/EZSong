@@ -61,7 +61,33 @@ public static class TwoHandVoicingSelfTest
         MidiFile midi = MidiFile.Read(outputPath);
         Expect(midi.GetTrackChunks().Count() == 2, "Expected two MIDI tracks.");
         TwoHandVoiceIdentityIsExplicit(result[0], result[1], settings);
+        TwoHandExtendedChordReduction();
         Console.WriteLine("TwoHandVoicingSelfTest: ALL OK");
+    }
+
+    private static void TwoHandExtendedChordReduction()
+    {
+        Chord c13 = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.C, Alteration.neutral, ChordType.Thirteenth);
+        TwoHandVoicingSettings settings = new()
+        {
+            MinLeftHandNote = new Pitch(NoteStep.C, Alteration.neutral, 1),
+            MaxLeftHandNote = new Pitch(NoteStep.B, Alteration.neutral, 2),
+            MinRightHandNote = new Pitch(NoteStep.C, Alteration.neutral, 3),
+            MaxRightHandNote = new Pitch(NoteStep.C, Alteration.neutral, 4),
+            MinLeftHandVoices = 1,
+            MaxLeftHandVoices = 2,
+            MinRightHandVoices = 1,
+            MaxRightHandVoices = 3,
+            MaxTotalVoices = 5,
+            ChordTonePriorityPolicy = ChordTonePriorityPolicy.EssentialsThenExtensions
+        };
+
+        TwoHandChordVoicing voicing = new TwoHandVoicingEngine(settings)
+            .GenerateFirst(new ChordVoicingRequest(c13));
+
+        int[] expected = { 0, 2, 4, 9, 10 };
+        Expect(voicing.Pitches.Select(p => p.ToMidiNoteNumber() % 12).OrderBy(x => x).SequenceEqual(expected),
+            "Two-hand C13 should use the same intelligent tone-priority policy as one-hand voicing.");
     }
 
     private static void TwoHandVoiceIdentityIsExplicit(

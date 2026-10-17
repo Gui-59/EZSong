@@ -102,7 +102,12 @@ public sealed class TwoHandVoicingEngine
         }
 
         if (classes.Length > _settings.MaxTotalVoices) {
-            classes = ReduceToMaximumVoices(request.Chord, classes, _settings.MaxTotalVoices);
+            classes = ChordToneSelector.Select(
+                request.Chord,
+                classes,
+                _settings.MaxTotalVoices,
+                request.Bass,
+                _settings.ChordTonePriorityPolicy);
         }
 
         if (request.ExactVoicing is not null)
@@ -284,12 +289,6 @@ public sealed class TwoHandVoicingEngine
             throw new ArgumentException("The notes collection cannot be empty.");
         }
         return max - min;
-    }
-
-    private static Model.Pitch[] ReduceToMaximumVoices(Chord chord, Model.Pitch[] pitchClasses, int maxVoices)
-    {
-        Model.Pitch root = Pitch.FromMidi(((int)chord.RootNote + (int)chord.RootNoteAlteration) % 12);
-        return pitchClasses.OrderBy(pc => pc == root ? 0 : 1).ThenBy(pc => pc).Take(maxVoices).ToArray();
     }
 
     private static IEnumerable<Model.Pitch> GetChordPitchClasses(Chord chord)
