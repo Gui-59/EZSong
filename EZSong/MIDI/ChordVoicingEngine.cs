@@ -35,11 +35,16 @@ public sealed class ChordVoicingEngine
             throw new InvalidOperationException($"No valid voicing found for {request.Chord.ToHumanString()}.");
         }
 
-        // With no previous voicing, prefer the most compact voicing in the allowed register.
-        return candidates
-            .OrderBy(v => Span(v))
-            .ThenBy(v => v.Max())
-            .ThenBy(v => v.Min())
+        IEnumerable<Model.Pitch[]> orderedCandidates = candidates;
+        if (_settings.PreferCompactInitialVoicing)
+        {
+            orderedCandidates = orderedCandidates
+                .OrderBy(v => Span(v))
+                .ThenBy(v => v.Max())
+                .ThenBy(v => v.Min());
+        }
+
+        return orderedCandidates
             .Select(v => new ChordVoicing(request.Chord, v))
             .First();
     }
@@ -284,8 +289,10 @@ public sealed class ChordVoicingEngine
             .OrderBy(x => x)
             .ToArray();
 
-        if (pitchClasses.Length < 2) {
-            throw new InvalidOperationException("A chord must contain at least two distinct notes.");
+        if (pitchClasses.Length < _settings.ChordMinKeyCount) {
+            throw new InvalidOperationException(
+                $"Chord {request.Chord.ToHumanString()} contains only {pitchClasses.Length} distinct tones, " +
+                $"but ChordMinKeyCount is {_settings.ChordMinKeyCount}.");
         }
 
         if (pitchClasses.Length > _settings.ChordMaxKeyCount) {
@@ -377,8 +384,9 @@ public sealed class ChordVoicingEngine
 
     private void ValidateVoicingNotes(ChordVoicingRequest request, IReadOnlyList<Model.Pitch> notes)
     {
-        if (notes.Count < 2 || notes.Count > _settings.ChordMaxKeyCount) {
-            throw new ArgumentException("A voicing must contain between 2 and 5 notes.");
+        if (notes.Count < _settings.ChordMinKeyCount || notes.Count > _settings.ChordMaxKeyCount) {
+            throw new ArgumentException(
+                $"A voicing must contain between {_settings.ChordMinKeyCount} and {_settings.ChordMaxKeyCount} notes.");
         }
 
         if (notes.Any(n => n < _settings.MinChordAreaNote || n > _settings.MaxChordAreaNote)) {

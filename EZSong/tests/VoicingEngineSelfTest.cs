@@ -22,6 +22,7 @@ public static class VoicingEngineSelfTest
         ExactFirstVoicingIsPreserved();
         ChordProgressionParserWorks();
         VoicingPreferenceJsonWorks();
+        ConfigurableVoicingConstraintsWork();
 
         Console.WriteLine("VoicingEngineSelfTest: ALL OK");
     }
@@ -302,6 +303,39 @@ public static class VoicingEngineSelfTest
                 File.Delete(path);
             }
         }
+    }
+
+    private static void ConfigurableVoicingConstraintsWork()
+    {
+        VoicingSettings settings = CreateSettings();
+        settings.ChordMinKeyCount = 3;
+        settings.ChordMaxKeyCount = 3;
+        settings.CommonNoteWeight = 0;
+        settings.MovementWeight = 2;
+        settings.BassMovementWeight = 0;
+        settings.UserPreferenceWeight = 0;
+
+        ChordVoicingEngine engine = new(settings);
+        ChordVoicing c = engine.GenerateFirst(new ChordVoicingRequest(Major(NoteStep.C)));
+        Expect(c.Pitches.Count == 3,
+            $"Configurable chord voice count should force three notes: {Format(c)}");
+
+        bool rejected = false;
+        try
+        {
+            VoicingSettings impossible = CreateSettings();
+            impossible.ChordMinKeyCount = 4;
+            impossible.ChordMaxKeyCount = 5;
+            _ = new ChordVoicingEngine(impossible).GenerateFirst(
+                new ChordVoicingRequest(Major(NoteStep.C)));
+        }
+        catch (InvalidOperationException)
+        {
+            rejected = true;
+        }
+
+        Expect(rejected, "A three-tone chord should be rejected when four minimum tones are required.");
+        Console.WriteLine("Configurable voicing constraints: count + optimisation weights OK");
     }
 
     private static void PrintTransition(ChordVoicing from, ChordVoicing to, ChordVoicingEngine engine)

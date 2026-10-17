@@ -60,6 +60,31 @@ public static class TwoHandVoicingSelfTest
 
         MidiFile midi = MidiFile.Read(outputPath);
         Expect(midi.GetTrackChunks().Count() == 2, "Expected two MIDI tracks.");
+
+        bool rejected = false;
+        try
+        {
+            TwoHandVoicingSettings impossible = new()
+            {
+                MinLeftHandNote = settings.MinLeftHandNote,
+                MaxLeftHandNote = settings.MaxLeftHandNote,
+                MinRightHandNote = settings.MinRightHandNote,
+                MaxRightHandNote = settings.MaxRightHandNote,
+                MinLeftHandVoices = 1,
+                MaxLeftHandVoices = 2,
+                MinRightHandVoices = 1,
+                MaxRightHandVoices = 2,
+                MinTotalVoices = 4,
+                MaxTotalVoices = 5
+            };
+            _ = new TwoHandVoicingEngine(impossible).GenerateFirst(new ChordVoicingRequest(c));
+        }
+        catch (InvalidOperationException)
+        {
+            rejected = true;
+        }
+
+        Expect(rejected, "C major should be rejected when four total distinct voices are required.");
         Console.WriteLine("TwoHandVoicingSelfTest: ALL OK");
     }
 

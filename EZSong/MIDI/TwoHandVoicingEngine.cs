@@ -90,15 +90,25 @@ public sealed class TwoHandVoicingEngine
     public TwoHandChordVoicing GenerateFirst(ChordVoicingRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return GenerateCandidates(request).OrderBy(v => Span(v.Pitches)).ThenBy(v => v.Pitches.Max()).First();
+        IEnumerable<TwoHandChordVoicing> candidates = GenerateCandidates(request);
+        if (_settings.PreferCompactInitialVoicing)
+        {
+            candidates = candidates
+                .OrderBy(v => Span(v.Pitches))
+                .ThenBy(v => v.Pitches.Max())
+                .ThenBy(v => v.Pitches.Min());
+        }
+        return candidates.First();
     }
 
     private List<TwoHandChordVoicing> GenerateCandidates(ChordVoicingRequest request)
     {
         ChordForCurrentChord = request.Chord;
         Model.Pitch[] classes = GetChordPitchClasses(request.Chord).Distinct().OrderBy(x => x).ToArray();
-        if (classes.Length < 2) {
-            throw new InvalidOperationException("A chord must contain at least two distinct notes.");
+        if (classes.Length < _settings.MinTotalVoices) {
+            throw new InvalidOperationException(
+                $"Chord {request.Chord.ToHumanString()} contains only {classes.Length} distinct tones, " +
+                $"but MinTotalVoices is {_settings.MinTotalVoices}.");
         }
 
         if (classes.Length > _settings.MaxTotalVoices) {
@@ -124,6 +134,8 @@ public sealed class TwoHandVoicingEngine
         {
             int leftCount = notes.Count(IsLeft);
             int rightCount = notes.Length - leftCount;
+            if (notes.Length < _settings.MinTotalVoices || notes.Length > _settings.MaxTotalVoices)
+                return;
             if (leftCount < _settings.MinLeftHandVoices || leftCount > _settings.MaxLeftHandVoices ||
                 rightCount < _settings.MinRightHandVoices || rightCount > _settings.MaxRightHandVoices)
                 {
@@ -189,9 +201,10 @@ public sealed class TwoHandVoicingEngine
     private List<TwoHandChordVoicing> ValidateExact(ChordVoicingRequest request)
     {
         Model.Pitch[] notes = request.ExactVoicing!.OrderBy(x => x).ToArray();
-        if (notes.Length < 2 || notes.Length > _settings.MaxTotalVoices)
+        if (notes.Length < _settings.MinTotalVoices || notes.Length > _settings.MaxTotalVoices)
             {
-            throw new ArgumentException("The exact voicing has an invalid number of notes.");
+            throw new ArgumentException(
+                $"The exact voicing must contain between {_settings.MinTotalVoices} and {_settings.MaxTotalVoices} notes.");
         }
         if (notes.Zip(notes.Skip(1), (a, b) => b - a).Any(d => d <= 0))
             {
