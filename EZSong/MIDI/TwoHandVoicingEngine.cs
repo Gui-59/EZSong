@@ -90,25 +90,15 @@ public sealed class TwoHandVoicingEngine
     public TwoHandChordVoicing GenerateFirst(ChordVoicingRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        IEnumerable<TwoHandChordVoicing> candidates = GenerateCandidates(request);
-        if (_settings.PreferCompactInitialVoicing)
-        {
-            candidates = candidates
-                .OrderBy(v => Span(v.Pitches))
-                .ThenBy(v => v.Pitches.Max())
-                .ThenBy(v => v.Pitches.Min());
-        }
-        return candidates.First();
+        return GenerateCandidates(request).OrderBy(v => Span(v.Pitches)).ThenBy(v => v.Pitches.Max()).First();
     }
 
     private List<TwoHandChordVoicing> GenerateCandidates(ChordVoicingRequest request)
     {
         ChordForCurrentChord = request.Chord;
         Model.Pitch[] classes = GetChordPitchClasses(request.Chord).Distinct().OrderBy(x => x).ToArray();
-        if (classes.Length < _settings.MinTotalVoices) {
-            throw new InvalidOperationException(
-                $"Chord {request.Chord.ToHumanString()} contains only {classes.Length} distinct tones, " +
-                $"but MinTotalVoices is {_settings.MinTotalVoices}.");
+        if (classes.Length < 2) {
+            throw new InvalidOperationException("A chord must contain at least two distinct notes.");
         }
 
         if (classes.Length > _settings.MaxTotalVoices) {
@@ -134,8 +124,6 @@ public sealed class TwoHandVoicingEngine
         {
             int leftCount = notes.Count(IsLeft);
             int rightCount = notes.Length - leftCount;
-            if (notes.Length < _settings.MinTotalVoices || notes.Length > _settings.MaxTotalVoices)
-                return;
             if (leftCount < _settings.MinLeftHandVoices || leftCount > _settings.MaxLeftHandVoices ||
                 rightCount < _settings.MinRightHandVoices || rightCount > _settings.MaxRightHandVoices)
                 {
@@ -201,10 +189,9 @@ public sealed class TwoHandVoicingEngine
     private List<TwoHandChordVoicing> ValidateExact(ChordVoicingRequest request)
     {
         Model.Pitch[] notes = request.ExactVoicing!.OrderBy(x => x).ToArray();
-        if (notes.Length < _settings.MinTotalVoices || notes.Length > _settings.MaxTotalVoices)
+        if (notes.Length < 2 || notes.Length > _settings.MaxTotalVoices)
             {
-            throw new ArgumentException(
-                $"The exact voicing must contain between {_settings.MinTotalVoices} and {_settings.MaxTotalVoices} notes.");
+            throw new ArgumentException("The exact voicing has an invalid number of notes.");
         }
         if (notes.Zip(notes.Skip(1), (a, b) => b - a).Any(d => d <= 0))
             {
@@ -230,87 +217,64 @@ public sealed class TwoHandVoicingEngine
         return new() { new TwoHandChordVoicing(request.Chord, notes.Where(IsLeft), notes.Where(IsRight)) };
     }
 
-    private bool TryScoreTransition(TwoHandChordVoicing previous, TwoHandChordVoicing current, out int score)
+    public VoicingTransitionAnalysis AnalyzeTransition(
+        TwoHandChordVoicing previous,
+        TwoHandChordVoicing current)
     {
-        score = int.MaxValue;
-        (int total, bool valid) match = MinimumMovement(previous.Pitches, current.Pitches, _settings.MaxVoiceMovement);
-        if (!match.valid) {
-            return false;
+        ArgumentNullException.ThrowIfNull(previous);
+        ArgumentNullException.ThrowIfNull(current);
+
+        Pitch[] previousNotes = previous.Pitches.OrderBy(x => x).ToArray();
+        Pitch[] currentNotes = current.Pitches.OrderBy(x => x).ToArray();
+        int common = previousNotes.Intersect(currentNotes).Count();
+
+        VoiceLeadingMatch matching = VoiceLeadingMatcher.Match(
+            previousNotes, currentNotes, _settings.MaxVoiceMovement);
+
+        if (!matching.IsValid)
+        {
+            return new VoicingTransitionAnalysis(
+                previousNotes.Intersect(currentNotes).OrderBy(x => x).ToArray(),
+                0, 0, int.MaxValue, false);
         }
 
-        int common = previous.Pitches.Intersect(current.Pitches).Count();
-
-        Pitch? previousMin = previous.Pitches.Min();
-        Pitch? currentMin = current.Pitches.Min();
-        if (previousMin is null || currentMin is null) {
-            throw new InvalidOperationException("Chord voicing cannot be empty.");
+        int bassMovement = Math.Abs(currentNotes[0] - previousNotes[0]);
+        if (bassMovement > _settings.MaxVoiceMovement)
+        {
+            return new VoicingTransitionAnalysis(
+                previousNotes.Intersect(currentNotes).OrderBy(x => x).ToArray(),
+                matching.TotalMovement, bassMovement, int.MaxValue, false, matching.Movements);
         }
 
-        int bass = Math.Abs(previousMin - currentMin);
-        if (bass > _settings.MaxVoiceMovement) {
-            return false;
-        }
-
-        score = -common * _settings.CommonNoteWeight + match.total * _settings.MovementWeight + bass * _settings.BassMovementWeight;
+        int score =
+            -common * _settings.CommonNoteWeight
+            + matching.TotalMovement * _settings.MovementWeight
+            + bassMovement * _settings.BassMovementWeight;
 
         if (_preferences is not null)
         {
             foreach (VoicingPreference preference in _preferences.Find(previous.Chord, current.Chord))
             {
                 if (preference.FirstChord is not null && preference.SecondChord is not null &&
-                    preference.FirstChord.Pitches.SequenceEqual(previous.Pitches) &&
-                    preference.SecondChord.Pitches.SequenceEqual(current.Pitches))
+                    preference.FirstChord.Pitches.SequenceEqual(previousNotes) &&
+                    preference.SecondChord.Pitches.SequenceEqual(currentNotes))
                 {
-                    // Reuse the same preference weight as the normal voicing engine.
-                    // It remains a preference, never a hard rule.
                     score -= _settings.UserPreferenceWeight;
                     break;
                 }
             }
         }
 
-        return true;
+        return new VoicingTransitionAnalysis(
+            previousNotes.Intersect(currentNotes).OrderBy(x => x).ToArray(),
+            matching.TotalMovement, bassMovement, score, true, matching.Movements);
     }
 
-    private static (int total, bool valid) MinimumMovement(IReadOnlyList<Model.Pitch> previous, IReadOnlyList<Model.Pitch> current, int max)
+    private bool TryScoreTransition(TwoHandChordVoicing previous, TwoHandChordVoicing current, out int score)
     {
-        if (previous.Count == 0 || current.Count == 0) {
-            return (0, false);
-        }
-        int[,] memo = new int[previous.Count + 1, 1 << current.Count];
-        bool[,] seen = new bool[previous.Count + 1, 1 << current.Count];
-        const int Impossible = 1_000_000;
-        int Solve(int i, int mask)
-        {
-            if (i == previous.Count) {
-                return 0;
-            }
-            if (seen[i, mask]) {
-                return memo[i, mask];
-            }
-            seen[i, mask] = true;
-            int best = Impossible;
-            if (previous.Count > current.Count) {
-                best = Math.Min(best, Solve(i + 1, mask));
-            }
-            for (int j = 0; j < current.Count; j++)
-            {
-                if ((mask & (1 << j)) != 0) {
-                    continue;
-                }
-                int d = Math.Abs(previous[i] - current[j]);
-                if (d > max) {
-                    continue;
-                }
-                int rest = Solve(i + 1, mask | (1 << j));
-                if (rest < Impossible) {
-                    best = Math.Min(best, d + rest);
-                }
-            }
-            return memo[i, mask] = best;
-        }
-        int value = Solve(0, 0);
-        return (value, value < Impossible);
+        VoicingTransitionAnalysis analysis = AnalyzeTransition(previous, current);
+        score = analysis.Score;
+        return analysis.IsValid;
     }
 
     private static int Span(IReadOnlyList<Model.Pitch> notes) {

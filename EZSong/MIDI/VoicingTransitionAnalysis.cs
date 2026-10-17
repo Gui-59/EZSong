@@ -14,18 +14,21 @@ public sealed class VoicingTransitionAnalysis
     public int BassMovement { get; }
     public int Score { get; }
     public bool IsValid { get; }
+    public IReadOnlyList<VoiceMovement> VoiceMovements { get; }
 
     public VoicingTransitionAnalysis(
         IReadOnlyList<Pitch> commonNotes,
         int totalMovement,
         int bassMovement,
         int score,
-        bool isValid)
+        bool isValid,
+        IReadOnlyList<VoiceMovement>? voiceMovements = null)
     {
         CommonNotes = commonNotes;
         TotalMovement = totalMovement;
         BassMovement = bassMovement;
         Score = score;
         IsValid = isValid;
+        VoiceMovements = voiceMovements ?? Array.Empty<VoiceMovement>();
     }
 }

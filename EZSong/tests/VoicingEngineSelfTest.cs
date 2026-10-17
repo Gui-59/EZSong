@@ -22,7 +22,7 @@ public static class VoicingEngineSelfTest
         ExactFirstVoicingIsPreserved();
         ChordProgressionParserWorks();
         VoicingPreferenceJsonWorks();
-        ConfigurableVoicingConstraintsWork();
+        VoiceIdentityIsExplicit();
 
         Console.WriteLine("VoicingEngineSelfTest: ALL OK");
     }
@@ -233,6 +233,30 @@ public static class VoicingEngineSelfTest
         Expect(exactProgression[0].Pitches.SequenceEqual(exact), "Exact first voicing should be preserved by parser.");
     }
 
+    private static void VoiceIdentityIsExplicit()
+    {
+        ChordVoicingEngine engine = CreateEngine();
+        Chord c = Major(NoteStep.C);
+        Chord am = Minor(NoteStep.A);
+
+        ChordVoicing first = new(c, new[] { P(NoteStep.E, 1), P(NoteStep.G, 1), P(NoteStep.C, 2) });
+        ChordVoicing next = new(am, new[] { P(NoteStep.E, 1), P(NoteStep.A, 1), P(NoteStep.C, 2) });
+
+        VoicingTransitionAnalysis analysis = engine.AnalyzeTransition(
+            first, new ChordVoicingRequest(am), next.Pitches);
+
+        Expect(analysis.IsValid, "C -> Am transition should be valid.");
+        Expect(analysis.VoiceMovements.Count == 3, "Expected three explicit voice movements.");
+        Expect(analysis.VoiceMovements.Count(v => v.IsContinued) == 3, "All three voices should continue.");
+        Expect(analysis.VoiceMovements.Any(v => v.PreviousNote?.Equals(P(NoteStep.E, 1)) == true && v.CurrentNote?.Equals(P(NoteStep.E, 1)) == true),
+            "E1 should remain E1.");
+        Expect(analysis.VoiceMovements.Any(v => v.PreviousNote?.Equals(P(NoteStep.G, 1)) == true && v.CurrentNote?.Equals(P(NoteStep.A, 1)) == true),
+            "G1 should move to A1.");
+        Expect(analysis.VoiceMovements.Any(v => v.PreviousNote?.Equals(P(NoteStep.C, 2)) == true && v.CurrentNote?.Equals(P(NoteStep.C, 2)) == true),
+            "C2 should remain C2.");
+        Console.WriteLine("Voice identity tracking: C -> Am OK");
+    }
+
     private static void ExactFirstVoicingIsPreserved()
     {
         ChordVoicingEngine engine = CreateEngine();
@@ -303,39 +327,6 @@ public static class VoicingEngineSelfTest
                 File.Delete(path);
             }
         }
-    }
-
-    private static void ConfigurableVoicingConstraintsWork()
-    {
-        VoicingSettings settings = CreateSettings();
-        settings.ChordMinKeyCount = 3;
-        settings.ChordMaxKeyCount = 3;
-        settings.CommonNoteWeight = 0;
-        settings.MovementWeight = 2;
-        settings.BassMovementWeight = 0;
-        settings.UserPreferenceWeight = 0;
-
-        ChordVoicingEngine engine = new(settings);
-        ChordVoicing c = engine.GenerateFirst(new ChordVoicingRequest(Major(NoteStep.C)));
-        Expect(c.Pitches.Count == 3,
-            $"Configurable chord voice count should force three notes: {Format(c)}");
-
-        bool rejected = false;
-        try
-        {
-            VoicingSettings impossible = CreateSettings();
-            impossible.ChordMinKeyCount = 4;
-            impossible.ChordMaxKeyCount = 5;
-            _ = new ChordVoicingEngine(impossible).GenerateFirst(
-                new ChordVoicingRequest(Major(NoteStep.C)));
-        }
-        catch (InvalidOperationException)
-        {
-            rejected = true;
-        }
-
-        Expect(rejected, "A three-tone chord should be rejected when four minimum tones are required.");
-        Console.WriteLine("Configurable voicing constraints: count + optimisation weights OK");
     }
 
     private static void PrintTransition(ChordVoicing from, ChordVoicing to, ChordVoicingEngine engine)

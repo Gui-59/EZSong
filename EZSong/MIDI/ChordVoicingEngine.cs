@@ -35,16 +35,11 @@ public sealed class ChordVoicingEngine
             throw new InvalidOperationException($"No valid voicing found for {request.Chord.ToHumanString()}.");
         }
 
-        IEnumerable<Model.Pitch[]> orderedCandidates = candidates;
-        if (_settings.PreferCompactInitialVoicing)
-        {
-            orderedCandidates = orderedCandidates
-                .OrderBy(v => Span(v))
-                .ThenBy(v => v.Max())
-                .ThenBy(v => v.Min());
-        }
-
-        return orderedCandidates
+        // With no previous voicing, prefer the most compact voicing in the allowed register.
+        return candidates
+            .OrderBy(v => Span(v))
+            .ThenBy(v => v.Max())
+            .ThenBy(v => v.Min())
             .Select(v => new ChordVoicing(request.Chord, v))
             .First();
     }
@@ -222,8 +217,8 @@ public sealed class ChordVoicingEngine
         Model.Pitch[] newNotes = candidate.OrderBy(x => x).ToArray();
 
         int nbCommon = previousNotes.Intersect(newNotes).Count();
-        (int TotalMovement, bool IsValid) matching =
-            MinimumMovementMatching(previousNotes, newNotes, _settings.MaxVoiceMovement);
+        VoiceLeadingMatch matching =
+            VoiceLeadingMatcher.Match(previousNotes, newNotes, _settings.MaxVoiceMovement);
 
         if (!matching.IsValid)
         {
@@ -243,7 +238,8 @@ public sealed class ChordVoicingEngine
                 matching.TotalMovement,
                 bassMovement,
                 int.MaxValue,
-                false);
+                false,
+                matching.Movements);
         }
 
         int score =
@@ -271,7 +267,8 @@ public sealed class ChordVoicingEngine
             matching.TotalMovement,
             bassMovement,
             score,
-            true);
+            true,
+            matching.Movements);
     }
 
     private int ScoreTransition(
@@ -289,10 +286,8 @@ public sealed class ChordVoicingEngine
             .OrderBy(x => x)
             .ToArray();
 
-        if (pitchClasses.Length < _settings.ChordMinKeyCount) {
-            throw new InvalidOperationException(
-                $"Chord {request.Chord.ToHumanString()} contains only {pitchClasses.Length} distinct tones, " +
-                $"but ChordMinKeyCount is {_settings.ChordMinKeyCount}.");
+        if (pitchClasses.Length < 2) {
+            throw new InvalidOperationException("A chord must contain at least two distinct notes.");
         }
 
         if (pitchClasses.Length > _settings.ChordMaxKeyCount) {
@@ -384,9 +379,8 @@ public sealed class ChordVoicingEngine
 
     private void ValidateVoicingNotes(ChordVoicingRequest request, IReadOnlyList<Model.Pitch> notes)
     {
-        if (notes.Count < _settings.ChordMinKeyCount || notes.Count > _settings.ChordMaxKeyCount) {
-            throw new ArgumentException(
-                $"A voicing must contain between {_settings.ChordMinKeyCount} and {_settings.ChordMaxKeyCount} notes.");
+        if (notes.Count < 2 || notes.Count > _settings.ChordMaxKeyCount) {
+            throw new ArgumentException("A voicing must contain between 2 and 5 notes.");
         }
 
         if (notes.Any(n => n < _settings.MinChordAreaNote || n > _settings.MaxChordAreaNote)) {
@@ -465,80 +459,6 @@ public sealed class ChordVoicingEngine
         return chordPitchClasses;
     }
 
-    private static (int TotalMovement, bool IsValid) MinimumMovementMatching(
-        IReadOnlyList<Model.Pitch> previous,
-        IReadOnlyList<Model.Pitch> current,
-        int maxMovement)
-    {
-        if (previous.Count == 0 || current.Count == 0) {
-            return (0, false);
-        }
-
-        // Notes that disappear do not have to be close to a note in the new
-        // voicing: a voice is allowed to disappear when the chord has fewer
-        // tones. Likewise, when a new voice is added, it does not have to be
-        // one of the voices matched below; it only has to be reachable from
-        // the previous hand position. This is deliberately independent from
-        // the number of common pitch classes.
-        if (current.Count > previous.Count)
-        {
-            foreach (Model.Pitch added in current)
-            {
-                if (!previous.Any(old => Math.Abs(old - added) <= maxMovement)) {
-                    return (0, false);
-                }
-            }
-        }
-
-        int[,] memo = new int[previous.Count + 1, 1 << current.Count];
-        bool[,] seen = new bool[previous.Count + 1, 1 << current.Count];
-
-        const int Impossible = 1_000_000;
-
-        int Solve(int index, int usedMask)
-        {
-            if (index == previous.Count) {
-                return 0;
-            }
-
-            if (seen[index, usedMask]) {
-                return memo[index, usedMask];
-            }
-
-            seen[index, usedMask] = true;
-            int best = Impossible;
-
-            // A previous voice may disappear when the new chord has fewer
-            // voices. This is not a failure: preserving common keys is a
-            // preference, not an absolute requirement.
-            if (previous.Count > current.Count) {
-                best = Math.Min(best, Solve(index + 1, usedMask));
-            }
-
-            for (int j = 0; j < current.Count; j++)
-            {
-                if ((usedMask & (1 << j)) != 0) {
-                    continue;
-                }
-
-                int distance = Math.Abs(previous[index] - current[j]);
-                if (distance > maxMovement) {
-                    continue;
-                }
-
-                int remainder = Solve(index + 1, usedMask | (1 << j));
-                if (remainder < Impossible) {
-                    best = Math.Min(best, distance + remainder);
-                }
-            }
-
-            memo[index, usedMask] = best;
-            return best;
-        }
-
-        int movement = Solve(0, 0);
-        return (movement, movement < Impossible);
-    }
 
     private static int Span(IReadOnlyList<Model.Pitch> notes) {
         return notes[^1] - notes[0];

@@ -1,34 +1,13 @@
-# EZSong V12 — configurable voicing constraints
+# EZSong V11 — true two-hand voicing
 
-V12 keeps the V11 two-hand architecture and makes the main voicing constraints
-and optimisation rules explicit in the settings objects. Existing default
-values are preserved.
+V11 adds a genuine two-hand voicing engine. Unlike the V10 MIDI split, the
+left/right ranges are constraints during voicing generation and therefore
+influence the global voice-leading optimisation.
 
-## One hand
-
-```csharp
-var settings = new VoicingSettings
-{
-    MinChordAreaNote = new Pitch(NoteStep.C, Alteration.neutral, 1),
-    MaxChordAreaNote = new Pitch(NoteStep.C, Alteration.neutral, 3),
-    ChordMinKeyCount = 2,
-    ChordMaxKeyCount = 5,
-    MaxVoiceMovement = 11,
-    CommonNoteWeight = 100,
-    MovementWeight = 1,
-    BassMovementWeight = 3,
-    UserPreferenceWeight = 75,
-    PreferCompactInitialVoicing = true
-};
-```
-
-A weight of `0` disables that preference without disabling the corresponding
-hard constraint. Negative weights are rejected.
-
-## Two hands
+Example:
 
 ```csharp
-var settings = new TwoHandVoicingSettings
+var voicingSettings = new TwoHandVoicingSettings
 {
     MinLeftHandNote = new Pitch(NoteStep.C, Alteration.neutral, 1),
     MaxLeftHandNote = new Pitch(NoteStep.B, Alteration.neutral, 2),
@@ -38,23 +17,23 @@ var settings = new TwoHandVoicingSettings
     MaxLeftHandVoices = 2,
     MinRightHandVoices = 1,
     MaxRightHandVoices = 2,
-    MinTotalVoices = 2,
-    MaxTotalVoices = 4,
-    MaxVoiceMovement = 11,
-    CommonNoteWeight = 100,
-    MovementWeight = 1,
-    BassMovementWeight = 3,
-    UserPreferenceWeight = 75,
-    PreferCompactInitialVoicing = true
+    MaxTotalVoices = 4
 };
+
+var exportSettings = new MidiChordExportSettings();
+
+var preferences = VoicingPreferenceJson.Load("voicing-preferences.json");
+var generator = new ChordMidiGenerator();
+var voicings = generator.GenerateTwoHands(
+    firstChord,
+    followingChords,
+    "two-hands.mid",
+    voicingSettings,
+    exportSettings,
+    preferences: preferences);
 ```
 
-`MinTotalVoices` and `MaxTotalVoices` constrain the number of distinct chord
-tones. No note doubling is introduced to satisfy a voice-count constraint.
-
-## Compatibility
-
-All V11 default values remain unchanged, so existing code can continue to
-construct `VoicingSettings` and `TwoHandVoicingSettings` without modification.
+The resulting MIDI has two tracks, but the important distinction is that the
+notes were already assigned to the hands by the voicing engine.
 
 Hand-thesia remains completely external to EZSong.
