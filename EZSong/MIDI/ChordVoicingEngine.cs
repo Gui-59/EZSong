@@ -170,6 +170,13 @@ public sealed class ChordVoicingEngine
         return result;
     }
 
+    /// <summary>Assigns persistent voice identities to a generated progression.</summary>
+    public VoiceTrackingResult TrackVoices(IReadOnlyList<ChordVoicing> progression)
+    {
+        ArgumentNullException.ThrowIfNull(progression);
+        return VoiceIdentityTracker.TrackProgression(progression, _settings.MaxVoiceMovement);
+    }
+
     public ChordVoicing GenerateNext(ChordVoicingRequest request, ChordVoicing previous)
     {
         ArgumentNullException.ThrowIfNull(request);

@@ -25,6 +25,7 @@ public static class VoicingEngineSelfTest
         VoiceIdentityIsExplicit();
         IntelligentExtendedChordReduction();
         SlashBassSurvivesExtendedChordReduction();
+        PersistentVoiceIdentityAcrossProgression();
 
         Console.WriteLine("VoicingEngineSelfTest: ALL OK");
     }
@@ -73,6 +74,43 @@ public static class VoicingEngineSelfTest
         Expect(voicing.Pitches.Count == 5, "C13/G should still use the configured five voices.");
 
         Console.WriteLine("V14: slash bass preservation during reduction OK");
+    }
+
+    private static void PersistentVoiceIdentityAcrossProgression()
+    {
+        ChordVoicingEngine engine = CreateEngine();
+        Chord c = Major(NoteStep.C);
+        Chord am = Minor(NoteStep.A);
+        Chord am7 = MinorSeventh(NoteStep.A);
+
+        IReadOnlyList<ChordVoicing> progression = engine.GenerateProgression(new[]
+        {
+            ChordVoicingRequest.FromExactVoicing(c, P(NoteStep.E, 1), P(NoteStep.G, 1), P(NoteStep.C, 2)),
+            new ChordVoicingRequest(am),
+            new ChordVoicingRequest(am7)
+        });
+
+        VoiceTrackingResult tracking = engine.TrackVoices(progression);
+        Expect(tracking.Voicings.Count == 3, "V15 should track every chord in the progression.");
+        Expect(tracking.Voicings[0].Voices.Select(v => v.VoiceId).SequenceEqual(new[] { 1, 2, 3 }),
+            "The first chord should establish voices 1, 2 and 3.");
+
+        int eVoice = tracking.Voicings[0].Voices.Single(v => v.Note == P(NoteStep.E, 1)).VoiceId;
+        int cVoice = tracking.Voicings[0].Voices.Single(v => v.Note == P(NoteStep.C, 2)).VoiceId;
+        Expect(tracking.Voicings[1].Voices.Single(v => v.Note == P(NoteStep.E, 1)).VoiceId == eVoice,
+            "E1 must keep its voice identity from C to Am.");
+        Expect(tracking.Voicings[1].Voices.Single(v => v.Note == P(NoteStep.C, 2)).VoiceId == cVoice,
+            "C2 must keep its voice identity from C to Am.");
+
+        Expect(tracking.Voicings[2].Voices.Count == 4, "Am7 should add a fourth voice.");
+        int newVoiceCount = tracking.Voicings[2].Voices.Count(v => v.VoiceId > 3);
+        Expect(newVoiceCount == 1, "The new Am7 note must receive a new persistent voice ID.");
+
+        Expect(tracking.VoicePaths.Count == 4, "The progression should expose four voice paths after the added note.");
+        Expect(tracking.VoicePaths.All(path => path.Points.Count == 3),
+            "Every voice path must contain one point per chord position.");
+
+        Console.WriteLine("V15: persistent voice identity across progression OK");
     }
 
     private static void CToAmKeepsTwoKeys()

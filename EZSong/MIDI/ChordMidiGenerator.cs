@@ -61,6 +61,31 @@ public sealed class ChordMidiGenerator
         return result;
     }
 
+    /// <summary>Generates MIDI and also exposes persistent voice identities for the progression.</summary>
+    public VoiceTrackingResult GenerateTracked(
+        ChordVoicingRequest firstChord,
+        IEnumerable<ChordVoicingRequest> followingChords,
+        string outputPath,
+        int velocity = 90)
+    {
+        IReadOnlyList<ChordVoicing> voicings = Generate(
+            firstChord, followingChords, outputPath, velocity);
+        return _voicingEngine.TrackVoices(voicings);
+    }
+
+    /// <summary>Generates MIDI with export settings and exposes persistent voice identities.</summary>
+    public VoiceTrackingResult GenerateTracked(
+        ChordVoicingRequest firstChord,
+        IEnumerable<ChordVoicingRequest> followingChords,
+        string outputPath,
+        MidiChordExportSettings exportSettings,
+        int velocity = 90)
+    {
+        IReadOnlyList<ChordVoicing> voicings = Generate(
+            firstChord, followingChords, outputPath, exportSettings, velocity);
+        return _voicingEngine.TrackVoices(voicings);
+    }
+
     public IReadOnlyList<ChordVoicing> Generate(
         ChordSequence sequence,
         ChordVoicingRequest firstChord,
