@@ -38,13 +38,13 @@ public static class VoicingPreferenceJson
         public List<string>? ToNotes { get; set; }
     }
 
-    private static readonly JsonSerializerOptions Options = new()
+    private static readonly JsonSerializerOptions _options = new()
     {
         WriteIndented = true,
         PropertyNameCaseInsensitive = true
     };
 
-    private static readonly Regex PitchRegex = new(
+    private static readonly Regex _pitchRegex = new(
         @"^(?<note>[A-Ga-g])(?<accidental>[#b♯♭]?)(?<octave>[0-9]+)$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
@@ -58,7 +58,7 @@ public static class VoicingPreferenceJson
         }
 
         string json = File.ReadAllText(path);
-        FileModel model = JsonSerializer.Deserialize<FileModel>(json, Options)
+        FileModel model = JsonSerializer.Deserialize<FileModel>(json, _options)
             ?? new FileModel();
 
         VoicingPreferenceStore store = new();
@@ -125,7 +125,7 @@ public static class VoicingPreferenceJson
             _ = Directory.CreateDirectory(directory);
         }
 
-        File.WriteAllText(path, JsonSerializer.Serialize(model, Options));
+        File.WriteAllText(path, JsonSerializer.Serialize(model, _options));
     }
 
     private static Pitch ParsePitch(string text)
@@ -135,7 +135,7 @@ public static class VoicingPreferenceJson
             throw new FormatException("A preferred MIDI pitch cannot be empty.");
         }
 
-        Match match = PitchRegex.Match(text.Trim());
+        Match match = _pitchRegex.Match(text.Trim());
         if (!match.Success)
         {
             throw new FormatException(

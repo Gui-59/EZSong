@@ -90,13 +90,19 @@ public sealed class TwoHandVoicingEngine
     public TwoHandChordVoicing GenerateFirst(ChordVoicingRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return GenerateCandidates(request).OrderBy(v => Span(v.Pitches)).ThenBy(v => v.Pitches.Max()).First();
+        List<TwoHandChordVoicing> candidates = GenerateCandidates(request);
+        if (candidates.Count == 0) {
+            throw new InvalidOperationException($"No valid two-hand voicing found for {request.Chord.ToHumanString()}.");
+        }
+
+        return _settings.PreferCompactInitialVoicing
+            ? candidates.OrderBy(v => Span(v.Pitches)).ThenBy(v => v.Pitches.Max()).First()
+            : candidates[0];
     }
 
     private List<TwoHandChordVoicing> GenerateCandidates(ChordVoicingRequest request)
     {
-        ChordForCurrentChord = request.Chord;
-        Model.Pitch[] classes = GetChordPitchClasses(request.Chord).Distinct().OrderBy(x => x).ToArray();
+        Model.Pitch[] classes = ChordPitchClassProvider.Get(request.Chord).ToArray();
         if (classes.Length < 2) {
             throw new InvalidOperationException("A chord must contain at least two distinct notes.");
         }
@@ -118,11 +124,11 @@ public sealed class TwoHandVoicingEngine
         List<TwoHandChordVoicing> result = new();
         Model.Pitch[] notes = new Model.Pitch[classes.Length];
         bool[] used = new bool[classes.Length];
-        GenerateNotes(0, Pitch.MinValue, classes, request.Bass, notes, used, result);
+        GenerateNotes(request.Chord, 0, Pitch.MinValue, classes, request.Bass, notes, used, result);
         return result;
     }
 
-    private void GenerateNotes(int index, Model.Pitch previous, Model.Pitch[] classes,
+    private void GenerateNotes(Chord chord, int index, Model.Pitch previous, Model.Pitch[] classes,
         PitchClass? bass, Model.Pitch[] notes, bool[] used, List<TwoHandChordVoicing> result)
     {
         if (index == classes.Length)
@@ -140,7 +146,7 @@ public sealed class TwoHandVoicingEngine
             }
 
             result.Add(new TwoHandChordVoicing(
-                ChordForCurrentChord, notes.Where(IsLeft), notes.Where(IsRight)));
+                chord, notes.Where(IsLeft), notes.Where(IsRight)));
             return;
         }
 
@@ -160,15 +166,11 @@ public sealed class TwoHandVoicingEngine
                 }
                 used[i] = true;
                 notes[index] = pitch;
-                GenerateNotes(index + 1, pitch, classes, bass, notes, used, result);
+                GenerateNotes(chord, index + 1, pitch, classes, bass, notes, used, result);
                 used[i] = false;
             }
         }
     }
-
-    // The recursive candidate builder is scoped to one request; this field avoids
-    // threading the Chord through every recursive call.
-    private Chord ChordForCurrentChord { get; set; } = null!;
 
     private IEnumerable<Model.Pitch> EnumerateHandNotes(Model.Pitch pitchClass)
     {
@@ -205,6 +207,11 @@ public sealed class TwoHandVoicingEngine
         if (notes.Any(p => !IsLeft(p) && !IsRight(p)))
             {
             throw new ArgumentException("The exact voicing contains a note outside both hand ranges.");
+        }
+        HashSet<Model.Pitch> chordPitchClasses = ChordPitchClassProvider.Get(request.Chord).ToHashSet();
+        if (notes.Any(note => !chordPitchClasses.Contains(note % 12)))
+            {
+            throw new ArgumentException("The exact voicing contains a note that does not belong to the chord.");
         }
         if (request.Bass is not null && notes[0] % 12 != request.Bass.Value.ChromaticPitch)
             {
@@ -291,24 +298,4 @@ public sealed class TwoHandVoicingEngine
         return max - min;
     }
 
-    private static IEnumerable<Model.Pitch> GetChordPitchClasses(Chord chord)
-    {
-        int root = ((int)chord.RootNote + (int)chord.RootNoteAlteration) % 12;
-        int[] intervals = chord.ChordType switch
-        {
-            ChordType.NoneOrMajor => [0,4,7], ChordType.Minor => [0,3,7], ChordType.Seventh => [0,4,7,10],
-            ChordType.MinorSeventh => [0,3,7,10], ChordType.MajorSeventh => [0,4,7,11], ChordType.PowerChord => [0,7],
-            ChordType.Sixth => [0,4,7,9], ChordType.MinorSixth => [0,3,7,9], ChordType.SuspendedSecond => [0,2,7],
-            ChordType.SuspendedFourth => [0,5,7], ChordType.Diminished => [0,3,6], ChordType.Augmented => [0,4,8],
-            ChordType.DiminishedSeventh => [0,3,6,9], ChordType.AugmentedSeventh => [0,4,8,10], ChordType.AddSecond => [0,2,4,7],
-            ChordType.AddFourth => [0,4,5,7], ChordType.AddSixth => [0,4,7,9], ChordType.AddNinth => [0,4,7,2],
-            ChordType.Ninth => [0,4,7,10,2], ChordType.MinorNinth => [0,3,7,10,2], ChordType.MajorNinth => [0,4,7,11,2],
-            ChordType.Eleventh => [0,4,7,10,2,5], ChordType.MinorEleventh => [0,3,7,10,2,5], ChordType.MajorEleventh => [0,4,7,11,2,5],
-            ChordType.Thirteenth => [0,4,7,10,2,9], ChordType.MinorThirteenth => [0,3,7,10,2,9], ChordType.MajorThirteenth => [0,4,7,11,2,9],
-            ChordType.MinorMajorSeventh => [0,3,7,11], ChordType.SixthNinth => [0,4,7,9,2], ChordType.SeventhMinusFive => [0,4,6,10],
-            ChordType.SeventhPlusFive => [0,4,8,10], ChordType.MinorSeventhFlatFive => [0,3,6,10],
-            _ => throw new ArgumentOutOfRangeException(nameof(chord.ChordType))
-        };
-        return intervals.Select(i => (root + i) % 12).Select(Pitch.FromMidi);
-    }
 }

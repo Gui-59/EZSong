@@ -23,6 +23,7 @@ public sealed class TwoHandChordVoicing
         Pitches = LeftHand.Concat(RightHand).OrderBy(x => x.ToMidiNoteNumber()).ToArray();
     }
 
-    public override string ToString() =>
-        $"{Chord.ToHumanString()}: LH[{string.Join(' ', LeftHand)}] RH[{string.Join(' ', RightHand)}]";
+    public override string ToString() {
+        return $"{Chord.ToHumanString()}: LH[{string.Join(' ', LeftHand)}] RH[{string.Join(' ', RightHand)}]";
+    }
 }

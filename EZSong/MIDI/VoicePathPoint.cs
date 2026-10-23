@@ -9,17 +9,25 @@ public sealed class VoicePathPoint
     public Chord Chord { get; }
     public Pitch? Note { get; }
 
-    public bool IsPresent => Note is not null;
+    public bool IsPresent {
+        get {
+            return Note is not null;
+        }
+    }
 
     public VoicePathPoint(int chordIndex, Chord chord, Pitch? note)
     {
-        if (chordIndex < 0) throw new ArgumentOutOfRangeException(nameof(chordIndex));
+        if (chordIndex < 0) {
+            throw new ArgumentOutOfRangeException(nameof(chordIndex));
+        }
+
         Chord = chord ?? throw new ArgumentNullException(nameof(chord));
         ChordIndex = chordIndex;
         Note = note;
     }
 
-    public override string ToString() =>
-        Note is null ? $"[{ChordIndex}] {Chord.ToHumanString()}: -" :
+    public override string ToString() {
+        return Note is null ? $"[{ChordIndex}] {Chord.ToHumanString()}: -" :
         $"[{ChordIndex}] {Chord.ToHumanString()}: {Note}";
+    }
 }

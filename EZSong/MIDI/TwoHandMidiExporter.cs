@@ -19,8 +19,13 @@ public static class TwoHandMidiExporter
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
         settings.Validate();
-        if (voicedChords.Count == 0) throw new ArgumentException("At least one chord is required.", nameof(voicedChords));
-        if (velocity < 1 || velocity > 127) throw new ArgumentOutOfRangeException(nameof(velocity));
+        if (voicedChords.Count == 0) {
+            throw new ArgumentException("At least one chord is required.", nameof(voicedChords));
+        }
+
+        if (velocity < 1 || velocity > 127) {
+            throw new ArgumentOutOfRangeException(nameof(velocity));
+        }
 
         TrackChunk left = new();
         TrackChunk right = new();
@@ -73,7 +78,7 @@ public static class TwoHandMidiExporter
     private static void AddAbsoluteEvents(TrackChunk track, IEnumerable<(long Tick, int Order, MidiEvent Event)> events)
     {
         long previous = 0;
-        foreach (var item in events.OrderBy(x => x.Tick).ThenBy(x => x.Order))
+        foreach ((long Tick, int Order, MidiEvent Event) item in events.OrderBy(x => x.Tick).ThenBy(x => x.Order))
         {
             item.Event.DeltaTime = item.Tick - previous;
             previous = item.Tick;

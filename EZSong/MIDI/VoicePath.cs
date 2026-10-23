@@ -11,11 +11,15 @@ public sealed class VoicePath
 
     public VoicePath(int voiceId, IEnumerable<VoicePathPoint> points)
     {
-        if (voiceId <= 0) throw new ArgumentOutOfRangeException(nameof(voiceId));
+        if (voiceId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(voiceId));
+        }
+
         VoiceId = voiceId;
         Points = points?.ToArray() ?? throw new ArgumentNullException(nameof(points));
     }
 
-    public override string ToString() =>
-        $"Voice {VoiceId}: {string.Join(" | ", Points.Select(p => p.Note?.ToString() ?? "-"))}";
+    public override string ToString() {
+        return $"Voice {VoiceId}: {string.Join(" | ", Points.Select(p => p.Note?.ToString() ?? "-"))}";
+    }
 }

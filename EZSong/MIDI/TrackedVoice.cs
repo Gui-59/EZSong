@@ -10,10 +10,15 @@ public sealed class TrackedVoice
 
     public TrackedVoice(int voiceId, Pitch note)
     {
-        if (voiceId <= 0) throw new ArgumentOutOfRangeException(nameof(voiceId));
+        if (voiceId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(voiceId));
+        }
+
         VoiceId = voiceId;
         Note = note;
     }
 
-    public override string ToString() => $"Voice {VoiceId}: {Note}";
+    public override string ToString() {
+        return $"Voice {VoiceId}: {Note}";
+    }
 }

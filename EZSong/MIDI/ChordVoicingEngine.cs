@@ -1,6 +1,5 @@
 using EZSong.Enums;
 using EZSong.Model;
-using System.Collections.Generic;
 
 namespace EZSong.MIDI;
 
@@ -35,13 +34,11 @@ public sealed class ChordVoicingEngine
             throw new InvalidOperationException($"No valid voicing found for {request.Chord.ToHumanString()}.");
         }
 
-        // With no previous voicing, prefer the most compact voicing in the allowed register.
-        return candidates
-            .OrderBy(v => Span(v))
-            .ThenBy(v => v.Max())
-            .ThenBy(v => v.Min())
-            .Select(v => new ChordVoicing(request.Chord, v))
-            .First();
+        Model.Pitch[] selected = _settings.PreferCompactInitialVoicing
+            ? candidates.OrderBy(v => Span(v)).ThenBy(v => v.Max()).ThenBy(v => v.Min()).First()
+            : candidates[0];
+
+        return new ChordVoicing(request.Chord, selected);
     }
 
     /// <summary>
@@ -278,20 +275,9 @@ public sealed class ChordVoicingEngine
             matching.Movements);
     }
 
-    private int ScoreTransition(
-        ChordVoicing previous,
-        ChordVoicingRequest request,
-        IReadOnlyList<Model.Pitch> candidate)
-    {
-        return AnalyzeTransition(previous, request, candidate).Score;
-    }
-
     private List<Model.Pitch[]> GenerateCandidates(ChordVoicingRequest request)
     {
-        Model.Pitch[] pitchClasses = GetChordPitchClasses(request.Chord)
-            .Distinct()
-            .OrderBy(x => x)
-            .ToArray();
+        Model.Pitch[] pitchClasses = ChordPitchClassProvider.Get(request.Chord).ToArray();
 
         if (pitchClasses.Length < 2) {
             throw new InvalidOperationException("A chord must contain at least two distinct notes.");
@@ -403,7 +389,7 @@ public sealed class ChordVoicingEngine
             throw new ArgumentException("A voicing may not contain duplicated MIDI notes.");
         }
 
-        HashSet<Model.Pitch> chordPitchClasses = GetChordPitchClasses(request.Chord).ToHashSet();
+        HashSet<Model.Pitch> chordPitchClasses = ChordPitchClassProvider.Get(request.Chord).ToHashSet();
         if (notes.Any(n => !chordPitchClasses.Contains(n % 12))) {
             throw new ArgumentException("The exact voicing contains a note that does not belong to the chord.");
         }
@@ -413,53 +399,21 @@ public sealed class ChordVoicingEngine
         }
     }
 
-    private static IEnumerable<Model.Pitch> GetChordPitchClasses(Chord chord)
+    private static int Span(Model.Pitch[] pitches)
     {
-        int root = ((int)chord.RootNote + (int)chord.RootNoteAlteration) %  12;
-        int[] intervals = chord.ChordType switch
-        {
-            ChordType.NoneOrMajor => [0, 4, 7],
-            ChordType.Minor => [0, 3, 7],
-            ChordType.Seventh => [0, 4, 7, 10],
-            ChordType.MinorSeventh => [0, 3, 7, 10],
-            ChordType.MajorSeventh => [0, 4, 7, 11],
-            ChordType.PowerChord => [0, 7],
-            ChordType.Sixth => [0, 4, 7, 9],
-            ChordType.MinorSixth => [0, 3, 7, 9],
-            ChordType.SuspendedSecond => [0, 2, 7],
-            ChordType.SuspendedFourth => [0, 5, 7],
-            ChordType.Diminished => [0, 3, 6],
-            ChordType.Augmented => [0, 4, 8],
-            ChordType.DiminishedSeventh => [0, 3, 6, 9],
-            ChordType.AugmentedSeventh => [0, 4, 8, 10],
-            ChordType.AddSecond => [0, 2, 4, 7],
-            ChordType.AddFourth => [0, 4, 5, 7],
-            ChordType.AddSixth => [0, 4, 7, 9],
-            ChordType.AddNinth => [0, 4, 7, 2],
-            ChordType.Ninth => [0, 4, 7, 10, 2],
-            ChordType.MinorNinth => [0, 3, 7, 10, 2],
-            ChordType.MajorNinth => [0, 4, 7, 11, 2],
-            ChordType.Eleventh => [0, 4, 7, 10, 2, 5],
-            ChordType.MinorEleventh => [0, 3, 7, 10, 2, 5],
-            ChordType.MajorEleventh => [0, 4, 7, 11, 2, 5],
-            ChordType.Thirteenth => [0, 4, 7, 10, 2, 9],
-            ChordType.MinorThirteenth => [0, 3, 7, 10, 2, 9],
-            ChordType.MajorThirteenth => [0, 4, 7, 11, 2, 9],
-            ChordType.MinorMajorSeventh => [0, 3, 7, 11],
-            ChordType.SixthNinth => [0, 4, 7, 9, 2],
-            ChordType.SeventhMinusFive => [0, 4, 6, 10],
-            ChordType.SeventhPlusFive => [0, 4, 8, 10],
-            ChordType.MinorSeventhFlatFive => [0, 3, 6, 10],
-            _ => throw new ArgumentOutOfRangeException(nameof(chord.ChordType))
-        };
+        if (pitches.Length == 0) {
+            return 0;
+        }
 
-        IEnumerable <Model.Pitch> chordPitchClasses = intervals.Select(interval => (root + interval) % 12).Select(Pitch.FromMidi);
+        // s'assurer que Max() et Min() ne retournent pas null
+        Model.Pitch? maxPitch = pitches.Max();
+        Model.Pitch? minPitch = pitches.Min();
 
-        return chordPitchClasses;
+        if (maxPitch is null || minPitch is null) {
+            return 0;
+        }
+
+        return maxPitch.ToMidiNoteNumber() - minPitch.ToMidiNoteNumber();
     }
 
-
-    private static int Span(IReadOnlyList<Model.Pitch> notes) {
-        return notes[^1] - notes[0];
-    }
 }

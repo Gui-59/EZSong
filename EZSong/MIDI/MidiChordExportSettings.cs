@@ -36,15 +36,21 @@ public sealed class MidiChordExportSettings
         ArgumentNullException.ThrowIfNull(SplitPoint);
 
         if (string.IsNullOrWhiteSpace(LeftHandTrackName))
+            {
             throw new ArgumentException("Track name cannot be empty.", nameof(LeftHandTrackName));
+        }
 
         if (string.IsNullOrWhiteSpace(RightHandTrackName))
+            {
             throw new ArgumentException("Track name cannot be empty.", nameof(RightHandTrackName));
+        }
     }
 
     private static void ValidateChannel(int channel, string parameterName)
     {
         if (channel < 0 || channel > 15)
+            {
             throw new ArgumentOutOfRangeException(parameterName, "MIDI channel must be between 0 and 15.");
+        }
     }
 }

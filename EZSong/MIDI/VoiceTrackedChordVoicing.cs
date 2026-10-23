@@ -8,8 +8,17 @@ public sealed class VoiceTrackedChordVoicing
     public ChordVoicing Voicing { get; }
     public IReadOnlyList<TrackedVoice> Voices { get; }
 
-    public Chord Chord => Voicing.Chord;
-    public IReadOnlyList<Pitch> Pitches => Voicing.Pitches;
+    public Chord Chord {
+        get {
+            return Voicing.Chord;
+        }
+    }
+
+    public IReadOnlyList<Pitch> Pitches {
+        get {
+            return Voicing.Pitches;
+        }
+    }
 
     public VoiceTrackedChordVoicing(ChordVoicing voicing, IEnumerable<TrackedVoice> voices)
     {
@@ -18,12 +27,17 @@ public sealed class VoiceTrackedChordVoicing
             ?? throw new ArgumentNullException(nameof(voices));
 
         if (Voices.Count != Voicing.Pitches.Count)
+            {
             throw new ArgumentException("The number of tracked voices must match the voicing note count.", nameof(voices));
+        }
 
         if (Voices.Select(v => v.Note).SequenceEqual(Voicing.Pitches) == false)
+            {
             throw new ArgumentException("Tracked voice notes must match the voicing notes.", nameof(voices));
+        }
     }
 
-    public override string ToString() =>
-        $"{Chord.ToHumanString()}: {string.Join(" ", Voices.Select(v => $"V{v.VoiceId}={v.Note}"))}";
+    public override string ToString() {
+        return $"{Chord.ToHumanString()}: {string.Join(" ", Voices.Select(v => $"V{v.VoiceId}={v.Note}"))}";
+    }
 }

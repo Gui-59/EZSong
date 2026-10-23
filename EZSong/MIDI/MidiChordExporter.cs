@@ -57,10 +57,13 @@ public static class MidiChordExporter
         AddAbsoluteEvents(rightTrack, rightEvents);
 
         List<TrackChunk> tracks = new();
-        if (settings.CreateEmptyTracks || leftEvents.Count > 0)
+        if (settings.CreateEmptyTracks || leftEvents.Count > 0) {
             tracks.Add(leftTrack);
-        if (settings.CreateEmptyTracks || rightEvents.Count > 0)
+        }
+
+        if (settings.CreateEmptyTracks || rightEvents.Count > 0) {
             tracks.Add(rightTrack);
+        }
 
         MidiFile midiFile = new(tracks.ToArray())
         {
@@ -174,10 +177,14 @@ public static class MidiChordExporter
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
 
         if (voicedChords.Count == 0)
+            {
             throw new ArgumentException("At least one chord is required.", nameof(voicedChords));
+        }
 
         if (velocity < 1 || velocity > 127)
+            {
             throw new ArgumentOutOfRangeException(nameof(velocity));
+        }
     }
 
     private static long DurationToTicks(RhythmRationalDuration duration)

@@ -11,14 +11,29 @@ public sealed class VoiceMovement
     public Pitch? PreviousNote { get; }
     public Pitch? CurrentNote { get; }
     public int SemitoneMovement { get; }
-    public bool IsAdded => PreviousNote is null && CurrentNote is not null;
-    public bool IsRemoved => PreviousNote is not null && CurrentNote is null;
-    public bool IsContinued => PreviousNote is not null && CurrentNote is not null;
+    public bool IsAdded {
+        get {
+            return PreviousNote is null && CurrentNote is not null;
+        }
+    }
+
+    public bool IsRemoved {
+        get {
+            return PreviousNote is not null && CurrentNote is null;
+        }
+    }
+
+    public bool IsContinued {
+        get {
+            return PreviousNote is not null && CurrentNote is not null;
+        }
+    }
 
     public VoiceMovement(Pitch? previousNote, Pitch? currentNote)
     {
-        if (previousNote is null && currentNote is null)
+        if (previousNote is null && currentNote is null) {
             throw new ArgumentException("A voice movement must contain at least one note.");
+        }
 
         PreviousNote = previousNote;
         CurrentNote = currentNote;
@@ -29,8 +44,14 @@ public sealed class VoiceMovement
 
     public override string ToString()
     {
-        if (IsAdded) return $"+{CurrentNote}";
-        if (IsRemoved) return $"{PreviousNote}->-";
+        if (IsAdded) {
+            return $"+{CurrentNote}";
+        }
+
+        if (IsRemoved) {
+            return $"{PreviousNote}->-";
+        }
+
         return $"{PreviousNote}->{CurrentNote} ({SemitoneMovement})";
     }
 }

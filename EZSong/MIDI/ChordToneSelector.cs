@@ -94,16 +94,34 @@ internal static class ChordToneSelector
 
     private static ChordToneRole Role(Chord chord, int interval)
     {
-        if (interval == 0) return ChordToneRole.Root;
+        if (interval == 0) {
+            return ChordToneRole.Root;
+        }
 
         bool suspended = chord.ChordType is ChordType.SuspendedSecond or ChordType.SuspendedFourth;
-        if (suspended && (interval == 2 || interval == 5)) return ChordToneRole.Suspension;
+        if (suspended && (interval == 2 || interval == 5)) {
+            return ChordToneRole.Suspension;
+        }
 
-        if (interval == 3 || interval == 4) return ChordToneRole.Third;
-        if (interval == 7) return ChordToneRole.Fifth;
-        if (interval is 10 or 11) return ChordToneRole.Seventh;
-        if (interval is 2 or 5 or 9) return ChordToneRole.Extension;
-        if (interval is 6 or 8) return ChordToneRole.Altered;
+        if (interval == 3 || interval == 4) {
+            return ChordToneRole.Third;
+        }
+
+        if (interval == 7) {
+            return ChordToneRole.Fifth;
+        }
+
+        if (interval is 10 or 11) {
+            return ChordToneRole.Seventh;
+        }
+
+        if (interval is 2 or 5 or 9) {
+            return ChordToneRole.Extension;
+        }
+
+        if (interval is 6 or 8) {
+            return ChordToneRole.Altered;
+        }
 
         return ChordToneRole.Extension;
     }

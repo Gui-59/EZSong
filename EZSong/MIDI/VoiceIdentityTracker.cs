@@ -15,11 +15,14 @@ public static class VoiceIdentityTracker
     {
         ArgumentNullException.ThrowIfNull(progression);
         if (maxVoiceMovement < 0 || maxVoiceMovement > 127)
+            {
             throw new ArgumentOutOfRangeException(nameof(maxVoiceMovement));
-        if (progression.Count == 0)
+        }
+        if (progression.Count == 0) {
             return new VoiceTrackingResult(Array.Empty<VoiceTrackedChordVoicing>(), Array.Empty<VoicePath>());
+        }
 
-        List<VoicePathBuilder> builders = new();
+        Dictionary<int, VoicePathBuilder> builders = new();
         Dictionary<Pitch, int> activeIds = new();
         int nextVoiceId = 1;
         List<VoiceTrackedChordVoicing> tracked = new(progression.Count);
@@ -31,7 +34,7 @@ public static class VoiceIdentityTracker
             int id = nextVoiceId++;
             activeIds[note] = id;
             VoicePathBuilder builder = new(id, progression.Count);
-            builders.Add(builder);
+            builders.Add(id, builder);
             builder.Set(0, progression[0].Chord, note);
             firstVoices.Add(new TrackedVoice(id, note));
         }
@@ -47,9 +50,9 @@ public static class VoiceIdentityTracker
                 maxVoiceMovement);
 
             if (!match.IsValid)
-                throw new InvalidOperationException(
-                    $"Cannot track voices between chord {chordIndex - 1} ({previous.Chord.ToHumanString()}) " +
-                    $"and chord {chordIndex} ({current.Chord.ToHumanString()}).");
+                {
+                throw new InvalidOperationException($"Cannot track voices between chord {chordIndex - 1} ({previous.Chord.ToHumanString()}) " + $"and chord {chordIndex} ({current.Chord.ToHumanString()}).");
+            }
 
             Dictionary<Pitch, int> nextActive = new();
             List<TrackedVoice> currentVoices = new();
@@ -63,17 +66,18 @@ public static class VoiceIdentityTracker
                 if (continuation is not null)
                 {
                     if (!activeIds.TryGetValue(continuation.PreviousNote!, out id))
+                        {
                         throw new InvalidOperationException("Voice-leading matcher referenced an inactive voice.");
+                    }
                 }
                 else
                 {
                     id = nextVoiceId++;
                     VoicePathBuilder builder = new(id, progression.Count);
-                    builders.Add(builder);
+                    builders.Add(id, builder);
                 }
 
-                VoicePathBuilder path = builders.First(b => b.VoiceId == id);
-                path.Set(chordIndex, current.Chord, note);
+                builders[id].Set(chordIndex, current.Chord, note);
                 nextActive[note] = id;
                 currentVoices.Add(new TrackedVoice(id, note));
             }
@@ -85,7 +89,7 @@ public static class VoiceIdentityTracker
 
         return new VoiceTrackingResult(
             tracked,
-            builders.Select(b => b.Build(progression.Select(p => p.Chord).ToArray())).OrderBy(v => v.VoiceId).ToArray());
+            builders.Values.Select(b => b.Build(progression.Select(p => p.Chord).ToArray())).OrderBy(v => v.VoiceId).ToArray());
     }
 
     private sealed class VoicePathBuilder
@@ -99,8 +103,9 @@ public static class VoiceIdentityTracker
             _points = new VoicePathPoint?[count];
         }
 
-        public void Set(int chordIndex, Chord chord, Pitch note) =>
+        public void Set(int chordIndex, Chord chord, Pitch note) {
             _points[chordIndex] = new VoicePathPoint(chordIndex, chord, note);
+        }
 
         public VoicePath Build(IReadOnlyList<Chord> chords)
         {

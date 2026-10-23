@@ -22,24 +22,29 @@ public abstract class VoicingOptimizationSettings
     /// <summary>Reward for matching a user's preferred transition.</summary>
     public int UserPreferenceWeight { get; set; } = 75;
 
-    /// <summary>
-    /// When true, the first chord is selected by compactness before highest/lowest
-    /// note tie-breakers. When false, candidate generation order is used.
-    /// </summary>
+    /// <summary>Whether the first chord should prefer a compact voicing.</summary>
     public bool PreferCompactInitialVoicing { get; set; } = true;
 
     protected void ValidateOptimizationSettings()
     {
-        if (MaxVoiceMovement < 0 || MaxVoiceMovement > 127)
+        if (MaxVoiceMovement < 0 || MaxVoiceMovement > 127) {
             throw new ArgumentOutOfRangeException(nameof(MaxVoiceMovement));
+        }
 
-        if (CommonNoteWeight < 0)
+        if (CommonNoteWeight < 0) {
             throw new ArgumentOutOfRangeException(nameof(CommonNoteWeight));
-        if (MovementWeight < 0)
+        }
+
+        if (MovementWeight < 0) {
             throw new ArgumentOutOfRangeException(nameof(MovementWeight));
-        if (BassMovementWeight < 0)
+        }
+
+        if (BassMovementWeight < 0) {
             throw new ArgumentOutOfRangeException(nameof(BassMovementWeight));
-        if (UserPreferenceWeight < 0)
+        }
+
+        if (UserPreferenceWeight < 0) {
             throw new ArgumentOutOfRangeException(nameof(UserPreferenceWeight));
+        }
     }
 }

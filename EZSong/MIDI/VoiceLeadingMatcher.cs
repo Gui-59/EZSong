@@ -13,15 +13,16 @@ namespace EZSong.MIDI;
 /// </summary>
 internal static class VoiceLeadingMatcher
 {
-    private const int Impossible = 1_000_000;
+    private const int _impossible = 1_000_000;
 
     public static VoiceLeadingMatch Match(
         IReadOnlyList<Pitch> previous,
         IReadOnlyList<Pitch> current,
         int maxMovement)
     {
-        if (previous.Count == 0 || current.Count == 0)
+        if (previous.Count == 0 || current.Count == 0) {
             return VoiceLeadingMatch.Invalid;
+        }
 
         Pitch[] oldNotes = previous.OrderBy(x => x.ToMidiNoteNumber()).ToArray();
         Pitch[] newNotes = current.OrderBy(x => x.ToMidiNoteNumber()).ToArray();
@@ -30,8 +31,9 @@ internal static class VoiceLeadingMatcher
         {
             foreach (Pitch added in newNotes)
             {
-                if (!oldNotes.Any(old => Math.Abs(old - added) <= maxMovement))
+                if (!oldNotes.Any(old => Math.Abs(old - added) <= maxMovement)) {
                     return VoiceLeadingMatch.Invalid;
+                }
             }
         }
 
@@ -42,31 +44,38 @@ internal static class VoiceLeadingMatcher
 
         int Solve(int index, int usedMask)
         {
-            if (index == oldCount)
+            if (index == oldCount) {
                 return 0;
+            }
 
-            if (seen[index, usedMask])
+            if (seen[index, usedMask]) {
                 return memo[index, usedMask];
+            }
 
             seen[index, usedMask] = true;
-            int best = Impossible;
+            int best = _impossible;
 
             // A previous voice may disappear when the new voicing has fewer voices.
-            if (oldCount > newCount)
+            if (oldCount > newCount) {
                 best = Math.Min(best, Solve(index + 1, usedMask));
+            }
 
             for (int j = 0; j < newCount; j++)
             {
-                if ((usedMask & (1 << j)) != 0)
+                if ((usedMask & (1 << j)) != 0) {
                     continue;
+                }
 
                 int distance = Math.Abs(oldNotes[index] - newNotes[j]);
-                if (distance > maxMovement)
+                if (distance > maxMovement) {
                     continue;
+                }
 
                 int rest = Solve(index + 1, usedMask | (1 << j));
-                if (rest < Impossible)
+                if (rest < _impossible)
+                    {
                     best = Math.Min(best, distance + rest);
+                }
             }
 
             memo[index, usedMask] = best;
@@ -74,8 +83,9 @@ internal static class VoiceLeadingMatcher
         }
 
         int total = Solve(0, 0);
-        if (total >= Impossible)
+        if (total >= _impossible) {
             return VoiceLeadingMatch.Invalid;
+        }
 
         List<(int Previous, int Current)> pairs = new();
         int row = 0;
@@ -89,15 +99,17 @@ internal static class VoiceLeadingMatcher
             // have exactly the same optimal cost. This keeps identities stable.
             for (int j = 0; j < newCount; j++)
             {
-                if ((mask & (1 << j)) != 0)
+                if ((mask & (1 << j)) != 0) {
                     continue;
+                }
 
                 int distance = Math.Abs(oldNotes[row] - newNotes[j]);
-                if (distance > maxMovement)
+                if (distance > maxMovement) {
                     continue;
+                }
 
                 int rest = Solve(row + 1, mask | (1 << j));
-                if (rest < Impossible && distance + rest == target)
+                if (rest < _impossible && distance + rest == target)
                 {
                     pairs.Add((row, j));
                     mask |= 1 << j;
@@ -107,8 +119,9 @@ internal static class VoiceLeadingMatcher
                 }
             }
 
-            if (chosen)
+            if (chosen) {
                 continue;
+            }
 
             // The only remaining optimal choice can be disappearance of this voice.
             if (oldCount > newCount && Solve(row + 1, mask) == target)
@@ -130,19 +143,22 @@ internal static class VoiceLeadingMatcher
 
         // Preserve the old voice order for diagnostics; removed voices are explicit.
         bool[] matchedPrevious = new bool[oldCount];
-        foreach ((int previousIndex, _) in pairs)
+        foreach ((int previousIndex, _) in pairs) {
             matchedPrevious[previousIndex] = true;
+        }
 
         for (int i = 0; i < oldCount; i++)
         {
-            if (!matchedPrevious[i])
+            if (!matchedPrevious[i]) {
                 movements.Add(new VoiceMovement(oldNotes[i], null));
+            }
         }
 
         for (int i = 0; i < newCount; i++)
         {
-            if (!matchedCurrent[i])
+            if (!matchedCurrent[i]) {
                 movements.Add(new VoiceMovement(null, newNotes[i]));
+            }
         }
 
         // Stable display order: continued/removed voices by previous pitch, then added voices.

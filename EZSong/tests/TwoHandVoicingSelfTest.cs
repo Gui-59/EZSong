@@ -61,8 +61,42 @@ public static class TwoHandVoicingSelfTest
         MidiFile midi = MidiFile.Read(outputPath);
         Expect(midi.GetTrackChunks().Count() == 2, "Expected two MIDI tracks.");
         TwoHandVoiceIdentityIsExplicit(result[0], result[1], settings);
+        TwoHandExactVoicingRejectsNonChordTone();
         TwoHandExtendedChordReduction();
         Console.WriteLine("TwoHandVoicingSelfTest: ALL OK");
+    }
+
+    private static void TwoHandExactVoicingRejectsNonChordTone()
+    {
+        Chord c = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.C, Alteration.neutral, ChordType.NoneOrMajor);
+        TwoHandVoicingSettings settings = new()
+        {
+            MinLeftHandNote = new Pitch(NoteStep.C, Alteration.neutral, 1),
+            MaxLeftHandNote = new Pitch(NoteStep.B, Alteration.neutral, 2),
+            MinRightHandNote = new Pitch(NoteStep.C, Alteration.neutral, 3),
+            MaxRightHandNote = new Pitch(NoteStep.C, Alteration.neutral, 4),
+            MinLeftHandVoices = 1,
+            MaxLeftHandVoices = 2,
+            MinRightHandVoices = 1,
+            MaxRightHandVoices = 2,
+            MaxTotalVoices = 4
+        };
+
+        bool rejected = false;
+        try
+        {
+            _ = new TwoHandVoicingEngine(settings).GenerateFirst(
+                ChordVoicingRequest.FromExactVoicing(
+                    c,
+                    new Pitch(NoteStep.C, Alteration.neutral, 2),
+                    new Pitch(NoteStep.F, Alteration.neutral, 3)));
+        }
+        catch (ArgumentException)
+        {
+            rejected = true;
+        }
+
+        Expect(rejected, "A two-hand exact voicing must reject notes that do not belong to the chord.");
     }
 
     private static void TwoHandExtendedChordReduction()
