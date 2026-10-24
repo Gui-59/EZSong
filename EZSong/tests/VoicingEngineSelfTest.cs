@@ -26,6 +26,7 @@ public static class VoicingEngineSelfTest
         IntelligentExtendedChordReduction();
         SlashBassSurvivesExtendedChordReduction();
         PersistentVoiceIdentityAcrossProgression();
+        VoicingProfilesProvideIndependentPresets();
 
         Console.WriteLine("VoicingEngineSelfTest: ALL OK");
     }
@@ -111,6 +112,40 @@ public static class VoicingEngineSelfTest
             "Every voice path must contain one point per chord position.");
 
         Console.WriteLine("V15: persistent voice identity across progression OK");
+    }
+
+    private static void VoicingProfilesProvideIndependentPresets()
+    {
+        VoicingProfile first = VoicingProfile.ArrangerLeftHand;
+        VoicingProfile second = VoicingProfile.ArrangerLeftHand;
+
+        Expect(first.Name == "Arranger Left Hand", "The arranger profile should expose its display name.");
+        Expect(first.OneHand.MinChordAreaNote == P(NoteStep.C, 1),
+            "Arranger left-hand profile should start at C1.");
+        Expect(first.OneHand.MaxChordAreaNote == P(NoteStep.C, 3),
+            "Arranger left-hand profile should end at C3.");
+        Expect(first.OneHand.ChordMaxKeyCount == 5,
+            "Arranger left-hand profile should allow up to five tones.");
+        Expect(first.TwoHand.MaxTotalVoices == 4,
+            "Arranger profile should cap the true two-hand version at four voices.");
+
+        first.OneHand.ChordMaxKeyCount = 3;
+        Expect(second.OneHand.ChordMaxKeyCount == 5,
+            "Built-in profiles must return independent settings instances.");
+
+        VoicingProfile compact = VoicingProfile.LeftHandCompact;
+        VoicingProfile open = VoicingProfile.LeftHandOpen;
+        Expect(compact.OneHand.ChordMaxKeyCount == 4,
+            "Compact left-hand profile should use a four-tone ceiling.");
+        Expect(compact.OneHand.PreferCompactInitialVoicing,
+            "Compact left-hand profile should prefer compact initial voicings.");
+        Expect(!open.OneHand.PreferCompactInitialVoicing,
+            "Open left-hand profile should not force compact initial voicings.");
+
+        new ChordVoicingEngine(VoicingProfile.Piano.OneHand);
+        new TwoHandVoicingEngine(VoicingProfile.TwoHandsBalanced.TwoHand);
+
+        Console.WriteLine("V16: named voicing profiles OK");
     }
 
     private static void CToAmKeepsTwoKeys()
