@@ -158,7 +158,7 @@ public sealed class TwoHandVoicingEngine
         Model.Pitch[] notes = new Model.Pitch[classes.Length];
         bool[] used = new bool[classes.Length];
         GenerateNotes(request.Chord, 0, Pitch.MinValue, classes, request.Bass, notes, used, result);
-        return result;
+        return result.Where(v => _settings.IsVoicingShapeAllowed(v.Pitches)).ToList();
     }
 
     private void GenerateNotes(Chord chord, int index, Model.Pitch previous, Model.Pitch[] classes,
@@ -250,6 +250,10 @@ public sealed class TwoHandVoicingEngine
             {
             throw new ArgumentException("The exact voicing does not respect the requested bass note.");
         }
+        if (!_settings.IsVoicingShapeAllowed(notes))
+            {
+            throw new ArgumentException("The exact voicing violates the configured span or note-spacing constraints.");
+            }
         if (notes.Count(IsLeft) < _settings.MinLeftHandVoices || notes.Count(IsLeft) > _settings.MaxLeftHandVoices)
             {
             throw new ArgumentException("The exact voicing violates the left-hand voice count.");

@@ -253,7 +253,7 @@ public sealed class ChordVoicingEngine
         List<Model.Pitch[]> options = new();
         Model.Pitch[] partial = new Model.Pitch[pitchClasses.Length];
         GenerateAscending(0, Pitch.MinValue, pitchClasses, request.Bass, partial, new bool[pitchClasses.Length], options);
-        return options;
+        return options.Where(_settings.IsVoicingShapeAllowed).ToList();
     }
 
     private void GenerateAscending(
@@ -349,6 +349,9 @@ public sealed class ChordVoicingEngine
 
         if (request.Bass is not null && notes[0] % 12 != request.Bass.Value.ChromaticPitch) {
             throw new ArgumentException("The exact voicing does not respect the requested bass note.");
+        }
+        if (!_settings.IsVoicingShapeAllowed(notes)) {
+            throw new ArgumentException("The exact voicing violates the configured span or note-spacing constraints.");
         }
     }
 

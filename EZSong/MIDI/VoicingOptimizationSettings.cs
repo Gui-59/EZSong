@@ -22,8 +22,29 @@ public abstract class VoicingOptimizationSettings
     /// <summary>Reward for matching a user's preferred transition.</summary>
     public int UserPreferenceWeight { get; set; } = 75;
 
+    /// <summary>Maximum distance in semitones between the lowest and highest notes. Zero disables this constraint.</summary>
+    public int MaxVoicingSpanSemitones { get; set; } = 0;
+
+    /// <summary>Minimum distance in semitones between adjacent notes in a voicing. Zero disables this constraint.</summary>
+    public int MinimumNoteSpacingSemitones { get; set; } = 0;
+
     /// <summary>Whether the first chord should prefer a compact voicing.</summary>
     public bool PreferCompactInitialVoicing { get; set; } = true;
+
+    /// <summary>Returns whether the notes satisfy the configured spacing and total-span constraints.</summary>
+    public bool IsVoicingShapeAllowed(IEnumerable<EZSong.Model.Pitch> pitches)
+    {
+        EZSong.Model.Pitch[] notes = pitches.OrderBy(p => p).ToArray();
+        if (notes.Length == 0) return true;
+        if (MaxVoicingSpanSemitones > 0 &&
+            notes[^1].ToMidiNoteNumber() - notes[0].ToMidiNoteNumber() > MaxVoicingSpanSemitones)
+            return false;
+        if (MinimumNoteSpacingSemitones > 0 &&
+            notes.Zip(notes.Skip(1), (a, b) => b.ToMidiNoteNumber() - a.ToMidiNoteNumber())
+                .Any(distance => distance < MinimumNoteSpacingSemitones))
+            return false;
+        return true;
+    }
 
     protected void ValidateOptimizationSettings()
     {
@@ -45,6 +66,12 @@ public abstract class VoicingOptimizationSettings
 
         if (UserPreferenceWeight < 0) {
             throw new ArgumentOutOfRangeException(nameof(UserPreferenceWeight));
+        }
+        if (MaxVoicingSpanSemitones < 0 || MaxVoicingSpanSemitones > 127) {
+            throw new ArgumentOutOfRangeException(nameof(MaxVoicingSpanSemitones));
+        }
+        if (MinimumNoteSpacingSemitones < 0 || MinimumNoteSpacingSemitones > 127) {
+            throw new ArgumentOutOfRangeException(nameof(MinimumNoteSpacingSemitones));
         }
     }
 }
