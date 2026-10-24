@@ -5,6 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.Enums {
+
+    /// <summary>
+    /// Specifies the types of musical chords.
+    /// </summary>
+    /// <remarks>Includes major, minor, seventh, extended, and altered chord types commonly used in music notation.</remarks>
     public enum ChordType {
         NoneOrMajor = 0, //X
         Minor = 1, //Xm

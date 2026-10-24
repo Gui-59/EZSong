@@ -6,7 +6,18 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.EnumsStringifier {
+
+    /// <summary>
+    /// Stringify "ChordType" enum
+    /// </summary>
     public class ChordTypeStringifier {
+
+        /// <summary>
+        /// Stringify "ChordType" enum
+        /// </summary>
+        /// <param name="chordType">The chord type value to convert to a human-readable string.</param>
+        /// <returns>A human-readable string representation of the chord type.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         public static string ToHumanString(ChordType chordType) {
             switch(chordType) {
                 case ChordType.NoneOrMajor:

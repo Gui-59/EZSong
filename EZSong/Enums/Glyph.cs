@@ -5,6 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.Enums {
+
+    /// <summary>
+    /// Specifies musical glyphs used in notation, including notes, rests, ties, tuplets, and other symbols.
+    /// </summary>
+    /// <remarks>Each member represents a distinct musical symbol commonly found in sheet music.</remarks>
     public enum Glyph {
         Unknown,
         Dot,
@@ -12,16 +17,16 @@ namespace EZSong.Enums {
         TieTo,
         tupletStart,
         tupletEnd,
-        WholeNote, //Ronde
-        HalfNote, //Blanche
-        QuarterNote, //Noire
-        EighthNote, //Croche
-        SixteenthNote, //Double croche
-        WholeRest, //Ronde  
-        HalfRest, //Blanche
-        QuarterRest, //Noire
-        EighthRest, //Croche
-        SixteenthRest, //Double croche
-        UndefindedDurationNote, //Note sans durée définie
+        WholeNote,
+        HalfNote,
+        QuarterNote,
+        EighthNote,
+        SixteenthNote,
+        WholeRest,
+        HalfRest,
+        QuarterRest,
+        EighthRest,
+        SixteenthRest,
+        UndefindedDurationNote,
     }
 }

@@ -6,8 +6,12 @@ using System.Threading.Tasks;
 
 namespace EZSong.Enums {
 
-    //TODO : S'assurer de l'utiliser pour EZSong
+    /// <summary>
+    /// Specifies the musical mode of a song.
+    /// </summary>
     public enum SongMode {
+        //TODO : Ensure to correctly use is in the application
+        //TODO : Add modes ?
         major,
         minor
     }
