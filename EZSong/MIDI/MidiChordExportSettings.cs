@@ -29,16 +29,29 @@ public sealed class MidiChordExportSettings
     /// </summary>
     public bool CreateEmptyTracks { get; set; } = true;
 
+    /// <summary>When true, V18 progression exports also create one MIDI track per persistent voice.</summary>
+    public bool CreateVoiceTracks { get; set; } = false;
+
+    /// <summary>Prefix used for persistent voice track names.</summary>
+    public string VoiceTrackNamePrefix { get; set; } = "Voix ";
+
+    /// <summary>MIDI channel used by persistent voice tracks (0..15).</summary>
+    public int VoiceTrackChannel { get; set; } = 0;
+
     public void Validate()
     {
         ValidateChannel(LeftHandChannel, nameof(LeftHandChannel));
         ValidateChannel(RightHandChannel, nameof(RightHandChannel));
+        ValidateChannel(VoiceTrackChannel, nameof(VoiceTrackChannel));
         ArgumentNullException.ThrowIfNull(SplitPoint);
 
         if (string.IsNullOrWhiteSpace(LeftHandTrackName))
             {
             throw new ArgumentException("Track name cannot be empty.", nameof(LeftHandTrackName));
         }
+
+        if (string.IsNullOrWhiteSpace(VoiceTrackNamePrefix))
+            throw new ArgumentException("Voice track name prefix cannot be empty.", nameof(VoiceTrackNamePrefix));
 
         if (string.IsNullOrWhiteSpace(RightHandTrackName))
             {

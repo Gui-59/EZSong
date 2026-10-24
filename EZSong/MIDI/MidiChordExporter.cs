@@ -189,9 +189,104 @@ public static class MidiChordExporter
 
     private static long DurationToTicks(RhythmRationalDuration duration)
     {
-        RhythmRationalDuration normalized = duration.ApplyDots().Normalize();
-        return (long)Math.Round(
-            TicksPerQuarterNote * 4.0 * normalized.Numerator / normalized.Denominator,
-            MidpointRounding.AwayFromZero);
+        return VoicingMidiExportValidation.DurationToTicks(duration);
     }
+    /// <summary>
+    /// V18 export from the complete musical result. The exporter consumes the
+    /// already-resolved progression and therefore does not regenerate voicings.
+    /// Optionally creates one track per persistent voice identity.
+    /// </summary>
+    public static void Export(
+        VoicingProgression progression,
+        string outputPath,
+        MidiChordExportSettings settings,
+        int velocity = 90)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        settings.Validate();
+        VoicingMidiExportValidation.Validate(progression, outputPath, velocity);
+
+        IReadOnlyList<ChordVoicing> voicings = progression.Entries.Select(e => e.Voicing).ToArray();
+        List<TrackChunk> tracks = BuildHandTracks(voicings, settings, velocity);
+
+        if (settings.CreateVoiceTracks)
+        {
+            tracks.AddRange(BuildVoiceTracks(
+                progression.VoicePaths,
+                progression.Entries.Count,
+                progression.Entries.Select(e => e.Duration.GetEffectiveDuration()).ToArray(),
+                settings.VoiceTrackNamePrefix,
+                settings.VoiceTrackChannel));
+        }
+
+        MidiFile midiFile = new(tracks.ToArray())
+        {
+            TimeDivision = new TicksPerQuarterNoteTimeDivision(TicksPerQuarterNote)
+        };
+        midiFile.Write(outputPath, overwriteFile: true);
+    }
+
+    private static List<TrackChunk> BuildHandTracks(
+        IReadOnlyList<ChordVoicing> voicedChords,
+        MidiChordExportSettings settings,
+        int velocity)
+    {
+        TrackChunk leftTrack = new();
+        TrackChunk rightTrack = new();
+        leftTrack.Events.Add(new SequenceTrackNameEvent(settings.LeftHandTrackName));
+        rightTrack.Events.Add(new SequenceTrackNameEvent(settings.RightHandTrackName));
+
+        List<(long Tick, int Order, MidiEvent Event)> leftEvents = new();
+        List<(long Tick, int Order, MidiEvent Event)> rightEvents = new();
+        BuildHandEvents(voicedChords, settings, velocity, leftEvents, rightEvents);
+        AddAbsoluteEvents(leftTrack, leftEvents);
+        AddAbsoluteEvents(rightTrack, rightEvents);
+
+        List<TrackChunk> tracks = new();
+        if (settings.CreateEmptyTracks || leftEvents.Count > 0) tracks.Add(leftTrack);
+        if (settings.CreateEmptyTracks || rightEvents.Count > 0) tracks.Add(rightTrack);
+        return tracks;
+    }
+
+    private static List<TrackChunk> BuildVoiceTracks(
+        IReadOnlyList<VoicePath> voicePaths,
+        int entryCount,
+        IReadOnlyList<RhythmRationalDuration> durations,
+        string namePrefix,
+        int channel)
+    {
+        List<TrackChunk> tracks = new();
+        foreach (VoicePath path in voicePaths.OrderBy(v => v.VoiceId))
+        {
+            if (path.Points.Count != entryCount)
+                throw new InvalidOperationException($"Voice {path.VoiceId} path length does not match the progression.");
+
+            TrackChunk track = new();
+            track.Events.Add(new SequenceTrackNameEvent($"{namePrefix}{path.VoiceId}"));
+            List<(long Tick, int Order, MidiEvent Event)> events = new();
+            long position = 0;
+            int order = 0;
+
+            for (int i = 0; i < entryCount; i++)
+            {
+                long end = position + VoicingMidiExportValidation.DurationToTicks(durations[i]);
+                Pitch? note = path.Points[i].Note;
+                if (note is not null)
+                {
+                    NoteOnEvent on = new((SevenBitNumber)note.ToMidiNoteNumber(), (SevenBitNumber)90)
+                    { Channel = (FourBitNumber)channel };
+                    NoteOffEvent off = new((SevenBitNumber)note.ToMidiNoteNumber(), (SevenBitNumber)0)
+                    { Channel = (FourBitNumber)channel };
+                    events.Add((position, order++, on));
+                    events.Add((end, order++, off));
+                }
+                position = end;
+            }
+
+            AddAbsoluteEvents(track, events);
+            tracks.Add(track);
+        }
+        return tracks;
+    }
+
 }

@@ -128,5 +128,27 @@ public sealed class ChordMidiGenerator
         return result;
     }
 
+    /// <summary>V18: exports an already-generated musical result without regenerating its voicings.</summary>
+    public VoicingProgression Export(
+        VoicingProgression progression,
+        string outputPath,
+        MidiChordExportSettings exportSettings,
+        int velocity = 90)
+    {
+        MidiChordExporter.Export(progression, outputPath, exportSettings, velocity);
+        return progression;
+    }
+
+    /// <summary>V18: exports an already-generated true two-hand musical result.</summary>
+    public TwoHandVoicingProgression ExportTwoHands(
+        TwoHandVoicingProgression progression,
+        string outputPath,
+        MidiChordExportSettings exportSettings,
+        int velocity = 90)
+    {
+        TwoHandMidiExporter.Export(progression, outputPath, exportSettings, velocity);
+        return progression;
+    }
+
 }
 
