@@ -217,62 +217,13 @@ public sealed class ChordVoicingEngine
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(candidate);
 
-        Model.Pitch[] previousNotes = previous.Pitches.OrderBy(x => x).ToArray();
-        Model.Pitch[] newNotes = candidate.OrderBy(x => x).ToArray();
-
-        int nbCommon = previousNotes.Intersect(newNotes).Count();
-        VoiceLeadingMatch matching =
-            VoiceLeadingMatcher.Match(previousNotes, newNotes, _settings.MaxVoiceMovement);
-
-        if (!matching.IsValid)
-        {
-            return new VoicingTransitionAnalysis(
-                previousNotes.Intersect(newNotes).OrderBy(x => x).ToArray(),
-                0,
-                0,
-                int.MaxValue,
-                false);
-        }
-
-        int bassMovement = Math.Abs(newNotes[0] - previousNotes[0]);
-        if (bassMovement > _settings.MaxVoiceMovement)
-        {
-            return new VoicingTransitionAnalysis(
-                previousNotes.Intersect(newNotes).OrderBy(x => x).ToArray(),
-                matching.TotalMovement,
-                bassMovement,
-                int.MaxValue,
-                false,
-                matching.Movements);
-        }
-
-        int score =
-            -nbCommon * _settings.CommonNoteWeight
-            + matching.TotalMovement * _settings.MovementWeight
-            + bassMovement * _settings.BassMovementWeight;
-
-        if (_preferences is not null)
-        {
-            foreach (VoicingPreference preference in _preferences.Find(previous.Chord, request.Chord))
-            {
-                if (preference.FirstChord is not null &&
-                    preference.SecondChord is not null &&
-                    preference.FirstChord.Pitches.SequenceEqual(previousNotes) &&
-                    preference.SecondChord.Pitches.SequenceEqual(newNotes))
-                {
-                    score -= _settings.UserPreferenceWeight;
-                    break;
-                }
-            }
-        }
-
-        return new VoicingTransitionAnalysis(
-            previousNotes.Intersect(newNotes).OrderBy(x => x).ToArray(),
-            matching.TotalMovement,
-            bassMovement,
-            score,
-            true,
-            matching.Movements);
+        return VoicingTransitionScorer.Analyze(
+            previous.Chord,
+            previous.Pitches,
+            request.Chord,
+            candidate,
+            _settings,
+            _preferences);
     }
 
     private List<Model.Pitch[]> GenerateCandidates(ChordVoicingRequest request)

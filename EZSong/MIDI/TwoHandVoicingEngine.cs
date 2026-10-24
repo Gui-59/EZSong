@@ -57,11 +57,14 @@ public sealed class TwoHandVoicingEngine
                     if (previous[p] >= Impossible) {
                         continue;
                     }
-                    if (!TryScoreTransition(layers[layer - 1][p], layers[layer][c], out int score)) {
+                    VoicingTransitionAnalysis analysis = AnalyzeTransition(
+                        layers[layer - 1][p],
+                        layers[layer][c]);
+                    if (!analysis.IsValid) {
                         continue;
                     }
 
-                    long cost = previous[p] + score;
+                    long cost = previous[p] + analysis.Score;
                     if (cost < current[c])
                     {
                         current[c] = cost;
@@ -236,57 +239,13 @@ public sealed class TwoHandVoicingEngine
         ArgumentNullException.ThrowIfNull(previous);
         ArgumentNullException.ThrowIfNull(current);
 
-        Pitch[] previousNotes = previous.Pitches.OrderBy(x => x).ToArray();
-        Pitch[] currentNotes = current.Pitches.OrderBy(x => x).ToArray();
-        int common = previousNotes.Intersect(currentNotes).Count();
-
-        VoiceLeadingMatch matching = VoiceLeadingMatcher.Match(
-            previousNotes, currentNotes, _settings.MaxVoiceMovement);
-
-        if (!matching.IsValid)
-        {
-            return new VoicingTransitionAnalysis(
-                previousNotes.Intersect(currentNotes).OrderBy(x => x).ToArray(),
-                0, 0, int.MaxValue, false);
-        }
-
-        int bassMovement = Math.Abs(currentNotes[0] - previousNotes[0]);
-        if (bassMovement > _settings.MaxVoiceMovement)
-        {
-            return new VoicingTransitionAnalysis(
-                previousNotes.Intersect(currentNotes).OrderBy(x => x).ToArray(),
-                matching.TotalMovement, bassMovement, int.MaxValue, false, matching.Movements);
-        }
-
-        int score =
-            -common * _settings.CommonNoteWeight
-            + matching.TotalMovement * _settings.MovementWeight
-            + bassMovement * _settings.BassMovementWeight;
-
-        if (_preferences is not null)
-        {
-            foreach (VoicingPreference preference in _preferences.Find(previous.Chord, current.Chord))
-            {
-                if (preference.FirstChord is not null && preference.SecondChord is not null &&
-                    preference.FirstChord.Pitches.SequenceEqual(previousNotes) &&
-                    preference.SecondChord.Pitches.SequenceEqual(currentNotes))
-                {
-                    score -= _settings.UserPreferenceWeight;
-                    break;
-                }
-            }
-        }
-
-        return new VoicingTransitionAnalysis(
-            previousNotes.Intersect(currentNotes).OrderBy(x => x).ToArray(),
-            matching.TotalMovement, bassMovement, score, true, matching.Movements);
-    }
-
-    private bool TryScoreTransition(TwoHandChordVoicing previous, TwoHandChordVoicing current, out int score)
-    {
-        VoicingTransitionAnalysis analysis = AnalyzeTransition(previous, current);
-        score = analysis.Score;
-        return analysis.IsValid;
+        return VoicingTransitionScorer.Analyze(
+            previous.Chord,
+            previous.Pitches,
+            current.Chord,
+            current.Pitches,
+            _settings,
+            _preferences);
     }
 
     private static int Span(IReadOnlyList<Model.Pitch> notes) {
