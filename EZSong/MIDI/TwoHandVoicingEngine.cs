@@ -21,6 +21,36 @@ public sealed class TwoHandVoicingEngine
         _preferences = preferences;
     }
 
+    public int MaxVoiceMovement => _settings.MaxVoiceMovement;
+
+    public TwoHandVoicingProgression GenerateVoicingProgression(
+        IReadOnlyList<ChordProgressionEntry> entries,
+        IReadOnlyList<ChordVoicingRequest> requests)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+        ArgumentNullException.ThrowIfNull(requests);
+        if (entries.Count != requests.Count)
+            throw new ArgumentException("The progression entry count must match the request count.");
+
+        IReadOnlyList<TwoHandChordVoicing> voicings = GenerateProgression(requests);
+        IReadOnlyList<ChordVoicing> left = voicings
+            .Select(v => new ChordVoicing(v.Chord, v.LeftHand))
+            .ToArray();
+        IReadOnlyList<ChordVoicing> right = voicings
+            .Select(v => new ChordVoicing(v.Chord, v.RightHand))
+            .ToArray();
+
+        VoiceTrackingResult leftTracking = VoiceIdentityTracker.TrackProgression(left, _settings.MaxVoiceMovement);
+        VoiceTrackingResult rightTracking = VoiceIdentityTracker.TrackProgression(right, _settings.MaxVoiceMovement);
+
+        return VoicingProgressionBuilder.BuildTwoHands(
+            entries,
+            voicings,
+            leftTracking.VoicePaths,
+            rightTracking.VoicePaths,
+            _settings.MaxVoiceMovement);
+    }
+
     public IReadOnlyList<TwoHandChordVoicing> GenerateProgression(
         IReadOnlyList<ChordVoicingRequest> requests)
     {

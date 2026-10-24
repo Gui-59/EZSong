@@ -140,6 +140,52 @@ public sealed class ChordProgressionParser {
         return ParseEntries(text).Select(entry => entry.Chord).ToArray();
     }
 
+    /// <summary>Parses and resolves a progression into the musical two-hand result layer.</summary>
+    public TwoHandVoicingProgression ParseToTwoHandVoicingProgression(
+        string text,
+        TwoHandVoicingEngine voicingEngine,
+        IEnumerable<Pitch>? exactFirstVoicing = null)
+    {
+        ArgumentNullException.ThrowIfNull(voicingEngine);
+        IReadOnlyList<ChordProgressionEntry> entries = ParseEntries(text);
+        if (entries.Count == 0)
+            return new TwoHandVoicingProgression(Array.Empty<TwoHandVoicingProgressionEntry>());
+
+        Pitch[]? exact = exactFirstVoicing?.ToArray();
+        List<ChordVoicingRequest> requests = new(entries.Count);
+        for (int i = 0; i < entries.Count; i++)
+        {
+            requests.Add(i == 0 && exact is not null
+                ? ChordVoicingRequest.FromExactVoicing(entries[i].Chord, exact)
+                : new ChordVoicingRequest(entries[i].Chord));
+        }
+
+        return voicingEngine.GenerateVoicingProgression(entries, requests);
+    }
+
+    /// <summary>Parses and resolves a progression into the musical voicing result layer.</summary>
+    public VoicingProgression ParseToVoicingProgression(
+        string text,
+        IEnumerable<Pitch>? exactFirstVoicing = null)
+    {
+        IReadOnlyList<ChordProgressionEntry> entries = ParseEntries(text);
+        if (entries.Count == 0)
+            return new VoicingProgression(Array.Empty<VoicingProgressionEntry>());
+
+        Pitch[]? exact = exactFirstVoicing?.ToArray();
+        List<ChordVoicingRequest> requests = new(entries.Count);
+        for (int i = 0; i < entries.Count; i++)
+        {
+            requests.Add(i == 0 && exact is not null
+                ? ChordVoicingRequest.FromExactVoicing(entries[i].Chord, exact)
+                : new ChordVoicingRequest(entries[i].Chord));
+        }
+
+        IReadOnlyList<ChordVoicing> voicings = _voicingEngine.GenerateProgression(requests);
+        VoiceTrackingResult tracking = _voicingEngine.TrackVoices(voicings);
+        return VoicingProgressionBuilder.Build(entries, voicings, tracking.VoicePaths, _voicingEngine.MaxVoiceMovement);
+    }
+
     /// <summary>
     /// Parses the progression and generates one voicing for each chord.
     /// Durations are retained on the returned Chord instances but are ignored

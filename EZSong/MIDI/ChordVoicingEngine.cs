@@ -21,6 +21,8 @@ public sealed class ChordVoicingEngine
         _preferences = preferences;
     }
 
+    public int MaxVoiceMovement => _settings.MaxVoiceMovement;
+
     public ChordVoicing GenerateFirst(ChordVoicingRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
