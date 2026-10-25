@@ -8,7 +8,16 @@ using System.Threading.Tasks;
 
 namespace EZSong.IO {
 
+    /// <summary>
+    /// Manages the persistence of Song objects to and from JSON files.
+    /// </summary>
     public static class SongPersistancyManager {
+
+        /// <summary>
+        /// Saves a Song object to a specified file path in JSON format.
+        /// </summary>
+        /// <param name="path">The file path to save the JSON data to.</param>
+        /// <param name="song">The Song object to save.</param>
         public static void Save(string path, Song song) {
             SongDto dto = song.ToDto();
 
@@ -19,6 +28,12 @@ namespace EZSong.IO {
             File.WriteAllText(path, json);
         }
 
+        /// <summary>
+        /// Loads a Song object from a specified file path containing JSON data.
+        /// </summary>
+        /// <param name="path">The file path to load the JSON data from.</param>
+        /// <returns>The deserialized Song object.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the file does not contain valid Song data.</exception>
         public static Song Load(string path) {
             string json = File.ReadAllText(path);
 
