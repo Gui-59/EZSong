@@ -28,9 +28,9 @@ namespace EZSong.Exporting.Lilypond {
         const string _styleSheetName = "default-style"; //TODO : paramétrer le nom de la feuille de style à utiliser pour la génération du fichier .ly (la feuille de style doit se trouver dans le répertoire "Stylesheets" du projet)
 
 
-        private Dictionary<SongElementCoordinates, LilyPondVar> _lilypondSongMelodies;
-        private Dictionary<SongElementCoordinates, LilyPondVar> _lilypondSongChords;
-        private Dictionary<SongElementCoordinates, LilyPondVar> _lilypondSongLyrics;
+        private List<LilyPondVar> _lilypondSongMelodies;
+        private List<LilyPondVar> _lilypondSongChords;
+        private List<LilyPondVar> _lilypondSongLyrics;
 
         /// <summary>
         /// Represente the whole song
@@ -89,12 +89,20 @@ namespace EZSong.Exporting.Lilypond {
 
                 for (int staffIndex = 0; staffIndex < _song.SongSettings.StaffsSettings.Staffs.Count(); staffIndex++) {
                     SongElementCoordinates songElementCoordinates  = new(segmentIndex, staffIndex);
-                    fullScript += GenerateLilypondSongmelodyVar(songElementCoordinates);
+                    LilyPondVar lilypondMelodyVar = GenerateLilypondSongmelodyVar(songElementCoordinates);
+                    _lilypondSongMelodies.Add(lilypondMelodyVar);
+                    fullScript += lilypondMelodyVar.Value;
                 }
 
                 SongElementCoordinates songElementCoordinates2 = new(segmentIndex, null);
-                fullScript += GenerateLilypondSongchordsVar(songElementCoordinates2);
-                fullScript += GenerateLilypondSonglyricsVar(songElementCoordinates2);
+
+                LilyPondVar lilypondChordsVar = GenerateLilypondSongchordsVar(songElementCoordinates2);
+                _lilypondSongChords.Add(lilypondChordsVar);
+                fullScript += lilypondChordsVar.Value;
+
+                LilyPondVar lilypondLyricsVar = GenerateLilypondSonglyricsVar(songElementCoordinates2);
+                _lilypondSongLyrics.Add(lilypondLyricsVar);
+                fullScript += lilypondLyricsVar.Value;
             }
 
 
@@ -195,9 +203,10 @@ namespace EZSong.Exporting.Lilypond {
         /// Generate a LilyPond script melody variable from current song segment/staff
         /// </summary>
         /// <returns></returns>
-        private string GenerateLilypondSongmelodyVar(SongElementCoordinates songElementCoordinates) {
+        private LilyPondVar GenerateLilypondSongmelodyVar(SongElementCoordinates songElementCoordinates) {
 
             StringBuilder sw = new();
+            LilyPondVar lilypondMelodyVar = new (SongLayer.Melody, songElementCoordinates);
 
             /*
               * Rappel de la synthaxe : 
@@ -242,9 +251,8 @@ namespace EZSong.Exporting.Lilypond {
               * 
               */
 
-            
-            _lilypondSongMelodies[songElementCoordinates] = new LilyPondVar("Songmelody_", songElementCoordinates);
-            _ = sw.AppendLine($"{_lilypondSongMelodies[songElementCoordinates].Name} = {_opening_bracket}");
+
+            _ = sw.AppendLine($"{lilypondMelodyVar.Name} = {_opening_bracket}");
 
             foreach (MeasureData m in _song.Segments[songElementCoordinates.SegmentIndex].Measures) {
                 KeySignature keySignature = m.KeySignature;
@@ -261,8 +269,11 @@ namespace EZSong.Exporting.Lilypond {
             }
 
             _ = sw.AppendLine($"{_closing_bracket}");
+            
+            lilypondMelodyVar.Value = sw.ToString();
+            
 
-            return sw.ToString();
+            return lilypondMelodyVar;
         }
 
         /// <summary>
@@ -381,15 +392,14 @@ namespace EZSong.Exporting.Lilypond {
         /// </summary>
         /// <param name="segmentIndex"></param>
         /// <returns></returns>
-        private string GenerateLilypondSongchordsVar(SongElementCoordinates songElementCoordinates) {
+        private LilyPondVar GenerateLilypondSongchordsVar(SongElementCoordinates songElementCoordinates) {
 
-            //Le nom de variable Lilypond ne peut pas terminer par un chiffre ; on met la lettre équivalente (via la table ASCII)
-            _lilypondSongChords[songElementCoordinates] = new LilyPondVar("Songchords_", songElementCoordinates);
+            LilyPondVar lilypondChordsVar = new(SongLayer.Chords, songElementCoordinates);           
             
             StringBuilder sw = new();
 
 			//accords
-            _ = sw.AppendLine($"{_lilypondSongChords[songElementCoordinates]} = {_backslash}chordmode {_opening_bracket} ");
+            _ = sw.AppendLine($"{lilypondChordsVar.Name} = {_backslash}chordmode {_opening_bracket} ");
             foreach (MeasureData m in _song.Segments[songElementCoordinates.SegmentIndex].Measures) {
                 _ = sw.AppendLine($"{_lilypondConverter.ChordSequenceToLilyPondString(m.ChordSequence)}");
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
@@ -397,7 +407,9 @@ namespace EZSong.Exporting.Lilypond {
 
             _ = sw.AppendLine($"{_closing_bracket} ");
 
-            return sw.ToString();
+            lilypondChordsVar.Value = sw.ToString();
+
+            return lilypondChordsVar;
         }
 
         /// <summary>
@@ -405,15 +417,14 @@ namespace EZSong.Exporting.Lilypond {
         /// </summary>
         /// <param name="segmentIndex"></param>
         /// <returns></returns>
-        private string GenerateLilypondSonglyricsVar(SongElementCoordinates songElementCoordinates) {
+        private LilyPondVar GenerateLilypondSonglyricsVar(SongElementCoordinates songElementCoordinates) {
 
-            //Le nom de variable Lilypond ne peut pas terminer par un chiffre ; on met la lettre équivalente (via la table ASCII)
-            _lilypondSongLyrics[songElementCoordinates] =  new LilyPondVar("Songlyrics_", songElementCoordinates);
+            LilyPondVar lilypondLyricsVar = new(SongLayer.Lyrics, songElementCoordinates);
 
             StringBuilder sw = new();
 
 			//Paroles sans découpage par syllabe (une phrase par mesure)
-            _ = sw.AppendLine($"{_lilypondSongLyrics[songElementCoordinates].Name} = {_opening_bracket}");
+            _ = sw.AppendLine($"{lilypondLyricsVar.Name} = {_opening_bracket}");
             foreach (MeasureData m in _song.Segments[songElementCoordinates.SegmentIndex].Measures) {
                 _ = sw.AppendLine($"s1_{_backslash}markup {_opening_bracket} {_dblquote}{m.Lyrics}{_dblquote} {_closing_bracket} ");
                 _ = sw.AppendLine($"{_backslash}bar{_dblquote}|{_dblquote}");
@@ -421,7 +432,9 @@ namespace EZSong.Exporting.Lilypond {
 
             _ = sw.AppendLine($"{_closing_bracket} ");
 
-            return sw.ToString();
+            lilypondLyricsVar.Value = sw.ToString();
+
+            return lilypondLyricsVar;
         }
 
         /// <summary>
@@ -470,19 +483,24 @@ namespace EZSong.Exporting.Lilypond {
 
                 SongElementCoordinates songElementCoordinates = new(segment.Index, staffIndex);
 
+                int songElementMelodyIndex = _lilypondSongMelodies.FindIndex(l => l.Layer == SongLayer.Melody && l.Coord.Equals(songElementCoordinates));
+
                 _ = sw.AppendLine(
                         $"{_backslash}new Voice = {_dblquote}mel_{segment.Index}_{staffIndex}{_dblquote} " +
                         $"{_opening_bracket} " +
-                        $"{_backslash}{_lilypondSongMelodies[songElementCoordinates].Name} " +
+                        $"{_backslash}{_lilypondSongMelodies[songElementMelodyIndex].Name} " +
                         $"{_closing_bracket}"
                     );
 
                 if (staffIndex == 0) {
                     SongElementCoordinates songElementCoordinates2 = new(segment.Index, null);
+
+                    int songElementLyricsIndex = _lilypondSongLyrics.FindIndex(l => l.Layer == SongLayer.Lyrics && l.Coord.Equals(songElementCoordinates2));
+
                     _ = sw.AppendLine(
                             $" {_backslash}new Voice = {_dblquote}parolesMesures{_dblquote} " +
                             $"{_opening_bracket} " +
-                            $"{_backslash}{_lilypondSongLyrics[songElementCoordinates2].Name} " +
+                            $"{_backslash}{_lilypondSongLyrics[songElementLyricsIndex].Name} " +
                             $"{_closing_bracket}"
                         );
                 }
@@ -491,13 +509,16 @@ namespace EZSong.Exporting.Lilypond {
             }
 
             SongElementCoordinates songElementCoordinates3 = new(segment.Index, null);
+
+            int songElementChordsIndex = _lilypondSongChords.FindIndex(l => l.Layer == SongLayer.Chords && l.Coord.Equals(songElementCoordinates3));
+
             _ = sw.AppendLine(
                     $"{_backslash}new ChordNames {_backslash}with " +
                     $"{_opening_bracket} " +
                     $"alignAboveContext = {_dblquote}melStaff_{segment.Index}_0{_dblquote} " +
                     $"{_closing_bracket} " +
                     $"{_opening_bracket} " +
-                    $"{_backslash}{_lilypondSongChords[songElementCoordinates3].Name} " +
+                    $"{_backslash}{_lilypondSongChords[songElementChordsIndex].Name} " +
                     $"{_closing_bracket}"
                 );
 
