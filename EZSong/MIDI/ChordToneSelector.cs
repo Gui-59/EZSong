@@ -8,8 +8,7 @@ namespace EZSong.MIDI;
 /// than the available voice count. The selection is deterministic and keeps a
 /// slash-chord bass mandatory.
 /// </summary>
-internal static class ChordToneSelector
-{
+internal static class ChordToneSelector {
     public static Pitch[] Select(
         Chord chord,
         IReadOnlyList<Pitch> pitchClasses,
@@ -49,15 +48,12 @@ internal static class ChordToneSelector
         return selected.Distinct().ToArray();
     }
 
-    private static int Priority(Chord chord, Pitch pitch, ChordTonePriorityPolicy policy)
-    {
+    private static int Priority(Chord chord, Pitch pitch, ChordTonePriorityPolicy policy) {
         int interval = IntervalFromRoot(chord, pitch);
         ChordToneRole role = Role(chord, interval);
 
-        return policy switch
-        {
-            ChordTonePriorityPolicy.EssentialsThenFifth => role switch
-            {
+        return policy switch {
+            ChordTonePriorityPolicy.EssentialsThenFifth => role switch {
                 ChordToneRole.Root => 0,
                 ChordToneRole.Third => 10,
                 ChordToneRole.Seventh => 20,
@@ -66,8 +62,7 @@ internal static class ChordToneSelector
                 ChordToneRole.Altered => 45,
                 _ => 50,
             },
-            _ => role switch
-            {
+            _ => role switch {
                 ChordToneRole.Root => 0,
                 ChordToneRole.Third => 10,
                 ChordToneRole.Seventh => 20,
@@ -80,11 +75,9 @@ internal static class ChordToneSelector
         };
     }
 
-    private static int ExtensionOrder(Chord chord, Pitch pitch)
-    {
+    private static int ExtensionOrder(Chord chord, Pitch pitch) {
         int interval = IntervalFromRoot(chord, pitch);
-        return interval switch
-        {
+        return interval switch {
             2 => 0,   // 9th / add2
             5 => 1,   // 11th / add4
             9 => 2,   // 13th / 6th
@@ -92,8 +85,7 @@ internal static class ChordToneSelector
         };
     }
 
-    private static ChordToneRole Role(Chord chord, int interval)
-    {
+    private static ChordToneRole Role(Chord chord, int interval) {
         if (interval == 0) {
             return ChordToneRole.Root;
         }
@@ -126,15 +118,13 @@ internal static class ChordToneSelector
         return ChordToneRole.Extension;
     }
 
-    private static int IntervalFromRoot(Chord chord, Pitch pitch)
-    {
+    private static int IntervalFromRoot(Chord chord, Pitch pitch) {
         int root = ((int)chord.RootNote + (int)chord.RootNoteAlteration) % 12;
         int value = pitch.ToMidiNoteNumber() % 12;
         return (value - root + 12) % 12;
     }
 
-    private enum ChordToneRole
-    {
+    private enum ChordToneRole {
         Root,
         Third,
         Fifth,

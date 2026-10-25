@@ -78,6 +78,11 @@
             return count;
         }
 
+        /// <summary>
+        /// Deternine if the last element of the beat pattern is a tie from. 
+        /// This is used to determine if the next beat pattern should be considered as a continuation of the previous one.
+        /// </summary>
+        /// <returns></returns>
         private bool EndsWithTie() {
             if (Elements.Count == 0) {
                 return false;
@@ -88,6 +93,10 @@
             return false;
         }
 
+        /// <summary>
+        /// Determine the total duration of the beat pattern by summing the effective durations of all elements.
+        /// </summary>
+        /// <returns>The total duration of the beat pattern.</returns>
         public RhythmRationalDuration GetTotalDuration() {
 
             RhythmRationalDuration total = new(0, 1, 0);
@@ -145,15 +154,29 @@
             };
         }
 
+        /// <summary>
+        /// Clears the beat pattern by removing all elements from the Elements list.
+        /// </summary>
         internal void Clear() {
             Elements.Clear();
 
         }
 
+        /// <summary>
+        /// Determines the remaining duration of the beat pattern by subtracting the total duration of the elements from the specified beat duration.
+        /// </summary>
+        /// <param name="beatDuration">The total duration of the beat.</param>
+        /// <returns>The remaining duration of the beat pattern.</returns>
         internal RhythmRationalDuration GetRemainingDuration(RhythmRationalDuration beatDuration) {
             return beatDuration - GetTotalDuration();
         }
 
+        /// <summary>
+        /// Determines if a given rhythm element can be added to the beat pattern without exceeding the specified beat duration.
+        /// </summary>
+        /// <param name="element">The rhythm element to check.</param>
+        /// <param name="beatDuration">The total duration of the beat.</param>
+        /// <returns>True if the element can be added without exceeding the beat duration; otherwise, false.</returns>
         internal bool CanAdd(IRhythmElement element, RhythmRationalDuration beatDuration) {
 
             if (element.GetType() == typeof(RhythmTuplet)) {

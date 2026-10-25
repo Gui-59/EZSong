@@ -38,7 +38,7 @@ namespace EZSong.MIDI {
         }
 
         /// <summary>
-        /// Joue une note MIDI sur le canal du synthétiseur, puis l'arrête après un délai spécifié.
+        /// Play a chord using the specified GM voice, note numbers, velocities, and duration in milliseconds.
         /// </summary>
         public async Task EchoChordAsync(
         GMVoice gmVoice,
@@ -61,7 +61,7 @@ namespace EZSong.MIDI {
         }
 
         /// <summary>
-        /// Joue une note MIDI sur le canal du synthétiseur.
+        /// Play a single MIDI note using the specified GM voice, note number, and velocity.
         /// </summary>
         public void PlayNote(GMVoice gmVoice, int noteNumber, int velocity = 100) {
             _synth.ProgramSelect(_channel, _sfId, _voiceBank, (uint)gmVoice);
@@ -69,7 +69,7 @@ namespace EZSong.MIDI {
         }
 
         /// <summary>
-        /// Arrête une note MIDI sur le canal du synthétiseur.
+        /// Stop a single MIDI note using the specified note number.
         /// </summary>
         public void StopNote(int noteNumber) {
             _synth.NoteOff(_channel, noteNumber);

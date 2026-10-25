@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace EZSong.Model {
+
+    /// <summary>
+    /// Represents a beat in a chord progression, containing a list of chords and their associated rhythmic duration.
+    /// </summary>
     public class ChordBeat {
 
         private RhythmRationalDuration _beatDuration;
@@ -29,6 +33,10 @@ namespace EZSong.Model {
             Chords = chords;
         }
 
+        /// <summary>
+        /// Determines the total duration of all chords in the beat by summing their individual durations.
+        /// </summary>
+        /// <returns>The total duration of all chords in the beat.</returns>
         public RhythmRationalDuration GetTotalDuration() {
 
             RhythmRationalDuration total = new(0, 1, 0);
@@ -100,6 +108,11 @@ namespace EZSong.Model {
             return humanString.Trim(); //TODO: remove the last " & " at the end of the string
         }
 
+
+        /// <summary>
+        /// Adds a chord to the list of chords in the beat if it can be added without exceeding the beat's duration.
+        /// </summary>
+        /// <param name="chord">The chord to add.</param>
         internal void AddChord(Chord chord) {
             if (CanAdd(chord)) {
                 Chords.Add(chord);

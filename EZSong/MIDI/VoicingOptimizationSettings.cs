@@ -5,8 +5,7 @@ namespace EZSong.MIDI;
 /// A weight of zero disables the corresponding preference without changing any
 /// hard musical constraint.
 /// </summary>
-public abstract class VoicingOptimizationSettings
-{
+public abstract class VoicingOptimizationSettings {
     /// <summary>Maximum movement allowed for a matched voice in semitones.</summary>
     public int MaxVoiceMovement { get; set; } = 11;
 
@@ -32,22 +31,24 @@ public abstract class VoicingOptimizationSettings
     public bool PreferCompactInitialVoicing { get; set; } = true;
 
     /// <summary>Returns whether the notes satisfy the configured spacing and total-span constraints.</summary>
-    public bool IsVoicingShapeAllowed(IEnumerable<EZSong.Model.Pitch> pitches)
-    {
+    public bool IsVoicingShapeAllowed(IEnumerable<EZSong.Model.Pitch> pitches) {
         EZSong.Model.Pitch[] notes = pitches.OrderBy(p => p).ToArray();
-        if (notes.Length == 0) return true;
-        if (MaxVoicingSpanSemitones > 0 &&
-            notes[^1].ToMidiNoteNumber() - notes[0].ToMidiNoteNumber() > MaxVoicingSpanSemitones)
+        if (notes.Length == 0) {
+            return true;
+        }
+
+        if (MaxVoicingSpanSemitones > 0 && notes[^1].ToMidiNoteNumber() - notes[0].ToMidiNoteNumber() > MaxVoicingSpanSemitones) {
             return false;
-        if (MinimumNoteSpacingSemitones > 0 &&
-            notes.Zip(notes.Skip(1), (a, b) => b.ToMidiNoteNumber() - a.ToMidiNoteNumber())
-                .Any(distance => distance < MinimumNoteSpacingSemitones))
+        }
+
+        if (MinimumNoteSpacingSemitones > 0 && notes.Zip(notes.Skip(1), (a, b) => b.ToMidiNoteNumber() - a.ToMidiNoteNumber()).Any(distance => distance < MinimumNoteSpacingSemitones)) {
             return false;
+        }
+
         return true;
     }
 
-    protected void ValidateOptimizationSettings()
-    {
+    protected void ValidateOptimizationSettings() {
         if (MaxVoiceMovement < 0 || MaxVoiceMovement > 127) {
             throw new ArgumentOutOfRangeException(nameof(MaxVoiceMovement));
         }

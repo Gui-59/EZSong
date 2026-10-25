@@ -6,27 +6,31 @@ namespace EZSong.MIDI;
 /// <summary>
 /// Optional constraints for the realization of one chord.
 /// </summary>
-public sealed class ChordVoicingRequest
-{
-    public Chord Chord { get; }
+public sealed class ChordVoicingRequest {
+    public Chord Chord {
+        get;
+    }
 
     /// <summary>
     /// If set, this note must be the lowest note of the resulting voicing.
     /// This is how slash chords are represented by the voicing engine.
     /// </summary>
-    public PitchClass? Bass { get; }
+    public PitchClass? Bass {
+        get;
+    }
 
     /// <summary>
     /// Optional exact starting voicing. When supplied for the first chord,
     /// these notes are used as-is after validation.
     /// </summary>
-    public IReadOnlyList<Pitch>? ExactVoicing { get; }
+    public IReadOnlyList<Pitch>? ExactVoicing {
+        get;
+    }
 
     public ChordVoicingRequest(
         Chord chord,
         PitchClass? bass = null,
-        IEnumerable<Pitch>? exactVoicing = null)
-    {
+        IEnumerable<Pitch>? exactVoicing = null) {
         Chord = chord ?? throw new ArgumentNullException(nameof(chord));
         Bass = bass ?? (chord.BassNote is null
             ? null
@@ -53,8 +57,7 @@ public sealed class ChordVoicingRequest
     }
 }
 
-public readonly record struct PitchClass(NoteStep Note, Alteration Alteration)
-{
+public readonly record struct PitchClass(NoteStep Note, Alteration Alteration) {
     public Pitch ChromaticPitch {
         get {
             return Pitch.FromMidi(((int)Note + (int)Alteration + 12) % 12);

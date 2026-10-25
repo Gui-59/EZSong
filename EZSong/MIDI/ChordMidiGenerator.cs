@@ -10,10 +10,7 @@ public sealed class ChordMidiGenerator
 {
     private readonly ChordVoicingEngine _voicingEngine;
 
-    public ChordMidiGenerator(
-        VoicingSettings? settings = null,
-        VoicingPreferenceStore? preferences = null)
-    {
+    public ChordMidiGenerator(VoicingSettings? settings = null, VoicingPreferenceStore? preferences = null) {
         _voicingEngine = new ChordVoicingEngine(settings, preferences);
     }
 

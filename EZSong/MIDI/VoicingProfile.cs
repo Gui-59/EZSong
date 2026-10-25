@@ -8,53 +8,76 @@ namespace EZSong.MIDI;
 /// Each access to a built-in profile returns a new instance so callers may
 /// safely customise its settings without modifying another profile instance.
 /// </summary>
-public sealed class VoicingProfile
-{
+public sealed class VoicingProfile {
     private VoicingProfile(
         string name,
         VoicingSettings oneHand,
-        TwoHandVoicingSettings twoHand)
-    {
+        TwoHandVoicingSettings twoHand) {
         Name = name;
         OneHand = oneHand;
         TwoHand = twoHand;
     }
 
-    public string Name { get; }
+    public string Name {
+        get;
+    }
 
     /// <summary>Settings for the one-hand voicing engine.</summary>
-    public VoicingSettings OneHand { get; }
+    public VoicingSettings OneHand {
+        get;
+    }
 
     /// <summary>Settings for the true two-hand voicing engine.</summary>
-    public TwoHandVoicingSettings TwoHand { get; }
+    public TwoHandVoicingSettings TwoHand {
+        get;
+    }
 
     /// <summary>
     /// Compact left-hand profile intended for arranger-style chord playing.
     /// </summary>
-    public static VoicingProfile ArrangerLeftHand => CreateArrangerLeftHand();
+    public static VoicingProfile ArrangerLeftHand {
+        get {
+            return CreateArrangerLeftHand();
+        }
+    }
 
     /// <summary>
     /// Compact left-hand profile with a deliberately narrow four-voice ceiling.
     /// </summary>
-    public static VoicingProfile LeftHandCompact => CreateLeftHandCompact();
+    public static VoicingProfile LeftHandCompact {
+        get {
+            return CreateLeftHandCompact();
+        }
+    }
 
     /// <summary>
     /// More spacious left-hand profile for open voicings.
     /// </summary>
-    public static VoicingProfile LeftHandOpen => CreateLeftHandOpen();
+    public static VoicingProfile LeftHandOpen {
+        get {
+            return CreateLeftHandOpen();
+        }
+    }
 
     /// <summary>
     /// General-purpose piano profile with a wider register and up to five voices.
     /// </summary>
-    public static VoicingProfile Piano => CreatePiano();
+    public static VoicingProfile Piano {
+        get {
+            return CreatePiano();
+        }
+    }
 
     /// <summary>
     /// Balanced true two-hand profile with a conventional LH/RH register split.
     /// </summary>
-    public static VoicingProfile TwoHandsBalanced => CreateTwoHandsBalanced();
+    public static VoicingProfile TwoHandsBalanced {
+        get {
+            return CreateTwoHandsBalanced();
+        }
+    }
 
-    private static VoicingProfile CreateArrangerLeftHand()
-    {
+    private static VoicingProfile CreateArrangerLeftHand() {
         VoicingSettings oneHand = CreateBaseOneHand();
         oneHand.MinChordAreaNote = P(NoteStep.C, 1);
         oneHand.MaxChordAreaNote = P(NoteStep.C, 3);
@@ -75,8 +98,7 @@ public sealed class VoicingProfile
         return new VoicingProfile("Arranger Left Hand", oneHand, twoHand);
     }
 
-    private static VoicingProfile CreateLeftHandCompact()
-    {
+    private static VoicingProfile CreateLeftHandCompact() {
         VoicingSettings oneHand = CreateBaseOneHand();
         oneHand.MinChordAreaNote = P(NoteStep.C, 1);
         oneHand.MaxChordAreaNote = P(NoteStep.C, 3);
@@ -97,8 +119,7 @@ public sealed class VoicingProfile
         return new VoicingProfile("Left Hand Compact", oneHand, twoHand);
     }
 
-    private static VoicingProfile CreateLeftHandOpen()
-    {
+    private static VoicingProfile CreateLeftHandOpen() {
         VoicingSettings oneHand = CreateBaseOneHand();
         oneHand.MinChordAreaNote = P(NoteStep.C, 1);
         oneHand.MaxChordAreaNote = P(NoteStep.C, 3);
@@ -119,8 +140,7 @@ public sealed class VoicingProfile
         return new VoicingProfile("Left Hand Open", oneHand, twoHand);
     }
 
-    private static VoicingProfile CreatePiano()
-    {
+    private static VoicingProfile CreatePiano() {
         VoicingSettings oneHand = CreateBaseOneHand();
         oneHand.MinChordAreaNote = P(NoteStep.C, 1);
         oneHand.MaxChordAreaNote = P(NoteStep.C, 4);
@@ -141,8 +161,7 @@ public sealed class VoicingProfile
         return new VoicingProfile("Piano", oneHand, twoHand);
     }
 
-    private static VoicingProfile CreateTwoHandsBalanced()
-    {
+    private static VoicingProfile CreateTwoHandsBalanced() {
         VoicingSettings oneHand = CreateBaseOneHand();
         oneHand.MinChordAreaNote = P(NoteStep.C, 1);
         oneHand.MaxChordAreaNote = P(NoteStep.C, 4);
@@ -163,27 +182,30 @@ public sealed class VoicingProfile
         return new VoicingProfile("Two Hands Balanced", oneHand, twoHand);
     }
 
-    private static VoicingSettings CreateBaseOneHand() => new()
-    {
-        MaxVoiceMovement = 11,
-        CommonNoteWeight = 100,
-        MovementWeight = 1,
-        BassMovementWeight = 3,
-        UserPreferenceWeight = 75,
-        ChordTonePriorityPolicy = ChordTonePriorityPolicy.EssentialsThenExtensions,
-        PreferCompactInitialVoicing = true,
-    };
+    private static VoicingSettings CreateBaseOneHand() {
+        return new() {
+            MaxVoiceMovement = 11,
+            CommonNoteWeight = 100,
+            MovementWeight = 1,
+            BassMovementWeight = 3,
+            UserPreferenceWeight = 75,
+            ChordTonePriorityPolicy = ChordTonePriorityPolicy.EssentialsThenExtensions,
+            PreferCompactInitialVoicing = true,
+        };
+    }
 
-    private static TwoHandVoicingSettings CreateBaseTwoHand() => new()
-    {
-        MaxVoiceMovement = 11,
-        CommonNoteWeight = 100,
-        MovementWeight = 1,
-        BassMovementWeight = 3,
-        UserPreferenceWeight = 75,
-        ChordTonePriorityPolicy = ChordTonePriorityPolicy.EssentialsThenExtensions,
-    };
+    private static TwoHandVoicingSettings CreateBaseTwoHand() {
+        return new() {
+            MaxVoiceMovement = 11,
+            CommonNoteWeight = 100,
+            MovementWeight = 1,
+            BassMovementWeight = 3,
+            UserPreferenceWeight = 75,
+            ChordTonePriorityPolicy = ChordTonePriorityPolicy.EssentialsThenExtensions,
+        };
+    }
 
-    private static Pitch P(NoteStep note, int octave) =>
-        new(note, Alteration.neutral, octave);
+    private static Pitch P(NoteStep note, int octave) {
+        return new(note, Alteration.neutral, octave);
+    }
 }

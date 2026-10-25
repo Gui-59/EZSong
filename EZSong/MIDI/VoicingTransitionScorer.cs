@@ -6,16 +6,14 @@ namespace EZSong.MIDI;
 /// Centralises transition analysis and scoring shared by one-hand and true
 /// two-hand voicing engines. It contains no candidate-generation logic.
 /// </summary>
-internal static class VoicingTransitionScorer
-{
+internal static class VoicingTransitionScorer {
     public static VoicingTransitionAnalysis Analyze(
         Chord previousChord,
         IReadOnlyList<Pitch> previousNotes,
         Chord currentChord,
         IReadOnlyList<Pitch> currentNotes,
         VoicingOptimizationSettings settings,
-        VoicingPreferenceStore? preferences = null)
-    {
+        VoicingPreferenceStore? preferences = null) {
         ArgumentNullException.ThrowIfNull(previousChord);
         ArgumentNullException.ThrowIfNull(previousNotes);
         ArgumentNullException.ThrowIfNull(currentChord);
@@ -25,8 +23,7 @@ internal static class VoicingTransitionScorer
         Pitch[] previous = previousNotes.OrderBy(x => x).ToArray();
         Pitch[] current = currentNotes.OrderBy(x => x).ToArray();
 
-        if (previous.Length == 0 || current.Length == 0)
-        {
+        if (previous.Length == 0 || current.Length == 0) {
             return Invalid(Array.Empty<Pitch>());
         }
 
@@ -36,14 +33,12 @@ internal static class VoicingTransitionScorer
             current,
             settings.MaxVoiceMovement);
 
-        if (!matching.IsValid)
-        {
+        if (!matching.IsValid) {
             return Invalid(commonNotes, matching.TotalMovement);
         }
 
         int bassMovement = Math.Abs(current[0] - previous[0]);
-        if (bassMovement > settings.MaxVoiceMovement)
-        {
+        if (bassMovement > settings.MaxVoiceMovement) {
             return new VoicingTransitionAnalysis(
                 commonNotes,
                 matching.TotalMovement,
@@ -58,15 +53,12 @@ internal static class VoicingTransitionScorer
             + matching.TotalMovement * settings.MovementWeight
             + bassMovement * settings.BassMovementWeight;
 
-        if (preferences is not null)
-        {
-            foreach (VoicingPreference preference in preferences.Find(previousChord, currentChord))
-            {
+        if (preferences is not null) {
+            foreach (VoicingPreference preference in preferences.Find(previousChord, currentChord)) {
                 if (preference.FirstChord is not null &&
                     preference.SecondChord is not null &&
                     preference.FirstChord.Pitches.SequenceEqual(previous) &&
-                    preference.SecondChord.Pitches.SequenceEqual(current))
-                {
+                    preference.SecondChord.Pitches.SequenceEqual(current)) {
                     score -= settings.UserPreferenceWeight;
                     break;
                 }
@@ -84,11 +76,12 @@ internal static class VoicingTransitionScorer
 
     private static VoicingTransitionAnalysis Invalid(
         IReadOnlyList<Pitch> commonNotes,
-        int totalMovement = 0) =>
-        new(
+        int totalMovement = 0) {
+        return new(
             commonNotes,
             totalMovement,
             0,
             int.MaxValue,
             false);
+    }
 }

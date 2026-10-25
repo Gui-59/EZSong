@@ -7,14 +7,25 @@ namespace EZSong.MIDI;
 /// The values use the musical <see cref="Pitch"/> type so callers do not need
 /// to deal with raw MIDI note numbers.
 /// </summary>
-public sealed class VoicingTransitionAnalysis
-{
-    public IReadOnlyList<Pitch> CommonNotes { get; }
-    public int TotalMovement { get; }
-    public int BassMovement { get; }
-    public int Score { get; }
-    public bool IsValid { get; }
-    public IReadOnlyList<VoiceMovement> VoiceMovements { get; }
+public sealed class VoicingTransitionAnalysis {
+    public IReadOnlyList<Pitch> CommonNotes {
+        get;
+    }
+    public int TotalMovement {
+        get;
+    }
+    public int BassMovement {
+        get;
+    }
+    public int Score {
+        get;
+    }
+    public bool IsValid {
+        get;
+    }
+    public IReadOnlyList<VoiceMovement> VoiceMovements {
+        get;
+    }
 
     public VoicingTransitionAnalysis(
         IReadOnlyList<Pitch> commonNotes,
@@ -22,8 +33,7 @@ public sealed class VoicingTransitionAnalysis
         int bassMovement,
         int score,
         bool isValid,
-        IReadOnlyList<VoiceMovement>? voiceMovements = null)
-    {
+        IReadOnlyList<VoiceMovement>? voiceMovements = null) {
         CommonNotes = commonNotes;
         TotalMovement = totalMovement;
         BassMovement = bassMovement;

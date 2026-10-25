@@ -6,13 +6,11 @@ namespace EZSong.MIDI;
 /// <summary>
 /// A concrete MIDI realization of a chord. Notes are always ordered from low to high.
 /// </summary>
-public sealed class ChordVoicing : IEquatable<ChordVoicing>
-{
+public sealed class ChordVoicing : IEquatable<ChordVoicing> {
     public Chord Chord { get; }
     public IReadOnlyList<Pitch> Notes { get; }
 
-    public ChordVoicing(Chord chord, IEnumerable<Pitch> notes)
-    {
+    public ChordVoicing(Chord chord, IEnumerable<Pitch> notes) {
         Chord = chord ?? throw new ArgumentNullException(nameof(chord));
         Notes = notes.OrderBy(GetMidiNoteNumber).ToArray();
     }
@@ -32,8 +30,7 @@ public sealed class ChordVoicing : IEquatable<ChordVoicing>
     }
 
     private static string FormatPitch(Pitch pitch) { //TODO : utiliser la méthode ToString() de Pitch à la place
-        string accidental = pitch.Alteration switch
-        {
+        string accidental = pitch.Alteration switch {
             Alteration.sharp => "#",
             Alteration.flat => "b",
             _ => string.Empty

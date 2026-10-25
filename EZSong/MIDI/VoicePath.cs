@@ -4,13 +4,15 @@ namespace EZSong.MIDI;
 /// Persistent identity of one musical voice through a complete progression.
 /// A null note means that the voice is absent at that chord position.
 /// </summary>
-public sealed class VoicePath
-{
-    public int VoiceId { get; }
-    public IReadOnlyList<VoicePathPoint> Points { get; }
+public sealed class VoicePath {
+    public int VoiceId {
+        get;
+    }
+    public IReadOnlyList<VoicePathPoint> Points {
+        get;
+    }
 
-    public VoicePath(int voiceId, IEnumerable<VoicePathPoint> points)
-    {
+    public VoicePath(int voiceId, IEnumerable<VoicePathPoint> points) {
         if (voiceId <= 0) {
             throw new ArgumentOutOfRangeException(nameof(voiceId));
         }

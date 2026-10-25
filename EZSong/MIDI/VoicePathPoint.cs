@@ -3,11 +3,16 @@ using EZSong.Model;
 namespace EZSong.MIDI;
 
 /// <summary>One point of a persistent voice path across a chord progression.</summary>
-public sealed class VoicePathPoint
-{
-    public int ChordIndex { get; }
-    public Chord Chord { get; }
-    public Pitch? Note { get; }
+public sealed class VoicePathPoint {
+    public int ChordIndex {
+        get;
+    }
+    public Chord Chord {
+        get;
+    }
+    public Pitch? Note {
+        get;
+    }
 
     public bool IsPresent {
         get {
@@ -15,8 +20,7 @@ public sealed class VoicePathPoint
         }
     }
 
-    public VoicePathPoint(int chordIndex, Chord chord, Pitch? note)
-    {
+    public VoicePathPoint(int chordIndex, Chord chord, Pitch? note) {
         if (chordIndex < 0) {
             throw new ArgumentOutOfRangeException(nameof(chordIndex));
         }

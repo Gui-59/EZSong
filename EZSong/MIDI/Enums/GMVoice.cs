@@ -7,6 +7,12 @@ using System.Threading.Tasks;
 //Valeurs possibles : https://www.cs.cmu.edu/~music/cmp/archives/cmsip/readings/GMSpecs_Patches.htm
 
 namespace EZSong.MIDI.Enums {
+
+    /// <summary>
+    /// GMVoice is an enumeration that represents the General MIDI (GM) instrument voices. 
+    /// Each value corresponds to a specific instrument sound defined in the GM standard, 
+    /// allowing for consistent playback of MIDI files across different devices and software.
+    /// </summary>
     public enum GMVoice {
         PIANO_AcousticGrand,
         PIANO_BrightAcoustic,

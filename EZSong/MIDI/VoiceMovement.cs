@@ -6,11 +6,16 @@ namespace EZSong.MIDI;
 /// Describes the movement of one musical voice between two successive voicings.
 /// A null side means that the voice was added or removed.
 /// </summary>
-public sealed class VoiceMovement
-{
-    public Pitch? PreviousNote { get; }
-    public Pitch? CurrentNote { get; }
-    public int SemitoneMovement { get; }
+public sealed class VoiceMovement {
+    public Pitch? PreviousNote {
+        get;
+    }
+    public Pitch? CurrentNote {
+        get;
+    }
+    public int SemitoneMovement {
+        get;
+    }
     public bool IsAdded {
         get {
             return PreviousNote is null && CurrentNote is not null;
@@ -29,8 +34,7 @@ public sealed class VoiceMovement
         }
     }
 
-    public VoiceMovement(Pitch? previousNote, Pitch? currentNote)
-    {
+    public VoiceMovement(Pitch? previousNote, Pitch? currentNote) {
         if (previousNote is null && currentNote is null) {
             throw new ArgumentException("A voice movement must contain at least one note.");
         }
@@ -42,8 +46,7 @@ public sealed class VoiceMovement
             : Math.Abs(currentNote - previousNote);
     }
 
-    public override string ToString()
-    {
+    public override string ToString() {
         if (IsAdded) {
             return $"+{CurrentNote}";
         }

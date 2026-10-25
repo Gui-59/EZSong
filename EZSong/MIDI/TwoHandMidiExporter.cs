@@ -5,16 +5,14 @@ using EZSong.Model;
 namespace EZSong.MIDI;
 
 /// <summary>Exports true two-hand voicings without applying a post-export split.</summary>
-public static class TwoHandMidiExporter
-{
+public static class TwoHandMidiExporter {
     public const int TicksPerQuarterNote = MidiChordExporter.TicksPerQuarterNote;
 
     public static void Export(
         IReadOnlyList<TwoHandChordVoicing> voicedChords,
         string outputPath,
         MidiChordExportSettings settings,
-        int velocity = 90)
-    {
+        int velocity = 90) {
         ArgumentNullException.ThrowIfNull(voicedChords);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
@@ -37,8 +35,7 @@ public static class TwoHandMidiExporter
         long position = 0;
         int order = 0;
 
-        foreach (TwoHandChordVoicing chord in voicedChords)
-        {
+        foreach (TwoHandChordVoicing chord in voicedChords) {
             long end = position + DurationToTicks(chord.Chord.Duration);
             AddNotes(chord.LeftHand, position, end, settings.LeftHandChannel, velocity, leftEvents, ref order);
             AddNotes(chord.RightHand, position, end, settings.RightHandChannel, velocity, rightEvents, ref order);
@@ -48,8 +45,7 @@ public static class TwoHandMidiExporter
         AddAbsoluteEvents(left, leftEvents);
         AddAbsoluteEvents(right, rightEvents);
 
-        MidiFile midi = new(left, right)
-        {
+        MidiFile midi = new(left, right) {
             TimeDivision = new TicksPerQuarterNoteTimeDivision(TicksPerQuarterNote)
         };
         midi.Write(outputPath, overwriteFile: true);
@@ -62,32 +58,29 @@ public static class TwoHandMidiExporter
         int channel,
         int velocity,
         List<(long Tick, int Order, MidiEvent Event)> events,
-        ref int order)
-    {
-        foreach (Model.Pitch pitch in notes)
-        {
-            NoteOnEvent on = new((SevenBitNumber)pitch.ToMidiNoteNumber(), (SevenBitNumber)velocity)
-            { Channel = (FourBitNumber)channel };
-            NoteOffEvent off = new((SevenBitNumber)pitch.ToMidiNoteNumber(), (SevenBitNumber)0)
-            { Channel = (FourBitNumber)channel };
+        ref int order) {
+        foreach (Model.Pitch pitch in notes) {
+            NoteOnEvent on = new((SevenBitNumber)pitch.ToMidiNoteNumber(), (SevenBitNumber)velocity) {
+                Channel = (FourBitNumber)channel
+            };
+            NoteOffEvent off = new((SevenBitNumber)pitch.ToMidiNoteNumber(), (SevenBitNumber)0) {
+                Channel = (FourBitNumber)channel
+            };
             events.Add((start, order++, on));
             events.Add((end, order++, off));
         }
     }
 
-    private static void AddAbsoluteEvents(TrackChunk track, IEnumerable<(long Tick, int Order, MidiEvent Event)> events)
-    {
+    private static void AddAbsoluteEvents(TrackChunk track, IEnumerable<(long Tick, int Order, MidiEvent Event)> events) {
         long previous = 0;
-        foreach ((long Tick, int Order, MidiEvent Event) item in events.OrderBy(x => x.Tick).ThenBy(x => x.Order))
-        {
+        foreach ((long Tick, int Order, MidiEvent Event) item in events.OrderBy(x => x.Tick).ThenBy(x => x.Order)) {
             item.Event.DeltaTime = item.Tick - previous;
             previous = item.Tick;
             track.Events.Add(item.Event);
         }
     }
 
-    private static long DurationToTicks(RhythmRationalDuration duration)
-    {
+    private static long DurationToTicks(RhythmRationalDuration duration) {
         return VoicingMidiExportValidation.DurationToTicks(duration);
     }
     /// <summary>
@@ -98,8 +91,7 @@ public static class TwoHandMidiExporter
         TwoHandVoicingProgression progression,
         string outputPath,
         MidiChordExportSettings settings,
-        int velocity = 90)
-    {
+        int velocity = 90) {
         ArgumentNullException.ThrowIfNull(settings);
         settings.Validate();
         VoicingMidiExportValidation.Validate(progression, outputPath, velocity);
@@ -113,8 +105,7 @@ public static class TwoHandMidiExporter
         long position = 0;
         int order = 0;
 
-        foreach (TwoHandVoicingProgressionEntry entry in progression.Entries)
-        {
+        foreach (TwoHandVoicingProgressionEntry entry in progression.Entries) {
             long end = position + VoicingMidiExportValidation.DurationToTicks(entry.Duration.GetEffectiveDuration());
             AddNotes(entry.Voicing.LeftHand, position, end, settings.LeftHandChannel, velocity, leftEvents, ref order);
             AddNotes(entry.Voicing.RightHand, position, end, settings.RightHandChannel, velocity, rightEvents, ref order);
@@ -125,8 +116,7 @@ public static class TwoHandMidiExporter
         AddAbsoluteEvents(right, rightEvents);
 
         List<TrackChunk> tracks = new() { left, right };
-        if (settings.CreateVoiceTracks)
-        {
+        if (settings.CreateVoiceTracks) {
             tracks.AddRange(BuildVoiceTracks(progression.LeftHandVoicePaths, progression.Entries.Count,
                 progression.Entries.Select(e => e.Duration.GetEffectiveDuration()).ToArray(),
                 $"{settings.LeftHandTrackName} - {settings.VoiceTrackNamePrefix}", settings.VoiceTrackChannel));
@@ -135,8 +125,7 @@ public static class TwoHandMidiExporter
                 $"{settings.RightHandTrackName} - {settings.VoiceTrackNamePrefix}", settings.VoiceTrackChannel));
         }
 
-        MidiFile midi = new(tracks.ToArray())
-        {
+        MidiFile midi = new(tracks.ToArray()) {
             TimeDivision = new TicksPerQuarterNoteTimeDivision(TicksPerQuarterNote)
         };
         midi.Write(outputPath, overwriteFile: true);
@@ -147,28 +136,28 @@ public static class TwoHandMidiExporter
         int entryCount,
         IReadOnlyList<RhythmRationalDuration> durations,
         string namePrefix,
-        int channel)
-    {
+        int channel) {
         List<TrackChunk> tracks = new();
-        foreach (VoicePath path in voicePaths.OrderBy(v => v.VoiceId))
-        {
-            if (path.Points.Count != entryCount)
+        foreach (VoicePath path in voicePaths.OrderBy(v => v.VoiceId)) {
+            if (path.Points.Count != entryCount) {
                 throw new InvalidOperationException($"Voice {path.VoiceId} path length does not match the progression.");
+            }
+
             TrackChunk track = new();
             track.Events.Add(new SequenceTrackNameEvent($"{namePrefix}{path.VoiceId}"));
             List<(long Tick, int Order, MidiEvent Event)> events = new();
             long position = 0;
             int order = 0;
-            for (int i = 0; i < entryCount; i++)
-            {
+            for (int i = 0; i < entryCount; i++) {
                 long end = position + VoicingMidiExportValidation.DurationToTicks(durations[i]);
                 Pitch? note = path.Points[i].Note;
-                if (note is not null)
-                {
-                    NoteOnEvent on = new((SevenBitNumber)note.ToMidiNoteNumber(), (SevenBitNumber)90)
-                    { Channel = (FourBitNumber)channel };
-                    NoteOffEvent off = new((SevenBitNumber)note.ToMidiNoteNumber(), (SevenBitNumber)0)
-                    { Channel = (FourBitNumber)channel };
+                if (note is not null) {
+                    NoteOnEvent on = new((SevenBitNumber)note.ToMidiNoteNumber(), (SevenBitNumber)90) {
+                        Channel = (FourBitNumber)channel
+                    };
+                    NoteOffEvent off = new((SevenBitNumber)note.ToMidiNoteNumber(), (SevenBitNumber)0) {
+                        Channel = (FourBitNumber)channel
+                    };
                     events.Add((position, order++, on));
                     events.Add((end, order++, off));
                 }

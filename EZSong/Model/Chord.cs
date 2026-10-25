@@ -37,20 +37,33 @@ namespace EZSong.Model {
 
         public bool IsSilentChord;
 
+        /// <summary>
+        /// Duration of the chord in rational rhythm (e.g., 1/4 for a quarter note, 3/8 for a dotted quarter note, etc.).
+        /// </summary>
         public RhythmRationalDuration Duration { 
             get; 
             set; 
         }
 
+        /// <summary>
+        /// Root note of the chord (e.g., C, D, E, F, G, A, B). This is the fundamental note upon which the chord is built.
+        /// </summary>
         public NoteStep RootNote {
             get; 
             set;
         }
+
+        /// <summary>
+        /// Root note alteration of the chord (e.g., sharp, flat, natural). This modifies the root note to create different chord qualities.
+        /// </summary>
         public Alteration RootNoteAlteration {
             get; 
             set;
         }
 
+        /// <summary>
+        /// Type of the chord (e.g., major, minor, seventh, etc.). This defines the specific harmonic structure of the chord.
+        /// </summary>
         public ChordType ChordType {
             get; 
             set;
@@ -65,6 +78,10 @@ namespace EZSong.Model {
             set;
         }
 
+        /// <summary>
+        /// Bass note alteration for slash chords. 
+        /// This modifies the bass note to create different harmonic effects in the voicing.
+        /// </summary>
         public Alteration BassNoteAlteration {
             get;
             set;

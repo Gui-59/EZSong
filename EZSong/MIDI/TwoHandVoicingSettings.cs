@@ -3,8 +3,7 @@ using EZSong.Model;
 namespace EZSong.MIDI;
 
 /// <summary>Constraints for a true two-hand chord voicing.</summary>
-public sealed class TwoHandVoicingSettings : VoicingOptimizationSettings
-{
+public sealed class TwoHandVoicingSettings : VoicingOptimizationSettings {
     public Pitch MinLeftHandNote { get; set; } = new(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 1);
     public Pitch MaxLeftHandNote { get; set; } = new(EZSong.Enums.NoteStep.B, EZSong.Enums.Alteration.neutral, 2);
     public Pitch MinRightHandNote { get; set; } = new(EZSong.Enums.NoteStep.C, EZSong.Enums.Alteration.neutral, 3);
@@ -19,8 +18,7 @@ public sealed class TwoHandVoicingSettings : VoicingOptimizationSettings
     /// <summary>Policy used when a chord contains more tones than MaxTotalVoices.</summary>
     public ChordTonePriorityPolicy ChordTonePriorityPolicy { get; set; } = ChordTonePriorityPolicy.EssentialsThenExtensions;
 
-    public void Validate()
-    {
+    public void Validate() {
         ArgumentNullException.ThrowIfNull(MinLeftHandNote);
         ArgumentNullException.ThrowIfNull(MaxLeftHandNote);
         ArgumentNullException.ThrowIfNull(MinRightHandNote);

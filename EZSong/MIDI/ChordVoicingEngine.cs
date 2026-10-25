@@ -7,24 +7,25 @@ namespace EZSong.MIDI;
 /// Computes playable one-hand chord voicings with strong preference for keeping
 /// the same physical keys between successive chords.
 /// </summary>
-public sealed class ChordVoicingEngine
-{
+public sealed class ChordVoicingEngine {
     private readonly VoicingSettings _settings;
     private readonly VoicingPreferenceStore? _preferences;
 
     public ChordVoicingEngine(
         VoicingSettings? settings = null,
-        VoicingPreferenceStore? preferences = null)
-    {
+        VoicingPreferenceStore? preferences = null) {
         _settings = settings ?? new VoicingSettings();
         _settings.Validate();
         _preferences = preferences;
     }
 
-    public int MaxVoiceMovement => _settings.MaxVoiceMovement;
+    public int MaxVoiceMovement {
+        get {
+            return _settings.MaxVoiceMovement;
+        }
+    }
 
-    public ChordVoicing GenerateFirst(ChordVoicingRequest request)
-    {
+    public ChordVoicing GenerateFirst(ChordVoicingRequest request) {
         ArgumentNullException.ThrowIfNull(request);
 
         if (request.ExactVoicing is not null) {
@@ -51,8 +52,7 @@ public sealed class ChordVoicingEngine
     /// voicing would make a later transition impossible under MaxVoiceMovement.
     /// </summary>
     public IReadOnlyList<ChordVoicing> GenerateProgression(
-        IReadOnlyList<ChordVoicingRequest> requests)
-    {
+        IReadOnlyList<ChordVoicingRequest> requests) {
         ArgumentNullException.ThrowIfNull(requests);
 
         if (requests.Count == 0) {
@@ -61,22 +61,16 @@ public sealed class ChordVoicingEngine
 
         List<Model.Pitch[]>[] layers = new List<Model.Pitch[]>[requests.Count];
 
-        for (int i = 0; i < requests.Count; i++)
-        {
-            if (i == 0 && requests[i].ExactVoicing is not null)
-            {
-                layers[i] = new List<Model.Pitch[]>
-                {
+        for (int i = 0; i < requests.Count; i++) {
+            if (i == 0 && requests[i].ExactVoicing is not null) {
+                layers[i] = new List<Model.Pitch[]> {
                     ValidateExactVoicing(requests[i]).Pitches.ToArray()
                 };
-            }
-            else
-            {
+            } else {
                 layers[i] = GenerateCandidates(requests[i]);
             }
 
-            if (layers[i].Count == 0)
-            {
+            if (layers[i].Count == 0) {
                 throw new InvalidOperationException(
                     $"No valid voicing found for {requests[i].Chord.ToHumanString()}.");
             }
@@ -91,18 +85,15 @@ public sealed class ChordVoicingEngine
         int[][] predecessors = new int[requests.Count][];
         predecessors[0] = Enumerable.Repeat(-1, layers[0].Count).ToArray();
 
-        for (int layer = 1; layer < requests.Count; layer++)
-        {
+        for (int layer = 1; layer < requests.Count; layer++) {
             long[] currentCosts = new long[layers[layer].Count];
             Array.Fill(currentCosts, Impossible);
             predecessors[layer] = Enumerable.Repeat(-1, layers[layer].Count).ToArray();
 
-            for (int currentIndex = 0; currentIndex < layers[layer].Count; currentIndex++)
-            {
+            for (int currentIndex = 0; currentIndex < layers[layer].Count; currentIndex++) {
                 Model.Pitch[] current = layers[layer][currentIndex];
 
-                for (int previousIndex = 0; previousIndex < layers[layer - 1].Count; previousIndex++)
-                {
+                for (int previousIndex = 0; previousIndex < layers[layer - 1].Count; previousIndex++) {
                     if (previousCosts[previousIndex] >= Impossible) {
                         continue;
                     }
@@ -121,8 +112,7 @@ public sealed class ChordVoicingEngine
                     }
 
                     long cost = previousCosts[previousIndex] + analysis.Score;
-                    if (cost < currentCosts[currentIndex])
-                    {
+                    if (cost < currentCosts[currentIndex]) {
                         currentCosts[currentIndex] = cost;
                         predecessors[layer][currentIndex] = previousIndex;
                     }
@@ -130,8 +120,7 @@ public sealed class ChordVoicingEngine
             }
 
             bool hasValidPath = currentCosts.Any(cost => cost < Impossible);
-            if (!hasValidPath)
-            {
+            if (!hasValidPath) {
                 throw new InvalidOperationException(
                     $"No valid voicing transition found from " +
                     $"{requests[layer - 1].Chord.ToHumanString()} to " +
@@ -143,8 +132,7 @@ public sealed class ChordVoicingEngine
         }
 
         int bestFinalIndex = 0;
-        for (int i = 1; i < previousCosts.Length; i++)
-        {
+        for (int i = 1; i < previousCosts.Length; i++) {
             if (previousCosts[i] < previousCosts[bestFinalIndex]) {
                 bestFinalIndex = i;
             }
@@ -153,14 +141,12 @@ public sealed class ChordVoicingEngine
         int[] selectedIndexes = new int[requests.Count];
         selectedIndexes[^1] = bestFinalIndex;
 
-        for (int layer = requests.Count - 1; layer > 0; layer--)
-        {
+        for (int layer = requests.Count - 1; layer > 0; layer--) {
             selectedIndexes[layer - 1] = predecessors[layer][selectedIndexes[layer]];
         }
 
         List<ChordVoicing> result = new(requests.Count);
-        for (int layer = 0; layer < requests.Count; layer++)
-        {
+        for (int layer = 0; layer < requests.Count; layer++) {
             result.Add(new ChordVoicing(
                 requests[layer].Chord,
                 layers[layer][selectedIndexes[layer]]));
@@ -170,14 +156,12 @@ public sealed class ChordVoicingEngine
     }
 
     /// <summary>Assigns persistent voice identities to a generated progression.</summary>
-    public VoiceTrackingResult TrackVoices(IReadOnlyList<ChordVoicing> progression)
-    {
+    public VoiceTrackingResult TrackVoices(IReadOnlyList<ChordVoicing> progression) {
         ArgumentNullException.ThrowIfNull(progression);
         return VoiceIdentityTracker.TrackProgression(progression, _settings.MaxVoiceMovement);
     }
 
-    public ChordVoicing GenerateNext(ChordVoicingRequest request, ChordVoicing previous)
-    {
+    public ChordVoicing GenerateNext(ChordVoicingRequest request, ChordVoicing previous) {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(previous);
 
@@ -189,15 +173,13 @@ public sealed class ChordVoicingEngine
         int bestScore = int.MaxValue;
         Model.Pitch[]? best = null;
 
-        foreach (Model.Pitch[] candidate in candidates)
-        {
+        foreach (Model.Pitch[] candidate in candidates) {
             VoicingTransitionAnalysis analysis = AnalyzeTransition(previous, request, candidate);
             if (!analysis.IsValid) {
                 continue;
             }
 
-            if (analysis.Score < bestScore)
-            {
+            if (analysis.Score < bestScore) {
                 bestScore = analysis.Score;
                 best = candidate;
             }
@@ -213,8 +195,7 @@ public sealed class ChordVoicingEngine
     public VoicingTransitionAnalysis AnalyzeTransition(
         ChordVoicing previous,
         ChordVoicingRequest request,
-        IReadOnlyList<Model.Pitch> candidate)
-    {
+        IReadOnlyList<Model.Pitch> candidate) {
         ArgumentNullException.ThrowIfNull(previous);
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(candidate);
@@ -228,8 +209,7 @@ public sealed class ChordVoicingEngine
             _preferences);
     }
 
-    private List<Model.Pitch[]> GenerateCandidates(ChordVoicingRequest request)
-    {
+    private List<Model.Pitch[]> GenerateCandidates(ChordVoicingRequest request) {
         Model.Pitch[] pitchClasses = ChordPitchClassProvider.Get(request.Chord).ToArray();
 
         if (pitchClasses.Length < 2) {
@@ -263,16 +243,13 @@ public sealed class ChordVoicingEngine
         PitchClass? bass,
         Model.Pitch[] partial,
         bool[] usedPitchClasses,
-        List<Model.Pitch[]> result)
-    {
-        if (index == pitchClasses.Length)
-        {
+        List<Model.Pitch[]> result) {
+        if (index == pitchClasses.Length) {
             result.Add(partial.ToArray());
             return;
         }
 
-        for (int pitchClassIndex = 0; pitchClassIndex < pitchClasses.Length; pitchClassIndex++)
-        {
+        for (int pitchClassIndex = 0; pitchClassIndex < pitchClasses.Length; pitchClassIndex++) {
             if (usedPitchClasses[pitchClassIndex]) {
                 continue;
             }
@@ -282,13 +259,11 @@ public sealed class ChordVoicingEngine
             // pitch class; the remaining chord tones remain completely free.
             if (index == 0 &&
                 bass is not null &&
-                pitchClasses[pitchClassIndex] != bass.Value.ChromaticPitch)
-            {
+                pitchClasses[pitchClassIndex] != bass.Value.ChromaticPitch) {
                 continue;
             }
 
-            foreach (Model.Pitch midi in EnumerateMidiNotes(pitchClasses[pitchClassIndex]))
-            {
+            foreach (Model.Pitch midi in EnumerateMidiNotes(pitchClasses[pitchClassIndex])) {
                 // previousMidi is the last note already placed in the
                 // ascending candidate. This gives every voicing one canonical
                 // representation and prevents duplicate MIDI keys.
@@ -313,23 +288,20 @@ public sealed class ChordVoicingEngine
         }
     }
 
-    private IEnumerable<Model.Pitch> EnumerateMidiNotes(Model.Pitch pitchClass)
-    {
+    private IEnumerable<Model.Pitch> EnumerateMidiNotes(Model.Pitch pitchClass) {
         Model.Pitch first = _settings.MinChordAreaNote + ((pitchClass - _settings.MinChordAreaNote) % 12 + 12) % 12;
         for (Model.Pitch midi = first; midi <= _settings.MaxChordAreaNote; midi += 12) {
             yield return midi;
         }
     }
 
-    private ChordVoicing ValidateExactVoicing(ChordVoicingRequest request)
-    {
+    private ChordVoicing ValidateExactVoicing(ChordVoicingRequest request) {
         Model.Pitch[] notes = request.ExactVoicing!.Select(p => p).OrderBy(x => x).ToArray();
         ValidateVoicingNotes(request, notes);
         return new ChordVoicing(request.Chord, request.ExactVoicing!);
     }
 
-    private void ValidateVoicingNotes(ChordVoicingRequest request, IReadOnlyList<Model.Pitch> notes)
-    {
+    private void ValidateVoicingNotes(ChordVoicingRequest request, IReadOnlyList<Model.Pitch> notes) {
         if (notes.Count < 2 || notes.Count > _settings.ChordMaxKeyCount) {
             throw new ArgumentException("A voicing must contain between 2 and 5 notes.");
         }
@@ -355,8 +327,7 @@ public sealed class ChordVoicingEngine
         }
     }
 
-    private static int Span(Model.Pitch[] pitches)
-    {
+    private static int Span(Model.Pitch[] pitches) {
         if (pitches.Length == 0) {
             return 0;
         }

@@ -148,8 +148,9 @@ public sealed class ChordProgressionParser {
     {
         ArgumentNullException.ThrowIfNull(voicingEngine);
         IReadOnlyList<ChordProgressionEntry> entries = ParseEntries(text);
-        if (entries.Count == 0)
+        if (entries.Count == 0) {
             return new TwoHandVoicingProgression(Array.Empty<TwoHandVoicingProgressionEntry>());
+        }
 
         Pitch[]? exact = exactFirstVoicing?.ToArray();
         List<ChordVoicingRequest> requests = new(entries.Count);
@@ -169,8 +170,9 @@ public sealed class ChordProgressionParser {
         IEnumerable<Pitch>? exactFirstVoicing = null)
     {
         IReadOnlyList<ChordProgressionEntry> entries = ParseEntries(text);
-        if (entries.Count == 0)
+        if (entries.Count == 0) {
             return new VoicingProgression(Array.Empty<VoicingProgressionEntry>());
+        }
 
         Pitch[]? exact = exactFirstVoicing?.ToArray();
         List<ChordVoicingRequest> requests = new(entries.Count);
