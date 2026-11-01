@@ -7,6 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets {
+
+    /// <summary>
+    /// Widget that displays information about the currently displayed staff in the Measures Editor, 
+    /// including its number and name, 
+    /// and provides controls for navigating between staffs and deleting the current staff.
+    /// </summary>
     internal class MeasuresEditorHeader : Box {
 
         private GlobalMeasuresEditor _globalMeasuresEditor;
@@ -17,6 +23,13 @@ namespace EZSong.UI.Widgets {
         private Label _displayedStaffName;
         private bool _isPlaceHolder;
 
+        /// <summary>
+        /// Creates a new instance of the MeasuresEditorHeader widget.
+        /// </summary>
+        /// <param name="globalMeasuresEditor">The global measures editor that this header is associated with.</param>
+        /// <param name="currentSong">The current song being edited.</param>
+        /// <param name="displayedStaffIndex">The index of the staff to display.</param>
+        /// <param name="isPlaceHolder">Indicates whether this header is a placeholder.</param>
         public MeasuresEditorHeader(GlobalMeasuresEditor globalMeasuresEditor, Song currentSong, int displayedStaffIndex,  bool isPlaceHolder) : base(Orientation.Vertical, 0) {
             _globalMeasuresEditor = globalMeasuresEditor;
             _currentSong = currentSong; 
@@ -30,6 +43,12 @@ namespace EZSong.UI.Widgets {
             InitializeComponent();
         }
 
+
+        /// <summary>
+        /// Initializes the components of the MeasuresEditorHeader widget, 
+        /// setting up labels and buttons for displaying staff information and navigation controls.
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
         private void InitializeComponent() {
 
             Clear();
@@ -83,6 +102,10 @@ namespace EZSong.UI.Widgets {
             ShowAll();
         }
 
+        /// <summary>
+        /// Clears all child widgets from the MeasuresEditorHeader, 
+        /// removing them from the container and disposing of them to free resources.
+        /// </summary>
         private void Clear() {
             foreach (Widget child in Children) {
                 Remove(child);
@@ -91,6 +114,9 @@ namespace EZSong.UI.Widgets {
 
         }
 
+        /// <summary>
+        /// Determines whether this MeasuresEditorHeader is a placeholder.
+        /// </summary>
         public bool IsPlaceHolder {
             get {
                 return _isPlaceHolder;
@@ -104,6 +130,11 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Refreshes the displayed staff information based on the provided index, 
+        /// updating the staff number and name labels accordingly.
+        /// </summary>
+        /// <param name="displayedStaffIndex">The index of the staff to display.</param>
         internal void RefreshDisplayedStaff(int displayedStaffIndex) {
 
             if (_isPlaceHolder) {

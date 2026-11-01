@@ -10,6 +10,11 @@ using System;
 using System.Runtime.CompilerServices;
 
 namespace EZSong.UI.Widgets {
+
+    /// <summary>
+    /// A widget that allows users to edit the chords of a measure in a song, 
+    /// providing a visual representation of the beats and their associated chords.
+    /// </summary>
     public class MeasureChordsEditor : DrawingArea {
 
         const int _height = 20; //Taille fixe pour éviter les problèmes de redimensionnement. TODO : calculer la taille en fonction de la police
@@ -18,18 +23,31 @@ namespace EZSong.UI.Widgets {
 
         private ColorPaletteManager _colorPaletteManager = new();
 
+        /// <summary>
+        /// Creates a new instance of the MeasureChordsEditor widget, 
+        /// initializing it with default settings and preparing it for user interaction.
+        /// </summary>
         public MeasureChordsEditor() {
             HeightRequest = _height; 
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
             _measureData = new();
         }
 
+        /// <summary>
+        /// Creates a new instance of the MeasureChordsEditor widget with the specified measure data,
+        /// </summary>
+        /// <param name="measureData">The measure data to be edited.</param>
         public MeasureChordsEditor(MeasureData measureData) {
             HeightRequest = _height; 
             AddEvents((int)Gdk.EventMask.ButtonPressMask);
             _measureData = measureData;
         }
 
+        /// <summary>
+        /// Renders the MeasureChordsEditor widget, drawing the background and the beats with their associated chords.
+        /// </summary>
+        /// <param name="cr">The Cairo context to draw on.</param>
+        /// <returns>True if the drawing was successful, otherwise false.</returns>
         protected override bool OnDrawn(Cairo.Context cr) {
 
             if (_measureData == null) {
@@ -46,6 +64,10 @@ namespace EZSong.UI.Widgets {
             return true;
         }
 
+        /// <summary>
+        /// Draws the background of the MeasureChordsEditor widget using the specified Cairo context,
+        /// </summary>
+        /// <param name="cr">The Cairo context to draw on.</param>
         private void DrawBackground(Cairo.Context cr) {
             cr.SetSourceRGB(
                 _colorPaletteManager.FrameBg.R, 
@@ -55,6 +77,11 @@ namespace EZSong.UI.Widgets {
             cr.Paint();
         }
 
+
+        /// <summary>
+        /// Draws the beats of the measure, including their associated chords, using the specified Cairo context.
+        /// </summary>
+        /// <param name="cr">The Cairo context to draw on.</param>
         private void DrawBeats(Cairo.Context cr) {
             if (_measureData == null) {
                 return;
@@ -80,6 +107,14 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Draws a single beat and its associated chords at the specified position and size using the provided Cairo context.
+        /// </summary>
+        /// <param name="cr">The Cairo context to draw on.</param>
+        /// <param name="chordBeat">The chord beat to be drawn.</param>
+        /// <param name="x">The x-coordinate of the top-left corner of the beat.</param>
+        /// <param name="width">The width of the beat.</param>
+        /// <param name="height">The height of the beat.</param>
         private void DrawBeat(Cairo.Context cr, ChordBeat chordBeat, double x, double width, double height) {
 
             string beatChordText = chordBeat.ToHumanString();
@@ -115,6 +150,14 @@ namespace EZSong.UI.Widgets {
             cr.LineTo(x + width, height);
             cr.Stroke();
         }
+
+
+        /// <summary>
+        /// Event handler for mouse button press events, 
+        /// allowing users to edit or clear chords on specific beats based on the mouse button pressed and the position of the click.
+        /// </summary>
+        /// <param name="ev">The mouse button event.</param>
+        /// <returns>True if the event was handled; otherwise, false.</returns>
         protected override bool OnButtonPressEvent(Gdk.EventButton ev) {
 
             if (_measureData == null) {
@@ -148,6 +191,11 @@ namespace EZSong.UI.Widgets {
             return true;
         }
 
+        /// <summary>
+        /// Clears the chords associated with a specific beat in the measure, 
+        /// and triggers the ChordsChanged event to notify listeners of the change.
+        /// </summary>
+        /// <param name="index">The index of the beat to clear.</param>
         private void ClearBeat(int index) {
 
             if (_measureData == null) {
@@ -164,6 +212,10 @@ namespace EZSong.UI.Widgets {
             ChordsChanged?.Invoke(_measureData.ChordSequence);
         }
 
+        /// <summary>
+        /// Edits the chords associated with a specific beat in the measure by opening a chord picker popover,
+        /// </summary>
+        /// <param name="index">The index of the beat to edit.</param>
         private void EditBeat(int index) {
             if (_measureData == null) {
                 return;
@@ -176,7 +228,10 @@ namespace EZSong.UI.Widgets {
            CreateElementFromUserChoice(index);
         }
 
-        //Popover qui permet de choisir l'accord, la durée et le type d'accord (majeur, mineur, 7ème, etc.)
+        /// <summary>
+        /// Creates a chord element for a specific beat based on user choice in the chord picker popover,
+        /// </summary>
+        /// <param name="beatIndex">The index of the beat to create the chord element for.</param>
         void CreateElementFromUserChoice(int beatIndex) {
             if (_measureData == null) {
                 return;
@@ -235,12 +290,20 @@ namespace EZSong.UI.Widgets {
         
         public event Action<ChordSequence>? ChordsChanged;
 
-        // PUBLIC API: load external model into widget
+        /// <summary>
+        /// Loads the measure data into the MeasureChordsEditor widget, 
+        /// updating its internal state and triggering a redraw to reflect the new data.
+        /// </summary>
+        /// <param name="measureData"></param>
         public void LoadFromModel(MeasureData measureData) {
             _measureData = measureData;
             QueueDraw();
         }
 
+        /// <summary>
+        /// Updates the time signature of the measure data in the MeasureChordsEditor widget,
+        /// </summary>
+        /// <param name="timeSignature">The new time signature to apply to the measure data.</param>
         internal void UpdateTimeSignature(TimeSignature timeSignature) {
             if (_measureData == null) {
                 return;

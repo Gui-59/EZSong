@@ -10,6 +10,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets {
+
+    /// <summary>
+    /// A widget that displays and manages the measures of a song segment, 
+    /// allowing for editing and interaction with individual measures.
+    /// </summary>
     internal class MeasuresEditor : Box {
 
         private GlobalMeasuresEditor _globalMeasuresEditor;
@@ -28,6 +33,9 @@ namespace EZSong.UI.Widgets {
         
         private int _segmentIndex;
 
+        /// <summary>
+        /// Determines whether this MeasuresEditor instance is a placeholder, which affects its behavior and display.
+        /// </summary>
         public bool IsPlaceHolder {
             get {
                 return _isPlaceHolder;
@@ -37,6 +45,15 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Creates a new instance of the MeasuresEditor widget, 
+        /// initializing it with the provided parameters and setting up its internal structure.
+        /// </summary>
+        /// <param name="globalMeasuresEditor">The global measures editor that this widget is associated with.</param>
+        /// <param name="userSettings">The user settings to be used by this widget.</param>
+        /// <param name="embeddedMidiSynth">The embedded MIDI synthesizer for MIDI echo.</param>
+        /// <param name="currentSong">The current song being edited.</param>
+        /// <param name="isPlaceHolder">Indicates whether this widget is a placeholder.</param>
         public MeasuresEditor(GlobalMeasuresEditor globalMeasuresEditor, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth, Song currentSong, bool isPlaceHolder) {
 
             _globalMeasuresEditor = globalMeasuresEditor;
@@ -49,9 +66,12 @@ namespace EZSong.UI.Widgets {
             //Refresh();
         }
 
+        /// <summary>
+        /// Initializes the components of the MeasuresEditor widget, 
+        /// setting up its internal structure and adding child widgets based on whether it is a placeholder or not.
+        /// </summary>
         private void InitializeComponent() {
             Clear();
-
 
             if (_isPlaceHolder) {
                 Label placeholderLabel = new("Créez une deuxième portée pour la voir ici");
@@ -65,6 +85,10 @@ namespace EZSong.UI.Widgets {
 
         }
 
+        /// <summary>
+        /// Refreshes the MeasuresEditor widget, 
+        /// reinitializing its components and updating the displayed measures based on the current song segment and staff index.
+        /// </summary>
         public void Refresh() {
             InitializeComponent();
 
@@ -93,11 +117,19 @@ namespace EZSong.UI.Widgets {
             ShowAll();
         }
 
+        /// <summary>
+        /// Refreshes the displayed segment in the MeasuresEditor widget,
+        /// </summary>
+        /// <param name="segmentIndex">The index of the segment to display.</param>
         internal void RefreshDisplayedSegment(int segmentIndex) {
             _segmentIndex = segmentIndex;
             Refresh();
         }
 
+        /// <summary>
+        /// Refreshes the displayed staff in the MeasuresEditor widget,
+        /// </summary>
+        /// <param name="staffIndex">The index of the staff to display.</param>
         internal void RefreshDisplayedStaff(int staffIndex) {
             _staffIndex = staffIndex;
             foreach (MeasureEditorWidget measureEditorWidget in _measuresWidgetsBox.Children) {
@@ -106,6 +138,11 @@ namespace EZSong.UI.Widgets {
             ShowAll();
         }
 
+        /// <summary>
+        /// Clears the MeasuresEditor widget, 
+        /// removing all child widgets and disposing of them, 
+        /// while preserving the internal measures widgets box for potential reuse.
+        /// </summary>
         public void Clear() {
             // Supprime les widgets de mesures contenus dans le box,
             // mais conserve le box lui-même pour le réutiliser.
@@ -130,6 +167,9 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Reindexes the measures in the current segment of the song,
+        /// </summary>
         internal void Reindex() {
 
             for (int i = 0; i < _song.Segments[_segmentIndex].Measures.Count; i++) {
@@ -149,6 +189,12 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Gets the currently focused MelodyMeasureEditor, 
+        /// if any, 
+        /// from the measures displayed in this MeasuresEditor widget.
+        /// </summary>
+        /// <returns>The currently focused MelodyMeasureEditor, if any; otherwise, null.</returns>
         public MelodyMeasureEditor? GetFocusedMelodyMeasureEditor() {
             foreach (MeasureEditorWidget measureEditor in _measuresWidgetsBox.Children) {
                 if (measureEditor.GlobalMelodyEditor.MelodyMeasureEditor.HasFocus) {
@@ -159,6 +205,10 @@ namespace EZSong.UI.Widgets {
             return null;
         }
 
+        /// <summary>
+        /// Adds a MeasureEditorWidget to the MeasuresEditor widget,
+        /// </summary>
+        /// <param name="widget">The MeasureEditorWidget to add.</param>
         internal void AddMeasure(MeasureEditorWidget widget) {
 
             if (_isPlaceHolder) { //Ce garde-fou évite de construire des widgets dans un conteneur qui n'est pas affiché.
@@ -170,6 +220,10 @@ namespace EZSong.UI.Widgets {
             _measuresWidgetsBox.PackStart(widget, true, false, 0);
         }
 
+        /// <summary>
+        /// Refreshes the specified measure in the MeasuresEditor widget,
+        /// </summary>
+        /// <param name="measure">The measure to refresh.</param>
         internal void RefreshMeasure(MeasureData measure) {
             foreach (MeasureEditorWidget widget in
                      _measuresWidgetsBox.Children) {
@@ -180,6 +234,10 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Refreshes the staff of the specified measure in the MeasuresEditor widget,
+        /// </summary>
+        /// <param name="measure">The measure whose staff to refresh.</param>
         internal void RefreshMeasureStaff(MeasureData measure) {
             foreach (MeasureEditorWidget widget in
                      _measuresWidgetsBox.Children) {

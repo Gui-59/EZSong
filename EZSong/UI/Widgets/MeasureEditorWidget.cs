@@ -10,6 +10,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets {
+
+    /// <summary>
+    /// A widget that allows for the editing of a single measure within a song segment,
+    /// </summary>
     public class MeasureEditorWidget : Frame {
 
         private ComboBoxText _keyCombo;
@@ -27,6 +31,7 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+
         public GlobalMelodyEditor GlobalMelodyEditor { 
             get; 
             private set;
@@ -42,7 +47,19 @@ namespace EZSong.UI.Widgets {
 
         private SelectableValues _selectableValues = new();
 
-        public MeasureEditorWidget(MeasureData measure, UserSettings userSettings, EmbeddedMidiSynth embeddedMidiSynth,
+        /// <summary>
+        /// Creates a new instance of the MeasureEditorWidget, 
+        /// initializing it with the provided measure data, user settings, and MIDI synthesizer.
+        /// </summary>
+        /// <param name="measure">The measure data to be edited.</param>
+        /// <param name="userSettings">The user settings to apply.</param>
+        /// <param name="embeddedMidiSynth">The embedded MIDI synthesizer to use for playback.</param>
+        /// <param name="segmentIndex">The index of the segment containing the measure.</param>
+        /// <param name="staffIndex">The index of the staff containing the measure.</param>
+        public MeasureEditorWidget(
+            MeasureData measure, 
+            UserSettings userSettings, 
+            EmbeddedMidiSynth embeddedMidiSynth,
             int segmentIndex,
             int staffIndex
         ) {
@@ -62,10 +79,16 @@ namespace EZSong.UI.Widgets {
             BuildUI();
         }
 
+        /// <summary>
+        /// Disposes of the editors within the MeasureEditorWidget, releasing any resources they may be holding.
+        /// </summary>
         public void DisposeEditors() {
             GlobalMelodyEditor.DisposeEditors();
         }
 
+        /// <summary>
+        /// Builds the user interface for the MeasureEditorWidget, arranging the various controls and editors in a vertical layout.
+        /// </summary>
         private void BuildUI() {
 
             Box row = new(Orientation.Vertical, 0); //On met en superposé les elements qui définissent une mesure
@@ -217,17 +240,32 @@ namespace EZSong.UI.Widgets {
             ShowAll();
         }
 
+
+        /// <summary>
+        /// Refreshes the displayed segment in the MeasureEditorWidget, 
+        /// updating the internal measure data and notifying the GlobalMelodyEditor to refresh its display accordingly.
+        /// </summary>
+        /// <param name="segmentIndex">The index of the segment to refresh.</param>
+        /// <param name="measureData">The measure data to refresh with.</param>
         internal void RefreshDisplayedSegment(int segmentIndex, MeasureData measureData) {
             _segmentIndex = segmentIndex;
             _measure = measureData;
             GlobalMelodyEditor.RefreshDisplayedSegment(segmentIndex, _measure);
         }
 
+        /// <summary>
+        /// Refreshes the displayed staff in the MeasureEditorWidget, 
+        /// updating the internal staff index and notifying the GlobalMelodyEditor to refresh its display accordingly.
+        /// </summary>
+        /// <param name="staffIndex">The index of the staff to refresh.</param>
         internal void RefreshDisplayedStaff(int staffIndex) {
             _staffIndex = staffIndex;
             GlobalMelodyEditor.RefreshDisplayedStaff(staffIndex);
         }
 
+        /// <summary>
+        /// Refreshes the shared properties of the measure (key signature, time signature, chords, lyrics) from the model,
+        /// </summary>
         internal void RefreshSharedFromModel() {
             _keyCombo.ActiveId =
                 _measure.KeySignature.ToDropDownId();
@@ -264,6 +302,9 @@ namespace EZSong.UI.Widgets {
                 _measure.TimeSignature);
         }
 
+        /// <summary>
+        /// Refreshes the staff information in the GlobalMelodyEditor from the model,
+        /// </summary>
         internal void RefreshStaffFromModel() {
             GlobalMelodyEditor.RefreshFromModel(_measure);
         }
