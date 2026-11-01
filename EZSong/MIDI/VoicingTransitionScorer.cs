@@ -7,6 +7,19 @@ namespace EZSong.MIDI;
 /// two-hand voicing engines. It contains no candidate-generation logic.
 /// </summary>
 internal static class VoicingTransitionScorer {
+
+    /// <summary>
+    /// Analyzes the transition between two chords and their respective voicings, 
+    /// returning a VoicingTransitionAnalysis object that contains information about the transition, 
+    /// including common notes, total movement, bass movement, score, validity, and voice movements.
+    /// </summary>
+    /// <param name="previousChord">The previous chord in the transition.</param>
+    /// <param name="previousNotes">The notes of the previous chord.</param>
+    /// <param name="currentChord">The current chord in the transition.</param>
+    /// <param name="currentNotes">The notes of the current chord.</param>
+    /// <param name="settings">The voicing optimization settings.</param>
+    /// <param name="preferences">Optional voicing preferences.</param>
+    /// <returns>A VoicingTransitionAnalysis object containing information about the transition.</returns>
     public static VoicingTransitionAnalysis Analyze(
         Chord previousChord,
         IReadOnlyList<Pitch> previousNotes,
@@ -73,6 +86,7 @@ internal static class VoicingTransitionScorer {
             true,
             matching.Movements);
     }
+
 
     private static VoicingTransitionAnalysis Invalid(
         IReadOnlyList<Pitch> commonNotes,

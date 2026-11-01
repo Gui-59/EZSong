@@ -20,24 +20,42 @@ namespace EZSong.MIDI;
 /// </code>
 /// </summary>
 public sealed class ChordProgressionParser {
+
+    /// <summary>
+    /// Regex to match a chord root and the rest of the chord text.
+    /// </summary>
     private static readonly Regex _chordRootRegex = new(
         @"^\s*(?<root>[A-Ga-g](?:#|b|♯|♭)?)(?<rest>.*?)\s*$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    /// <summary>
+    /// Regex to match a slash bass note at the end of a chord text.
+    /// </summary>
     private static readonly Regex _slashBassRegex = new(
         @"/(?<bass>[A-Ga-g](?:#|b|♯|♭)?)$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    /// <summary>
+    /// Regex to match a line in the chord progression text, capturing the chord and duration.
+    /// </summary>
     private static readonly Regex _lineRegex = new(
         @"^\s*\|\s*(?<chord>\S+)\s+(?<duration>\S+)\s*\|\s*$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    /// <summary>
+    /// Regex to match a simple duration notation, capturing the denominator and any dots.
+    /// </summary>
     private static readonly Regex _durationRegex = new(
         @"^(?<denominator>[1-9][0-9]*)(?<dots>\.{0,2})$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private readonly ChordVoicingEngine _voicingEngine;
 
+    /// <summary>
+    /// Creates a new instance of the <see cref="ChordProgressionParser"/> class with an optional
+    /// <see cref="ChordVoicingEngine"/>.
+    /// </summary>
+    /// <param name="voicingEngine"></param>
     public ChordProgressionParser(ChordVoicingEngine? voicingEngine = null) {
         _voicingEngine = voicingEngine ?? new ChordVoicingEngine();
     }

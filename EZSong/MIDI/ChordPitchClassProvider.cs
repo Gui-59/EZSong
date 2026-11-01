@@ -3,16 +3,23 @@ using EZSong.Model;
 
 namespace EZSong.MIDI;
 
-/// <summary>Single source of truth for the pitch classes belonging to each chord type.</summary>
-internal static class ChordPitchClassProvider
-{
-    public static IReadOnlyList<Pitch> Get(Chord chord)
-    {
+/// <summary>
+/// A static class that provides functionality to retrieve the pitch classes of a given chord,
+/// represented as a list of <see cref="Pitch"/> objects.
+/// </summary>
+internal static class ChordPitchClassProvider {
+
+    /// <summary>
+    /// Gets the pitch classes of a given chord, represented as a list of <see cref="Pitch"/> objects.
+    /// </summary>
+    /// <param name="chord">The chord for which to retrieve the pitch classes.</param>
+    /// <returns>A read-only list of pitch classes.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the chord type is not supported.</exception>
+    public static IReadOnlyList<Pitch> Get(Chord chord) {
         ArgumentNullException.ThrowIfNull(chord);
 
         int root = ((int)chord.RootNote + (int)chord.RootNoteAlteration + 12) % 12;
-        int[] intervals = chord.ChordType switch
-        {
+        int[] intervals = chord.ChordType switch {
             ChordType.NoneOrMajor => [0, 4, 7],
             ChordType.Minor => [0, 3, 7],
             ChordType.Seventh => [0, 4, 7, 10],

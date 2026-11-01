@@ -10,17 +10,32 @@ public sealed class ChordVoicing : IEquatable<ChordVoicing> {
     public Chord Chord { get; }
     public IReadOnlyList<Pitch> Notes { get; }
 
+    /// <summary>
+    /// Creates a new instance of the ChordVoicing class with the specified chord and notes.
+    /// </summary>
+    /// <param name="chord">The chord to be realized.</param>
+    /// <param name="notes">The notes of the chord. </param>
+    /// <exception cref="ArgumentNullException"></exception>
     public ChordVoicing(Chord chord, IEnumerable<Pitch> notes) {
         Chord = chord ?? throw new ArgumentNullException(nameof(chord));
         Notes = notes.OrderBy(GetMidiNoteNumber).ToArray();
     }
 
+    /// <summary>
+    /// List of pitches in the chord voicing, ordered from low to high. 
+    /// This property provides a read-only view of the notes in the chord voicing.
+    /// </summary>
     public IReadOnlyList<Model.Pitch> Pitches {
         get {
             return Notes.Select(n => n).ToArray();
         }
     }
 
+    /// <summary>
+    /// Converts the ChordVoicing instance to a string representation suitable for logging, 
+    /// displaying the chord and its notes in a human-readable format.
+    /// </summary>
+    /// <returns></returns>
     public override string ToString() {
         return $"{Chord.ToHumanString()}: {string.Join(" ", Notes.Select(FormatPitch))}";
     }

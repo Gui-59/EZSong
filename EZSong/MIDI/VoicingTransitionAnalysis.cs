@@ -11,12 +11,25 @@ public sealed class VoicingTransitionAnalysis {
     public IReadOnlyList<Pitch> CommonNotes {
         get;
     }
+
+    /// <summary>
+    /// Count of semitones moved by all voices in the transition, including the bass voice.
+    /// </summary>
     public int TotalMovement {
         get;
     }
+
+    /// <summary>
+    /// Count of semitones moved by the bass voice in the transition.
+    /// </summary>
     public int BassMovement {
         get;
     }
+
+    /// <summary>
+    /// Score of the transition, where a higher score indicates a better transition. 
+    /// The scoring system is based on musical theory and voice leading principles.
+    /// </summary>
     public int Score {
         get;
     }
