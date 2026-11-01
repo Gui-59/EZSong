@@ -7,8 +7,18 @@ using SkiaSharp;
 
 namespace EZSong.UI {
 
+    /// <summary>
+    /// Helper class for loading SVG images as Gtk.Image objects.
+    /// </summary>
     public static class SvgHelper {
 
+        /// <summary>
+        /// Loads an SVG image from an embedded resource and converts it to a Gtk.Image with the specified size.
+        /// </summary>
+        /// <param name="resourceName">The name of the embedded SVG resource.</param>
+        /// <param name="size">The desired size of the resulting Gtk.Image.</param>
+        /// <returns>A Gtk.Image containing the rendered SVG.</returns>
+        /// <exception cref="Exception">Thrown if the SVG resource cannot be found.</exception>
         public static Image LoadSvgAsGtkImage(string resourceName, int size) {
             Assembly asm = Assembly.GetExecutingAssembly();
             using Stream? stream = asm.GetManifestResourceStream(resourceName)

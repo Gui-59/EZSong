@@ -8,6 +8,10 @@ using EZSong;
 using EZSong.UI;
 
 class Program {
+
+    /// <summary>
+    /// Main entry point for the application.
+    /// </summary>
     static void Main() {
         Application.Init();
         MainWindow win = new();

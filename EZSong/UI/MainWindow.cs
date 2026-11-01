@@ -12,7 +12,9 @@ using Gtk;
 
 namespace EZSong.UI {
 
-    // Simple GTK UI
+    /// <summary>
+    /// Main window of the EZSong application, responsible for managing the user interface and interactions with the song model.
+    /// </summary>
     public class MainWindow : Gtk.Window {
         private const int _initialWidth = 900;
         private const int _initialHeight = 600;
@@ -45,9 +47,15 @@ namespace EZSong.UI {
         private Statusbar _statusBar;
         private uint _statusBarContextId;
 
-        
 
 
+        /// <summary>
+        /// Constructor for the MainWindow class. 
+        /// Initializes the main window, 
+        /// sets up the user interface, 
+        /// and configures event handlers for user interactions.
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
         public MainWindow() : base("EZSong") {
             _currentSong = new Song ();
 
@@ -236,6 +244,12 @@ namespace EZSong.UI {
             _stack.AddTitled(_flowTabs[4], "export", "Export");
         }
 
+        /// <summary>
+        /// Creates a FlowBox containing buttons for a specific tab in the main window. 
+        /// Each button is associated with an action relevant to the tab's functionality.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         private FlowBox CreateTab(string name) {
             FlowBox flow = new() {
                 SelectionMode = SelectionMode.None,
@@ -275,11 +289,18 @@ namespace EZSong.UI {
             return flow;
         }
 
+        /// <summary>
+        /// Adds a new segment to the current song and navigates to it.
+        /// </summary>
         private void AddSegment() {
             _currentSong.AddSegment();
             GoToNextSegment();
         }
 
+        /// <summary>
+        /// Adds a new staff to the current song. 
+        /// If there is more than one staff, it switches to the secondary staff in the global segment editor.
+        /// </summary>
         private void AddStaff() {
             //TODO : faire saisir via une popup très simple
             String staffName = Settings.Constants.DefaultStaffName;
@@ -290,25 +311,37 @@ namespace EZSong.UI {
             }
         }
 
+        /// <summary>
+        /// Navigates to the first segment of the current song and refreshes the displayed segment information in the UI.
+        /// </summary>
         private void GoToFirstSegment() {
             _globalSegmentEditor.DisplayedSegmentIndex = 0;
             RefreshDisplayedSegmentInfos();
         }
 
+        /// <summary>
+        /// Navigates to the next segment of the current song, looping back to the first segment if currently at the last segment.
+        /// </summary>
         private void GoToNextSegment() {
             _globalSegmentEditor.DisplayedSegmentIndex = MathHelper.LoopIndex(_globalSegmentEditor.DisplayedSegmentIndex, _currentSong.Segments.Count(), 1);
             RefreshDisplayedSegmentInfos();
         }
 
+        /// <summary>
+        /// Navigates to the previous segment of the current song, looping back to the last segment if currently at the first segment.
+        /// </summary>
         private void GoToPreviousSegment() {
             _globalSegmentEditor.DisplayedSegmentIndex = MathHelper.LoopIndex(_globalSegmentEditor.DisplayedSegmentIndex, _currentSong.Segments.Count(), -1);
             RefreshDisplayedSegmentInfos ();
         }
 
-        
-
-        
-
+        /// <summary>
+        /// Creates a button with an icon and label for use in the FlowBox tabs.
+        /// </summary>
+        /// <param name="label">The text label for the button.</param>
+        /// <param name="onClick">The event handler to invoke when the button is clicked.</param>
+        /// <param name="iconName">The name of the SVG icon to display on the button.</param>
+        /// <returns>A GTK Widget representing the button.</returns>
         private Widget CreateIconButton(string label, EventHandler onClick, string iconName = "icon-placeholder.svg") {
             Image image = SvgHelper.LoadSvgAsGtkImage("EZSong.Ressources.SVG."+iconName, 32);
             Label lbl = new(label);
@@ -323,7 +356,11 @@ namespace EZSong.UI {
 
             return btn;
         }
-
+        
+        /// <summary>
+        /// Updates the visibility of button labels based on the current compact mode.
+        /// </summary>
+        /// <param name="width">The current width of the window.</param>
         private void UpdateCompactMode(int width) {
             bool compact = width < _compactThreshold;
 
@@ -340,6 +377,9 @@ namespace EZSong.UI {
             }
         }
 
+        /// <summary>
+        /// Applies custom CSS styles to the application using the CSSManager class.
+        /// </summary>
         private void ApplyCss() {            
             CSSManager cssManager = new();
             CssProvider cssProvider = new();
@@ -347,6 +387,9 @@ namespace EZSong.UI {
             StyleContext.AddProviderForScreen(Gdk.Screen.Default, cssProvider, uint.MaxValue);
         }
 
+        /// <summary>
+        /// Saves the current song project to a file chosen by the user through a file chooser dialog.
+        /// </summary>
         private void SaveProject() {
             FileChooserDialog dlg = new("Enregistrer projet", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Enregistrer", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
@@ -356,6 +399,9 @@ namespace EZSong.UI {
             dlg.Destroy();
         }
 
+        /// <summary>
+        /// Loads a song project from a file chosen by the user through a file chooser dialog and updates the UI accordingly.
+        /// </summary>
         private void LoadProject() {
             FileChooserDialog dlg = new("Ouvrir projet", this, FileChooserAction.Open, "Annuler", ResponseType.Cancel, "Ouvrir", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
@@ -366,18 +412,29 @@ namespace EZSong.UI {
             dlg.Destroy();
         }
 
+        /// <summary>
+        /// Sets the current song in the main window and updates the global segment editor with the new song. 
+        /// </summary>
+        /// <param name="song">The song to set as the current song.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the provided song is null.</exception>
         public void SetSong(Song song) {
             _currentSong = song ?? throw new ArgumentNullException(nameof(song));
             _globalSegmentEditor.SetSong(song);
         }
 
+        /// <summary>
+        /// Refreshes the displayed segment information in the UI, 
+        /// including the segment number and name, 
+        /// based on the currently displayed segment index in the global segment editor.
+        /// </summary>
         private void RefreshDisplayedSegmentInfos() {
             _displayedSegmentNumber.Text = (_globalSegmentEditor.DisplayedSegmentIndex + 1).ToString();
             _displayedSegmentName.Text = "Segment " + (_globalSegmentEditor.DisplayedSegmentIndex + 1).ToString();
         }
 
-
-
+        /// <summary>
+        /// Updates the song information UI fields (title, artist, comment) based on the current song's properties.
+        /// </summary>
         private void UpdateSongInfoUI() {
             if (_currentSong != null) {
                 _titleEntry.Text = _currentSong.Title ?? string.Empty;
@@ -390,6 +447,9 @@ namespace EZSong.UI {
             }
         }
 
+        /// <summary>
+        /// Exports the current song to a PDF file using a file chooser dialog to select the save location.
+        /// </summary>
         private void ExportPdf() {
             FileChooserDialog dlg = new("Exporter en PDF", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Exporter", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {

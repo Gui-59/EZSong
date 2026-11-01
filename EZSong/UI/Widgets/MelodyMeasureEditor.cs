@@ -16,6 +16,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets {
+
+    /// <summary>
+    /// A Gtk.DrawingArea widget that allows editing a melody measure by adding, removing, and modifying chords and pitches. 
+    /// It supports mouse and keyboard interactions, as well as MIDI input for real-time note entry. 
+    /// The widget displays a piano-roll-like interface with a configurable number of octaves and note heights.
+    /// </summary>
     public class MelodyMeasureEditor : DrawingArea {
 
         private bool _disposed;
@@ -29,15 +35,11 @@ namespace EZSong.UI.Widgets {
         // Model: sequence of chords (positioned sequentially)
         private List<WidgetMelodyChord> _widgetMelodyChords = new();
 
-        
-
         private ColorPaletteManager _colorPaletteManager = new();
 
         private string _musicalFontFamily = new Settings.UserSettings().MusicalFontFamily;
         private Helpers.UICompositeGlyph _noteSymbolCompositeGlyph;
         private int _noteSymbolFontSize = -1; //Will be computed
-
-        
 
         // Public properties for configuration
         public int TargetedNoteSymbolHeightPx { get; set; } = 8; //Prefered : 8
@@ -61,24 +63,42 @@ namespace EZSong.UI.Widgets {
         public event EventHandler<int>? CursorChanged; // cursor index changed
 
         //Pour echo MIDI
-        private EmbeddedMidiSynth _embeddedMidiSynth; 
+        private EmbeddedMidiSynth _embeddedMidiSynth;
 
-
+        /// <summary>
+        /// Adds a new WidgetMelodyChord to the internal list and updates the MeasureData model accordingly.
+        /// </summary>
+        /// <param name="widgetMelodyChord">A WidgetMelodyChord to add.</param>
         private void AddWidgetMelodyChord(WidgetMelodyChord widgetMelodyChord) {
             _widgetMelodyChords.Add(widgetMelodyChord);
             _measureData.Staffs[_staffIndex].Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
         }
 
+        /// <summary>
+        /// Replaces the WidgetMelodyChord at the specified cursor index with a new chord and updates the MeasureData model accordingly.
+        /// </summary>
+        /// <param name="cursorIndex">The index of the chord to replace.</param>
+        /// <param name="chord">The new WidgetMelodyChord to insert.</param>
         private void ReplaceMelodyChord(int cursorIndex, WidgetMelodyChord chord) {
             _widgetMelodyChords[cursorIndex] = chord;
             _measureData.Staffs[_staffIndex].Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
         }
 
+        /// <summary>
+        /// Removes the WidgetMelodyChord at the specified cursor index and updates the MeasureData model accordingly.
+        /// </summary>
+        /// <param name="cursorIndex">The index of the chord to remove.</param>
         private void RemoveWidgetMelodyChord(int cursorIndex) {
             _widgetMelodyChords.RemoveAt(cursorIndex);
             _measureData.Staffs[_staffIndex].Melody.MelodyChords = _widgetMelodyChords.Select(c => c.ToMelodyChord()).ToList();
         }
 
+        /// <summary>
+        /// Constructor for the MelodyMeasureEditor widget. 
+        /// Initializes the widget, sets up event handlers, and starts the cursor blink timer.
+        /// </summary>
+        /// <param name="embeddedMidiSynth">The embedded MIDI synthesizer to use for playback.</param>
+        /// <param name="userSettings">The user settings to apply.</param>
         public MelodyMeasureEditor(EmbeddedMidiSynth embeddedMidiSynth, UserSettings userSettings) {
 
             _measureData = new MeasureData();
@@ -113,6 +133,9 @@ namespace EZSong.UI.Widgets {
             _embeddedMidiSynth = embeddedMidiSynth;
         }
 
+        /// <summary>
+        /// Disposes of the MelodyMeasureEditor widget, stopping the cursor blink timer and releasing any resources.
+        /// </summary>
         public new void Dispose() {
             if (_disposed) {
                 return;
@@ -123,6 +146,9 @@ namespace EZSong.UI.Widgets {
             StopCursorTimer();
         }
 
+        /// <summary>
+        /// Stops the cursor blink timer if it is running, preventing further cursor visibility toggling.
+        /// </summary>
         public void StopCursorTimer() {
             if (_cursorTimeoutId != 0) {
                 _ = GLib.Source.Remove(_cursorTimeoutId);
@@ -130,6 +156,10 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Computes the appropriate font size for the musical note symbol based on the targeted note symbol height in pixels.
+        /// </summary>
+        /// <param name="cr">The Cairo context used for measuring text extents.</param>
         private void ComputeMusicalFontSize(Context cr) {
             cr.SelectFontFace(_musicalFontFamily, FontSlant.Normal, FontWeight.Normal);
             
@@ -146,6 +176,13 @@ namespace EZSong.UI.Widgets {
             return;            
         }
 
+
+        /// <summary>
+        /// Renders the melody measure editor, including note grid, chord columns, melody chords, and cursor, using the
+        /// specified drawing context.
+        /// </summary>
+        /// <param name="cr">The drawing context used to render the visual elements.</param>
+        /// <returns>True if the drawing operation completes successfully; otherwise, false.</returns>
         protected override bool OnDrawn(Context cr) {
 
             //Calculate note symbol size
@@ -238,6 +275,14 @@ namespace EZSong.UI.Widgets {
             return true;
         }
 
+
+        /// <summary>
+        /// Draws a horizontal line representing a pitch area in the melody measure editor, with different colors for natural and altered notes based on the octave offset.
+        /// </summary>
+        /// <param name="cr">The drawing context used to render the pitch area.</param>
+        /// <param name="y">The vertical position of the pitch area.</param>
+        /// <param name="noteInOctave">The index of the note within the octave (0-11).</param>
+        /// <param name="octaveOffset">The offset of the octave from the central octave.</param>
         private void DrawPitchArea(Context cr, double y, int noteInOctave, int octaveOffset) {
 
             //Attention : on compte ici 12 notes par octaves (une ligne = 1 demi-ton)
@@ -287,16 +332,31 @@ namespace EZSong.UI.Widgets {
             cr.Stroke();
         }
 
+        /// <summary>
+        /// Gets the MIDI note number corresponding to the clicked row in the melody measure editor, based on the upper displayed MIDI note number and the row index from the top.
+        /// </summary>
+        /// <param name="rowFromTop">The index of the row from the top of the melody measure editor.</param>
+        /// <returns>The MIDI note number corresponding to the clicked row.</returns>
         private int GetMidiNoteNumberFromClickedRow(int rowFromTop) {
             int upperDisplayedMidiNoteNumber = GetUpperDisplayedMidiNoteNumber();
             return upperDisplayedMidiNoteNumber - (rowFromTop);
         }
 
+
+        /// <summary>
+        /// Gets the row index from the top of the melody measure editor corresponding to a given MIDI note number, based on the upper displayed MIDI note number.
+        /// </summary>
+        /// <param name="midiNoteNumber">The MIDI note number for which to get the row index.</param>
+        /// <returns>The row index from the top of the melody measure editor corresponding to the given MIDI note number.</returns>
         private int GetRowFromTopFromMidiNoteNumber(int midiNoteNumber) {
             int upperDisplayedMidiNoteNumber = GetUpperDisplayedMidiNoteNumber();
             return upperDisplayedMidiNoteNumber - midiNoteNumber;
         }
 
+        /// <summary>
+        /// Gets the upper displayed MIDI note number based on the staff's base octave and the number of displayed octaves in the melody measure editor.
+        /// </summary>
+        /// <returns>The upper displayed MIDI note number.</returns>
         private int GetUpperDisplayedMidiNoteNumber() {
             int baseOctave = _measureData.SongSettings.StaffsSettings.GetStaffBaseOctave(_staffIndex);
 
@@ -306,6 +366,14 @@ namespace EZSong.UI.Widgets {
             return UpperDisplayedMidiNoteNumberPitch.ToWidgetPitch().MidiNoteNumber;
         }
 
+        /// <summary>
+        /// Draws a melody chord at the specified position in the melody measure editor, rendering each pitch as a note symbol at the appropriate row based on its MIDI note number.
+        /// </summary>
+        /// <param name="cr">The Cairo context used for drawing.</param>
+        /// <param name="chord">The melody chord to draw.</param>
+        /// <param name="center_x">The x-coordinate of the center position where the chord should be drawn.</param>
+        /// <param name="areaTop">The y-coordinate of the top of the drawing area.</param>
+        /// <param name="areaHeight">The height of the drawing area.</param>
         private void DrawMelodyChordAt(Context cr, WidgetMelodyChord chord, double center_x, double areaTop, double areaHeight) {
             int rows = DisplayedOctaveCount * 12;
             double rowHeight = areaHeight / rows;
@@ -333,13 +401,24 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Event handler for the cursor blink timer. Toggles the visibility of the cursor and requests a redraw of the widget.
+        /// </summary>
+        /// <returns>True to keep the timer running.</returns>
         private bool OnCursorTimer() {
             _cursorVisible = !_cursorVisible;
             QueueDraw();
             return true;
         }
 
-        // PUBLIC API: load external model into widget
+        /// <summary>
+        /// Loads the melody measure editor with the specified staff index and measure data, initializing the internal state and notifying listeners of content changes if requested.
+        /// </summary>
+        /// <param name="staffIndex">The index of the staff to load.</param>
+        /// <param name="measureData">The measure data to load.</param>
+        /// <param name="notify">Whether to notify listeners of content changes.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public void LoadFromModel(int staffIndex, MeasureData measureData, bool notify = true) {
 
             if (measureData == null) {
@@ -364,6 +443,11 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Copies a WidgetMelodyChord, creating a new instance with the same pitches. This is used to export the internal state without exposing references to the original objects.
+        /// </summary>
+        /// <param name="s">The WidgetMelodyChord to copy.</param>
+        /// <returns>A new WidgetMelodyChord instance with the same pitches as the input.</returns>
         private WidgetMelodyChord DeepCopyChord(WidgetMelodyChord s) {
             WidgetMelodyChord c = new();
             foreach (WidgetPitch p in s.Pitches) {
@@ -372,13 +456,23 @@ namespace EZSong.UI.Widgets {
             return c;
         }
 
+        /// <summary>
+        /// Exports the current state of the melody measure editor to a list of WidgetMelodyChord instances, creating deep copies to avoid exposing internal references.
+        /// </summary>
+        /// <returns>A list of WidgetMelodyChord instances representing the current state of the editor.</returns>
         public List<WidgetMelodyChord> ExportToModel() {
             //todo : éviter le Select (lent)
             return _widgetMelodyChords.Select(DeepCopyChord).ToList();
-        }       
+        }
 
-        // Interaction handlers
 
+        /// <summary>
+        /// Event handler for mouse motion events. 
+        /// Updates the hover column and row based on the mouse position, 
+        /// allowing for visual feedback when hovering over different parts of the melody measure editor.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="args"></param>
         private void OnMotion(object o, MotionNotifyEventArgs args) {
             double ax = args.Event.X;
             double ay = args.Event.Y;
@@ -388,7 +482,13 @@ namespace EZSong.UI.Widgets {
             // not doing anything else for now
         }
 
-        // Return row index (0..rows-1 from top) and column (0..count)
+        /// <summary>
+        /// Tests the given x and y coordinates to determine which column and row in the melody measure editor they correspond to.
+        /// </summary>
+        /// <param name="x">The x-coordinate to test.</param>
+        /// <param name="y">The y-coordinate to test.</param>
+        /// <param name="column">The resulting column index.</param>
+        /// <param name="row">The resulting row index.</param>
         private void HitTest(double x, double y, out int column, out int row) {
             
             column = (int)Math.Round((x - (TargetedNoteFrameWidthPx / 2)) / TargetedNoteFrameWidthPx);
@@ -419,6 +519,12 @@ namespace EZSong.UI.Widgets {
             row = r;
         }
 
+
+        /// <summary>
+        /// Event handler for mouse button press events.
+        /// </summary>
+        /// <param name="o">The source of the event.</param>
+        /// <param name="args">The event data.</param>
         private void OnButtonPress(object o, ButtonPressEventArgs args) {
             GrabFocus(); // ensure keyboard focus
 
@@ -457,6 +563,13 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+
+        /// <summary>
+        /// Toggles the presence of a pitch at the specified cursor index and clicked row in the melody measure editor.
+        /// </summary>
+        /// <param name="cursorIndex">The index of the cursor in the melody measure editor.</param>
+        /// <param name="clickedRowFromTop">The row index clicked from the top.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         private async Task TogglePitchAt(int cursorIndex, int clickedRowFromTop) {
 
             if (cursorIndex < 0 || cursorIndex >= _widgetMelodyChords.Count) {
@@ -477,43 +590,12 @@ namespace EZSong.UI.Widgets {
             }
         }
 
-        //TODO : a migrer ailleurs
-        private int GetMidiCNoteFromOctave(int midiOctave) {
-
-            if (midiOctave == 1) {
-                return 0;
-            }
-            if (midiOctave == 2) {
-                return 24;
-            }
-            if (midiOctave == 3) {
-                return 36;
-            }
-            if (midiOctave == 4) {
-                return 48;
-            }
-            if (midiOctave == 5) {
-                return 60;
-            }
-            if (midiOctave == 6) {
-                return 72;
-            }
-            if (midiOctave == 7) {
-                return 84;
-            }
-            if (midiOctave == 8) {
-                return 96;
-            }
-            if (midiOctave == 9) {
-                return 108;
-            }
-            if (midiOctave == 10) {
-                return 120;
-            }
-
-            return 0;
-        }   
-
+        /// <summary>
+        /// Event handler for key press events. 
+        /// Handles navigation, editing, and insertion of chords and pitches based on the pressed key.
+        /// </summary>
+        /// <param name="o">The source of the event.</param>
+        /// <param name="args">The event data.</param>
         private void OnKeyPress(object o, KeyPressEventArgs args) {
             // Navigation and edit
             Gdk.Key key = args.Event.Key;
@@ -575,6 +657,12 @@ namespace EZSong.UI.Widgets {
             }
         }
 
+        /// <summary>
+        /// Echoes the chord at the specified index using the embedded MIDI synthesizer, 
+        /// playing the notes with the configured velocity and duration.
+        /// </summary>
+        /// <param name="index">The index of the chord to echo.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         private async Task EchoChord(int index) {
             if (index < 0 || index >= _widgetMelodyChords.Count) {
                 return;
@@ -590,8 +678,11 @@ namespace EZSong.UI.Widgets {
             await _embeddedMidiSynth.EchoChordAsync(_measureData.GetGMVoiceForStaff(_staffIndex), notes, velocities, _userSettings.MidiInputEchoDurationMs);
         }
 
-        // Placeholder for hooking external MIDI input. When MIDI note(s) arrive call this.
-        // midiNoteNumbers: list of MIDI note numbers (e.g. 60 = C4)
+        /// <summary>
+        /// Event handler for receiving MIDI note numbers. Converts the incoming MIDI notes to WidgetPitch instances, creates a new WidgetMelodyChord, and inserts or replaces it at the current cursor position. 
+        /// Advances the cursor after insertion and triggers a redraw and content change notification.
+        /// </summary>
+        /// <param name="midiNoteNumbers">The incoming MIDI note numbers.</param>
         public void OnMidiNoteReceived(IEnumerable<int> midiNoteNumbers) {
 
             // Convert midi to our pitch model and insert or replace at cursor.
@@ -613,12 +704,22 @@ namespace EZSong.UI.Widgets {
             ContentChanged?.Invoke(this, EventArgs.Empty);
         }
 
+
+        /// <summary>
+        /// Refreshes the displayed segment of the melody measure editor by updating the internal state with the specified displayed segment index and measure data.
+        /// </summary>
+        /// <param name="displayedSegmentIndex">The index of the segment to display.</param>
+        /// <param name="measureData">The measure data to display.</param>
         internal void RefreshDisplayedSegment(int displayedSegmentIndex, MeasureData measureData) {
             _segmentIndex = displayedSegmentIndex;
             _measureData = measureData;
             RefreshDisplayedStaff(_staffIndex);
         }
 
+        /// <summary>
+        /// Refreshes the displayed staff in the melody measure editor by updating the internal state with the specified displayed staff index and regenerating the list of WidgetMelodyChord instances from the measure data.
+        /// </summary>
+        /// <param name="displayedStaffIndex">The index of the staff to display.</param>
         internal void RefreshDisplayedStaff(int displayedStaffIndex) {
             _staffIndex = displayedStaffIndex;
             _widgetMelodyChords = (List<WidgetMelodyChord>)_measureData.Staffs[_staffIndex].Melody.ToWidgetMelodyChords();

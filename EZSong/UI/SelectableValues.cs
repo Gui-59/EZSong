@@ -7,6 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI {
+
+    /// <summary>
+    /// TODO
+    /// </summary>
     public class SelectableValues {
 
         public KeySignature DefaultKeySignature;
