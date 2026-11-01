@@ -7,6 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets.Helpers {
+
+    /// <summary>
+    /// A class that represents a musical glyph for UI rendering,
+    /// </summary>
     public class UIGlyph {
 
         public Enums.Glyph Glyph {
@@ -25,6 +29,12 @@ namespace EZSong.UI.Widgets.Helpers {
             return new UIGlyph(Enums.Glyph.TieFrom);
         }
 
+        /// <summary>
+        /// Creates a UIGlyph from a RhythmSimpleElement, 
+        /// determining the appropriate glyph based on whether the element is a rest or a note and its duration.
+        /// </summary>
+        /// <param name="element">The RhythmSimpleElement to create a UIGlyph for.</param>
+        /// <returns>A UIGlyph representing the musical glyph for the given element.</returns>
         public static UIGlyph FromDescriptor(RhythmSimpleElement element) {
 
             UIGlyph? glyph;
@@ -78,6 +88,11 @@ namespace EZSong.UI.Widgets.Helpers {
             return glyph;
         }
 
+
+        /// <summary>
+        /// Converts the UIGlyph to its corresponding Unicode character based on the SMuFL (Standard Music Font Layout) specification.
+        /// </summary>
+        /// <returns>A string representing the Unicode character for the UIGlyph based on the SMuFL specification.</returns>
         public override string ToString() {
 
             //https://w3c-cg.github.io/smufl/latest/tables/function-theory-symbols.html

@@ -8,10 +8,18 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.Widgets.WidgetsData {
+
+    /// <summary>
+    /// A class that represents a chord in a melody, 
+    /// consisting of multiple pitches played simultaneously.
+    /// </summary>
     public class WidgetMelodyChord {
         private List<WidgetPitch> _pitches = new();
 
-        // List of pitches that form the chord at a single position.
+        /// <summary>
+        /// List of pitches that make up the melody chord, 
+        /// where each pitch is represented by a WidgetPitch object.
+        /// </summary>
         public List<WidgetPitch> Pitches {
             get {
                 return _pitches;
@@ -21,6 +29,9 @@ namespace EZSong.UI.Widgets.WidgetsData {
             }
         }
 
+        /// <summary>
+        /// List of MIDI note numbers corresponding to the pitches in the melody chord,
+        /// </summary>
         public List<int> MidiNotes {
             get {
                 List<int> notes = new();
@@ -31,6 +42,9 @@ namespace EZSong.UI.Widgets.WidgetsData {
             }
         }
 
+        /// <summary>
+        /// Enumerable of velocities for each pitch in the melody chord,
+        /// </summary>
         public IEnumerable<int> Velocities {
             get {
                 UserSettings userSettings = new(); //TODO : Centraliser
@@ -42,6 +56,10 @@ namespace EZSong.UI.Widgets.WidgetsData {
             }
         }
 
+        /// <summary>
+        /// Converts the WidgetMelodyChord to a string representation suitable for logging purposes.
+        /// </summary>
+        /// <returns>A string representation of the WidgetMelodyChord instance.</returns>
         internal string ToLogString() {
             string logString = "";
 
@@ -52,6 +70,11 @@ namespace EZSong.UI.Widgets.WidgetsData {
             return logString; 
         }
 
+
+        /// <summary>
+        /// Converts the WidgetMelodyChord to a MelodyChord object, which is a model representation of the chord.
+        /// </summary>
+        /// <returns>A MelodyChord object representing the chord.</returns>
         public MelodyChord ToMelodyChord() {
             
             List<Pitch> pitches = new();

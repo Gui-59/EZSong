@@ -8,6 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.UX {
+
+    /// <summary>
+    /// A class that manages the CSS styling for the application, 
+    /// including color palettes and CSS class definitions.
+    /// </summary>
     internal class CSSManager {
         
         private ColorPaletteManager _colorPaletteManager;
@@ -21,20 +26,36 @@ namespace EZSong.UI.UX {
 
         private Dictionary<String, Dictionary<String, String>> _cssClasses = new();
 
-
+        /// <summary>
+        /// Creates a new instance of the CSSManager class, 
+        /// initializing the color palette manager and generating the CSS string based on defined styles.
+        /// </summary>
         public CSSManager() {
             _colorPaletteManager = new ColorPaletteManager();
             _css =  MakeCss();
         }
 
+        /// <summary>
+        /// Generates a CSS RGB string representation of a given System.Drawing.Color,
+        /// </summary>
+        /// <param name="color">The System.Drawing.Color object to convert.</param>
+        /// <returns>A CSS RGB string representation of the color.</returns>
         private String ColorToCssRgb(System.Drawing.Color color) {
             return "rgb(" + color.R.ToString() + ", " + color.G.ToString() + ", " + color.B.ToString() + ")";
         }
-
+        
+        /// <summary>
+        /// Generates a CSS background-color attribute string for a given System.Drawing.Color.
+        /// </summary>
+        /// <param name="color">The System.Drawing.Color object to convert.</param>
+        /// <returns>A CSS background-color attribute string.</returns>
         private String BackgroundColorAttributeToCssRgb(System.Drawing.Color color) {
             return "background-color: " + ColorToCssRgb(color);
         }
-
+        
+        /// <summary>
+        /// Computes the base CSS styles for the application.
+        /// </summary>
         private void ComputeBaseCss() {
 
             Dictionary<string, string> cssProperties = new();
@@ -60,6 +81,9 @@ namespace EZSong.UI.UX {
             _cssClasses.Add("flowbox", cssProperties);
         }
 
+        /// <summary>
+        /// Computes the standard form CSS styles for buttons, entries, and labels in the application.
+        /// </summary>
         private void ComputeStandardFormsCss() {
 
             Dictionary<string, string> cssProperties = new();
@@ -83,6 +107,9 @@ namespace EZSong.UI.UX {
             _cssClasses.Add(".infoLabel", cssProperties);
         }
 
+        /// <summary>
+        /// Computes the CSS styles for the stack switcher component, including button states and label formatting.
+        /// </summary>
         private void ComputeStackSwitcherCss() {
             Dictionary<string, string> cssProperties = new();
             cssProperties.Add("padding", "0px");
@@ -121,6 +148,10 @@ namespace EZSong.UI.UX {
             _cssClasses.Add(".stack-switcher button:checked label", cssProperties);
         }
 
+        /// <summary>
+        /// Creates the complete CSS string by computing base styles, standard form styles, and stack switcher styles, and then formatting them into a single CSS string.
+        /// </summary>
+        /// <returns></returns>
         private String MakeCss() {
             ComputeBaseCss();
             ComputeStandardFormsCss();
@@ -129,6 +160,11 @@ namespace EZSong.UI.UX {
             return MakeCssString();
         }
 
+        /// <summary>
+        /// Creates a CSS string representation of the defined CSS classes and their properties, 
+        /// formatting them into valid CSS syntax.
+        /// </summary>
+        /// <returns></returns>
         private String MakeCssString() {
 
             StringBuilder stringBuilder = new();

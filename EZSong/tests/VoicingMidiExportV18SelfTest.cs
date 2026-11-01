@@ -2,17 +2,22 @@ using EZSong.MIDI;
 
 namespace EZSong.Tests;
 
-/// <summary>Regression tests for V18 progression-based MIDI export.</summary>
-public static class VoicingMidiExportV18SelfTest
-{
-    public static void RunAll()
-    {
+/// <summary>
+/// A self-test class for verifying the functionality of the Voicing MIDI export feature in version 18 of the EZSong application.
+/// </summary>
+public static class VoicingMidiExportV18SelfTest {
+
+    /// <summary>
+    /// Runs all self-tests for the Voicing MIDI export feature, 
+    /// including one-hand and two-hand voicing progressions, 
+    /// and verifies that the corresponding MIDI files are created successfully.
+    /// </summary>
+    public static void RunAll() {
         string oneHandPath = Path.Combine(Path.GetTempPath(), "EZSong-V18-one-hand.mid");
         string twoHandPath = Path.Combine(Path.GetTempPath(), "EZSong-V18-two-hand.mid");
         string voiceTrackPath = Path.Combine(Path.GetTempPath(), "EZSong-V18-voices.mid");
 
-        var parser = new ChordProgressionParser(new ChordVoicingEngine(
-            VoicingProfile.ArrangerLeftHand.OneHand));
+        ChordProgressionParser parser = new(new ChordVoicingEngine(VoicingProfile.ArrangerLeftHand.OneHand));
         VoicingProgression oneHand = parser.ParseToVoicingProgression("""
             | C   4 |
             | G/B 4 |
@@ -22,7 +27,7 @@ public static class VoicingMidiExportV18SelfTest
             | C   4 |
             """);
 
-        var settings = new MidiChordExportSettings();
+        MidiChordExportSettings settings = new();
         MidiChordExporter.Export(oneHand, oneHandPath, settings);
         Expect(File.Exists(oneHandPath), "V18 one-hand MIDI file should exist.");
 
@@ -30,7 +35,7 @@ public static class VoicingMidiExportV18SelfTest
         MidiChordExporter.Export(oneHand, voiceTrackPath, settings);
         Expect(File.Exists(voiceTrackPath), "V18 voice-track MIDI file should exist.");
 
-        var twoHandParser = new ChordProgressionParser();
+        ChordProgressionParser twoHandParser = new();
         TwoHandVoicingProgression twoHand = twoHandParser.ParseToTwoHandVoicingProgression("""
             | C  4 |
             | Am 4 |
@@ -45,8 +50,15 @@ public static class VoicingMidiExportV18SelfTest
         File.Delete(voiceTrackPath);
     }
 
-    private static void Expect(bool condition, string message)
-    {
-        if (!condition) throw new InvalidOperationException(message);
+    /// <summary>
+    /// A helper method to assert that a condition is true, throwing an InvalidOperationException with a specified message if the condition is false.
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="message"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    private static void Expect(bool condition, string message) {
+        if (!condition) {
+            throw new InvalidOperationException(message);
+        }
     }
 }

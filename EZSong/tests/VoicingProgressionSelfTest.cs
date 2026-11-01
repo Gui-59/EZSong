@@ -3,18 +3,25 @@ using EZSong.Model;
 
 namespace EZSong.Tests;
 
-/// <summary>Small regression tests for the V17 musical result layer.</summary>
-public static class VoicingProgressionSelfTest
-{
-    public static void RunAll()
-    {
+/// <summary>
+/// A static class that contains self-tests for the VoicingProgression functionality, 
+/// including one-hand and two-hand voicing tests.
+/// </summary>
+public static class VoicingProgressionSelfTest {
+
+    /// <summary>
+    /// Runs all self-tests for the VoicingProgression functionality,
+    /// </summary>
+    public static void RunAll()    {
         TestOneHandResult();
         TestTwoHandResult();
     }
 
-    private static void TestOneHandResult()
-    {
-        var parser = new ChordProgressionParser(new ChordVoicingEngine(
+    /// <summary>
+    /// Tests the one-hand voicing progression result by parsing a chord progression and verifying the expected properties of the resulting VoicingProgression.
+    /// </summary>
+    private static void TestOneHandResult() {
+        ChordProgressionParser parser = new(new ChordVoicingEngine(
             VoicingProfile.ArrangerLeftHand.OneHand));
 
         VoicingProgression result = parser.ParseToVoicingProgression("""
@@ -34,11 +41,14 @@ public static class VoicingProgressionSelfTest
         Expect(result.Entries[2].VoicePaths.Count == result.VoicePaths.Count, "Entries should expose the same progression voice paths.");
     }
 
-    private static void TestTwoHandResult()
-    {
-        var settings = VoicingProfile.TwoHandsBalanced.TwoHand;
-        var engine = new TwoHandVoicingEngine(settings);
-        var parser = new ChordProgressionParser();
+    /// <summary>
+    /// Tests the two-hand voicing progression result by parsing a chord progression 
+    /// and verifying the expected properties of the resulting TwoHandVoicingProgression.
+    /// </summary>
+    private static void TestTwoHandResult()    {
+        TwoHandVoicingSettings settings = VoicingProfile.TwoHandsBalanced.TwoHand;
+        TwoHandVoicingEngine engine = new(settings);
+        ChordProgressionParser parser = new();
 
         TwoHandVoicingProgression result = parser.ParseToTwoHandVoicingProgression("""
             | C  4 |
@@ -53,9 +63,15 @@ public static class VoicingProgressionSelfTest
         Expect(result.RightHandVoicePaths.Count > 0, "Two-hand result should expose RH voice paths.");
     }
 
-    private static void Expect(bool condition, string message)
-    {
-        if (!condition)
+    /// <summary>
+    /// Method to assert a condition and throw an InvalidOperationException with a specified message if the condition is false.
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="message"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    private static void Expect(bool condition, string message) {
+        if (!condition) {
             throw new InvalidOperationException(message);
+        }
     }
 }

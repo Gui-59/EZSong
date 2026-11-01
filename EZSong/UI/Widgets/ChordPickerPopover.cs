@@ -7,6 +7,11 @@ using System;
 using System.Collections.Generic;
 
 namespace EZSong.UI.Widgets {
+
+    /// <summary>
+    /// A popover widget that allows users to select a chord from a list of available chords, 
+    /// organized by root note and alteration.
+    /// </summary>
     public class ChordPickerPopover : Popover {
 
         private ChordBeat? _chordBeat;
@@ -17,6 +22,10 @@ namespace EZSong.UI.Widgets {
 
         private Notebook _notebook;
 
+        /// <summary>
+        /// Creates a new instance of the ChordPickerPopover widget,
+        /// </summary>
+        /// <param name="relativeTo">The widget to which the popover will be relative.</param>
         public ChordPickerPopover(Widget relativeTo) : base(relativeTo) { 
             BorderWidth = 6;
             WidthRequest = 300;
@@ -32,10 +41,11 @@ namespace EZSong.UI.Widgets {
             };
         }
 
-        // =========================================================
-        // PUBLIC
-        // =========================================================
-
+        /// <summary>
+        /// Opens the popover and displays the available chords for the given ChordBeat and maximum duration.
+        /// </summary>
+        /// <param name="chordBeat">The ChordBeat for which to display available chords.</param>
+        /// <param name="maxDuration">The maximum duration for the chords to be displayed.</param>
         public void Open(ChordBeat chordBeat, RhythmRationalDuration maxDuration) {
             _maxDuration = maxDuration;
             _chordBeat = chordBeat;
@@ -46,14 +56,17 @@ namespace EZSong.UI.Widgets {
             Popup();
         }
 
-        // =========================================================
-        // UI
-        // =========================================================
-
+        /// <summary>
+        /// Builds the user interface of the ChordPickerPopover, adding the notebook that contains the chord selection pages.
+        /// </summary>
         private void BuildUI() {
             Add(_notebook);
         }
 
+        /// <summary>
+        /// Rebuilds the chord selection pages in the notebook based on the current ChordBeat and maximum duration, 
+        /// clearing any existing pages and adding new ones for each root note and alteration combination.
+        /// </summary>
         private void Rebuild() {
 
             // Clear
@@ -75,6 +88,12 @@ namespace EZSong.UI.Widgets {
             _ = _notebook.AppendPage(BuildChordListPage(NoteStep.B, Alteration.neutral), new Label("B"));
         }
 
+        /// <summary>
+        /// Builds a page in the notebook that displays a list of available chords for the given root note and alteration,
+        /// </summary>
+        /// <param name="root">The root note of the chords to be displayed.</param>
+        /// <param name="rootAlteration">The alteration of the root note of the chords to be displayed.</param>
+        /// <returns>A widget containing the list of available chords for the given root note and alteration.</returns>
         private Widget BuildChordListPage(NoteStep root, Alteration rootAlteration) {
             FlowBox flow = CreateFlow();
             foreach (Model.Chord chord in GetAllChordsForRoot(root, rootAlteration)) {
@@ -88,6 +107,12 @@ namespace EZSong.UI.Widgets {
             return flow;
         }
 
+        /// <summary>
+        /// Gets a list of all available chords for the given root note and alteration, with the specified maximum duration.
+        /// </summary>
+        /// <param name="root">The root note of the chords to be retrieved.</param>
+        /// <param name="rootAlteration">The alteration of the root note of the chords to be retrieved.</param>
+        /// <returns>A list of all available chords for the given root note and alteration.</returns>
         private List<Model.Chord> GetAllChordsForRoot(NoteStep root, Alteration rootAlteration) {
 
             //TODO : gérer un choix de durée max pour les accords (ex: si on est sur une croche, ne pas proposer des accords de 4/4)
@@ -306,6 +331,10 @@ namespace EZSong.UI.Widgets {
             return chords;
         }
 
+        /// <summary>
+        /// Creates a new FlowBox widget with specific properties for displaying chord buttons in a grid layout.
+        /// </summary>
+        /// <returns>A FlowBox widget configured for displaying chord buttons.</returns>
         private FlowBox CreateFlow() {
             return new FlowBox {
                 MaxChildrenPerLine = 4,
@@ -315,6 +344,11 @@ namespace EZSong.UI.Widgets {
             };
         }
 
+        /// <summary>
+        /// Creates a new Button widget with the specified label and specific size properties for displaying a chord option.
+        /// </summary>
+        /// <param name="label">The text to be displayed on the button.</param>
+        /// <returns>A Button widget configured with the specified label and size properties.</returns>
         private Button CreateButton(string label) {
             Button btn = new(label) {
                 WidthRequest = 60,

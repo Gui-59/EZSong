@@ -6,13 +6,16 @@ using EZSong.Model;
 namespace EZSong.Tests;
 
 /// <summary>
-/// Framework-free musical regression tests for the voicing engine.
-/// Call <see cref="RunAll"/> from a small console project.
+/// A static class that runs a series of self-tests for the VoicingEngine, 
+/// verifying its functionality and correctness.
 /// </summary>
-public static class VoicingEngineSelfTest
-{
-    public static void RunAll()
-    {
+public static class VoicingEngineSelfTest {
+
+    /// <summary>
+    /// Runs all self-tests for the VoicingEngine, 
+    /// checking various chord transitions, voicing preferences, and other functionalities.
+    /// </summary>
+    public static void RunAll() {
         CToAmKeepsTwoKeys();
         CToBWithNoCommonNotesIsValid();
         CommonTransitionsAreValid();
@@ -31,12 +34,10 @@ public static class VoicingEngineSelfTest
         Console.WriteLine("VoicingEngineSelfTest: ALL OK");
     }
 
-    private static void IntelligentExtendedChordReduction()
-    {
+    private static void IntelligentExtendedChordReduction() {
         Chord c13 = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.C, Alteration.neutral, ChordType.Thirteenth);
 
-        ChordVoicingEngine richEngine = new(new VoicingSettings
-        {
+        ChordVoicingEngine richEngine = new(new VoicingSettings {
             MinChordAreaNote = P(NoteStep.C, 1),
             MaxChordAreaNote = P(NoteStep.C, 3),
             ChordMaxKeyCount = 5,
@@ -48,8 +49,7 @@ public static class VoicingEngineSelfTest
         Expect(rich.Pitches.Select(p => p.ToMidiNoteNumber() % 12).OrderBy(x => x).SequenceEqual(expectedRich),
             $"C13 intelligent reduction should keep root, 3rd, 7th, 9th and 13th: {Format(rich)}");
 
-        ChordVoicingEngine traditionalEngine = new(new VoicingSettings
-        {
+        ChordVoicingEngine traditionalEngine = new(new VoicingSettings {
             MinChordAreaNote = P(NoteStep.C, 1),
             MaxChordAreaNote = P(NoteStep.C, 3),
             ChordMaxKeyCount = 5,
@@ -64,8 +64,10 @@ public static class VoicingEngineSelfTest
         Console.WriteLine("V14: intelligent extended-chord omission policy OK");
     }
 
-    private static void SlashBassSurvivesExtendedChordReduction()
-    {
+    /// <summary>
+    /// Tests that a slash chord with a specified bass note retains that bass note after the chord is reduced to fit within the configured number of voices.
+    /// </summary>
+    private static void SlashBassSurvivesExtendedChordReduction() {
         Chord c13OverG = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.C, Alteration.neutral, ChordType.Thirteenth, NoteStep.G);
         ChordVoicingEngine engine = CreateEngine();
         ChordVoicing voicing = engine.GenerateFirst(new ChordVoicingRequest(c13OverG));
@@ -77,8 +79,10 @@ public static class VoicingEngineSelfTest
         Console.WriteLine("V14: slash bass preservation during reduction OK");
     }
 
-    private static void PersistentVoiceIdentityAcrossProgression()
-    {
+    /// <summary>
+    /// Tests that voice identities are preserved across a progression of chords, even when new voices are added.
+    /// </summary>
+    private static void PersistentVoiceIdentityAcrossProgression() {
         ChordVoicingEngine engine = CreateEngine();
         Chord c = Major(NoteStep.C);
         Chord am = Minor(NoteStep.A);
@@ -114,8 +118,11 @@ public static class VoicingEngineSelfTest
         Console.WriteLine("V15: persistent voice identity across progression OK");
     }
 
-    private static void VoicingProfilesProvideIndependentPresets()
-    {
+    /// <summary>
+    /// Tests that the built-in voicing profiles provide independent settings instances, 
+    /// ensuring that changes to one profile do not affect another.
+    /// </summary>
+    private static void VoicingProfilesProvideIndependentPresets() {
         VoicingProfile first = VoicingProfile.ArrangerLeftHand;
         VoicingProfile second = VoicingProfile.ArrangerLeftHand;
 
@@ -142,14 +149,17 @@ public static class VoicingEngineSelfTest
         Expect(!open.OneHand.PreferCompactInitialVoicing,
             "Open left-hand profile should not force compact initial voicings.");
 
-        new ChordVoicingEngine(VoicingProfile.Piano.OneHand);
-        new TwoHandVoicingEngine(VoicingProfile.TwoHandsBalanced.TwoHand);
+        _ = new ChordVoicingEngine(VoicingProfile.Piano.OneHand);
+        _ = new TwoHandVoicingEngine(VoicingProfile.TwoHandsBalanced.TwoHand);
 
         Console.WriteLine("V16: named voicing profiles OK");
     }
 
-    private static void CToAmKeepsTwoKeys()
-    {
+    /// <summary>
+    /// Tests that transitioning from a C major chord to an A minor chord retains two of the original keys, 
+    /// ensuring smooth voice leading.
+    /// </summary>
+    private static void CToAmKeepsTwoKeys() {
         ChordVoicingEngine engine = CreateEngine();
         Chord c = Major(NoteStep.C);
         Chord am = Minor(NoteStep.A);
@@ -168,8 +178,11 @@ public static class VoicingEngineSelfTest
         PrintTransition(first, next, engine);
     }
 
-    private static void CToBWithNoCommonNotesIsValid()
-    {
+    /// <summary>
+    /// Tests that transitioning from a C major chord to a B major chord is valid, 
+    /// even when there are no common notes between the two chords.
+    /// </summary>
+    private static void CToBWithNoCommonNotesIsValid()     {
         ChordVoicingEngine engine = CreateEngine();
         Chord c = Major(NoteStep.C);
         Chord b = Major(NoteStep.B);
@@ -196,8 +209,10 @@ public static class VoicingEngineSelfTest
         PrintTransition(first, next, engine);
     }
 
-    private static void CommonTransitionsAreValid()
-    {
+    /// <summary>
+    /// Tests a series of common chord transitions to ensure that they are valid,
+    /// </summary>
+    private static void CommonTransitionsAreValid() {
         ChordVoicingEngine engine = CreateEngine();
         ChordVoicing current = engine.GenerateFirst(
             ChordVoicingRequest.FromExactVoicing(
@@ -216,8 +231,7 @@ public static class VoicingEngineSelfTest
             ("Am", Minor(NoteStep.A))
         ];
 
-        foreach ((string _, Chord chord) target in targets)
-        {
+        foreach ((string _, Chord chord) target in targets) {
             ChordVoicing next = engine.GenerateNext(new ChordVoicingRequest(target.chord), current);
             VoicingTransitionAnalysis analysis = engine.AnalyzeTransition(
                 current,
@@ -234,8 +248,11 @@ public static class VoicingEngineSelfTest
         }
     }
 
-    private static void SlashChordKeepsRequestedBass()
-    {
+    /// <summary>
+    /// Tests that a slash chord (e.g., G/B) retains the requested bass note (B) as the lowest note in the voicing, 
+    /// even after generating the next chord voicing.
+    /// </summary>
+    private static void SlashChordKeepsRequestedBass() {
         ChordVoicingEngine engine = CreateEngine();
         Chord c = Major(NoteStep.C);
         Chord gOverB = Major(NoteStep.G, NoteStep.B);
@@ -251,8 +268,10 @@ public static class VoicingEngineSelfTest
         PrintTransition(first, next, engine);
     }
 
-    private static void VoiceCountCanIncreaseAndDecrease()
-    {
+    /// <summary>
+    /// Tests that the number of voices in a chord voicing can increase or decrease appropriately when transitioning between chords,
+    /// </summary>
+    private static void VoiceCountCanIncreaseAndDecrease()  {
         ChordVoicingEngine engine = CreateEngine();
         Chord c = Major(NoteStep.C);
         Chord am7 = MinorSeventh(NoteStep.A);
@@ -275,8 +294,10 @@ public static class VoicingEngineSelfTest
         PrintTransition(three, backToThree, engine);
     }
 
-    private static void LargeVoiceMovementIsRejected()
-    {
+    /// <summary>
+    /// Tests that a transition with a large voice movement (greater than the configured maximum) is rejected,
+    /// </summary>
+    private static void LargeVoiceMovementIsRejected() {
         VoicingSettings settings = CreateSettings();
         settings.MinChordAreaNote = P(NoteStep.C, 3);
         settings.MaxChordAreaNote = P(NoteStep.C, 5);
@@ -300,8 +321,10 @@ public static class VoicingEngineSelfTest
         PrintTransition(first, next, engine);
     }
 
-    private static void ChordProgressionParserWorks()
-    {
+    /// <summary>
+    /// Tests the ChordProgressionParser to ensure it correctly parses a chord progression with measure bars and durations,
+    /// </summary>
+    private static void ChordProgressionParserWorks() {
         ChordVoicingEngine engine = CreateEngine();
         ChordProgressionParser parser = new(engine);
 
@@ -354,6 +377,9 @@ public static class VoicingEngineSelfTest
         Expect(exactProgression[0].Pitches.SequenceEqual(exact), "Exact first voicing should be preserved by parser.");
     }
 
+    /// <summary>
+    /// Tests that the voice identity tracking is explicit and correctly identifies continued voices across a chord transition.
+    /// </summary>
     private static void VoiceIdentityIsExplicit()
     {
         ChordVoicingEngine engine = CreateEngine();
@@ -378,6 +404,9 @@ public static class VoicingEngineSelfTest
         Console.WriteLine("Voice identity tracking: C -> Am OK");
     }
 
+    /// <summary>
+    /// Tests that when an exact first voicing is provided, it is preserved by the voicing engine without alteration.
+    /// </summary>
     private static void ExactFirstVoicingIsPreserved()
     {
         ChordVoicingEngine engine = CreateEngine();
@@ -388,12 +417,14 @@ public static class VoicingEngineSelfTest
         Expect(first == exact, $"Exact first voicing ({Format(exact)}) was not preserved: {Format(first)}");
     }
 
-    private static void VoicingPreferenceJsonWorks()
-    {
+    /// <summary>
+    /// Tests that voicing preferences can be serialized to and deserialized from JSON, 
+    /// and that the preferences are correctly applied when generating chord voicings.
+    /// </summary>
+    private static void VoicingPreferenceJsonWorks() {
         string path = Path.Combine(Path.GetTempPath(), $"EZSong-voicing-preferences-{Guid.NewGuid():N}.json");
 
-        try
-        {
+        try {
             Chord c = Major(NoteStep.C);
             Chord f = Major(NoteStep.F);
 
@@ -440,8 +471,7 @@ public static class VoicingEngineSelfTest
                 "Preference lookup should work with independently parsed Chord instances.");
 
             Console.WriteLine("Voicing preferences: JSON round-trip + structural matching OK");
-        }
-        finally
+        } finally
         {
             if (File.Exists(path))
             {
@@ -450,6 +480,13 @@ public static class VoicingEngineSelfTest
         }
     }
 
+    /// <summary>
+    /// Helper method to print the details of a chord transition, 
+    /// including the chords, their voicings, common notes, and movement analysis.
+    /// </summary>
+    /// <param name="from">The starting chord voicing.</param>
+    /// <param name="to">The ending chord voicing.</param>
+    /// <param name="engine">The chord voicing engine used for analysis.</param>
     private static void PrintTransition(ChordVoicing from, ChordVoicing to, ChordVoicingEngine engine)
     {
         VoicingTransitionAnalysis analysis = engine.AnalyzeTransition(
@@ -467,10 +504,19 @@ public static class VoicingEngineSelfTest
             $"common=[{common}] move={analysis.TotalMovement} bass={analysis.BassMovement} score={analysis.Score}");
     }
 
+    /// <summary>
+    /// Helper method to format the pitches of a chord voicing into a human-readable string.
+    /// </summary>
+    /// <param name="voicing">The chord voicing to format.</param>
+    /// <returns>A human-readable string representation of the chord voicing's pitches.</returns>
     private static string FormatNotes(ChordVoicing voicing) {
         return "[" + string.Join(" ", voicing.Pitches.Select(p => p.ToHumanString())) + "]";
     }
 
+    /// <summary>
+    /// Helper method to create a default VoicingSettings instance for testing purposes.
+    /// </summary>
+    /// <returns>A default VoicingSettings instance.</returns>
     private static VoicingSettings CreateSettings() {
         return new() {
             MinChordAreaNote = P(NoteStep.C, 1),
@@ -484,44 +530,87 @@ public static class VoicingEngineSelfTest
         };
     }
 
+    /// <summary>
+    /// Helper method to create a ChordVoicingEngine instance with default settings for testing purposes.
+    /// </summary>
+    /// <returns>A ChordVoicingEngine instance with default settings.</returns>
     private static ChordVoicingEngine CreateEngine() {
         return new(CreateSettings());
     }
 
+    /// <summary>
+    /// Helper method to create a major chord with an optional bass note for testing purposes.
+    /// </summary>
+    /// <param name="root">The root note of the chord.</param>
+    /// <param name="bass">The optional bass note of the chord.</param>
+    /// <returns>A major chord with the specified root and optional bass note.</returns>
     private static Chord Major(NoteStep root, NoteStep? bass = null) {
         return new(
         false, new RhythmRationalDuration(1, 1, 0), root, Alteration.neutral,
         ChordType.NoneOrMajor, bass);
     }
 
+    /// <summary>
+    /// Helper method to create a minor chord for testing purposes.
+    /// </summary>
+    /// <param name="root">The root note of the chord.</param>
+    /// <returns>A minor chord with the specified root note.</returns>
     private static Chord Minor(NoteStep root) {
         return new(
         false, new RhythmRationalDuration(1, 1, 0), root, Alteration.neutral,
         ChordType.Minor);
     }
 
+    /// <summary>
+    ///Helper method to create a seventh chord for testing purposes.
+    /// </summary>
+    /// <param name="root">The root note of the chord.</param>
+    /// <returns>A seventh chord with the specified root note.</returns>
     private static Chord Seventh(NoteStep root) {
         return new(
         false, new RhythmRationalDuration(1, 1, 0), root, Alteration.neutral,
         ChordType.Seventh);
     }
 
+    /// <summary>
+    /// Helper method to create a minor seventh chord for testing purposes.
+    /// </summary>
+    /// <param name="root">The root note of the chord.</param>
+    /// <returns>A minor seventh chord with the specified root note.</returns>
     private static Chord MinorSeventh(NoteStep root) {
         return new(
         false, new RhythmRationalDuration(1, 1, 0), root, Alteration.neutral,
         ChordType.MinorSeventh);
     }
 
+
+    /// <summary>
+    /// Helper method to create a major seventh chord for testing purposes.
+    /// </summary>
+    /// <param name="root">The root note of the chord.</param>
+    /// <returns>A major seventh chord with the specified root note.</returns>
     private static Chord MajorSeventh(NoteStep root) {
         return new(
         false, new RhythmRationalDuration(1, 1, 0), root, Alteration.neutral,
         ChordType.MajorSeventh);
     }
-
+    
+    /// <summary>
+    /// Helper method to create a pitch with the specified note and octave for testing purposes.
+    /// </summary>
+    /// <param name="note">The note of the pitch.</param>
+    /// <param name="octave">The octave of the pitch.</param>
+    /// <returns>A pitch with the specified note and octave.</returns>
     private static Pitch P(NoteStep note, int octave) {
         return new(note, Alteration.neutral, octave);
     }
 
+    /// <summary>
+    /// Asserts a condition and throw an InvalidOperationException with a message if the condition is false.
+    /// </summary>
+    /// <param name="condition">The condition to evaluate.</param>
+    /// <param name="message">The message to include in the exception if the condition is false.</param>
+    /// <exception cref="InvalidOperationException"></exception>
     private static void Expect(bool condition, string message)
     {
         if (!condition) {
@@ -529,6 +618,11 @@ public static class VoicingEngineSelfTest
         }
     }
 
+    /// <summary>
+    /// Helper method to format a ChordVoicing into a human-readable string for testing output.
+    /// </summary>
+    /// <param name="voicing">The ChordVoicing to format.</param>
+    /// <returns>A human-readable string representation of the ChordVoicing.</returns>
     private static string Format(ChordVoicing voicing) {
         return $"{voicing.Chord.ToHumanString()} [{string.Join(" ", voicing.Pitches.Select(p => p.ToHumanString()))}]";
     }

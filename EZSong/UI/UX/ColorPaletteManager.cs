@@ -6,6 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EZSong.UI.UX {
+
+    /// <summary>
+    /// A class that manages a color palette for the user interface, 
+    /// providing a centralized way to access and modify colors used in various UI components.
+    /// </summary>
     internal class ColorPaletteManager {
 
         private Color _frameBg = Color.LightPink;
@@ -122,10 +127,10 @@ namespace EZSong.UI.UX {
             }
         }
 
-
-
-
-
+        /// <summary>
+        /// Creates a new instance of the ColorPaletteManager class, 
+        /// initializing the color palette with default values for various UI components.
+        /// </summary>
         public ColorPaletteManager() {
         }
     }

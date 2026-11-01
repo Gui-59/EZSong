@@ -6,13 +6,16 @@ using Melanchall.DryWetMidi.Core;
 namespace EZSong.Tests;
 
 /// <summary>
-/// Regression test for two-track MIDI export. Hand-thesia is deliberately not
-/// referenced: this validates only the MIDI produced by EZSong.
+/// A self-test class for verifying the correct functionality of MIDI hand track generation and export.
 /// </summary>
-public static class MidiHandTracksSelfTest
-{
-    public static void Run(string outputPath)
-    {
+public static class MidiHandTracksSelfTest {
+
+    /// <summary>
+    /// Runs the self-tests for MIDI hand track generation and export. 
+    /// It creates a chord voicing, exports it to a MIDI file, and verifies that the resulting MIDI file contains the expected number of tracks and notes.
+    /// </summary>
+    /// <param name="outputPath">The path to the output MIDI file.</param>
+    public static void Run(string outputPath) {
         Chord chord = new(
             false,
             new RhythmRationalDuration(1, 1, 0),
@@ -28,8 +31,7 @@ public static class MidiHandTracksSelfTest
             new Pitch(NoteStep.E, Alteration.neutral, 3)
         });
 
-        MidiChordExportSettings settings = new()
-        {
+        MidiChordExportSettings settings = new() {
             SplitPoint = new Pitch(NoteStep.C, Alteration.neutral, 3),
             LeftHandChannel = 0,
             RightHandChannel = 1
@@ -48,8 +50,15 @@ public static class MidiHandTracksSelfTest
         Console.WriteLine("MidiHandTracksSelfTest: ALL OK");
     }
 
-    private static void Expect(bool condition, string message)
-    {
+
+    /// <summary>
+    /// A helper method that checks a condition 
+    /// and throws an InvalidOperationException with a specified message if the condition is false.
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="message"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    private static void Expect(bool condition, string message) {
         if (!condition) {
             throw new InvalidOperationException(message);
         }

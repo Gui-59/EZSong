@@ -5,16 +5,23 @@ using Melanchall.DryWetMidi.Core;
 
 namespace EZSong.Tests;
 
-public static class TwoHandVoicingSelfTest
-{
-    public static void Run(string outputPath)
-    {
+/// <summary>
+/// A self-test class for the TwoHandVoicingEngine and related functionality, 
+/// verifying that two-hand chord voicings are generated correctly and adhere to specified settings.
+/// </summary>
+public static class TwoHandVoicingSelfTest {
+
+    /// <summary>
+    /// Runs the self-test for two-hand chord voicing generation, 
+    /// comparing the results of the high-level API with the underlying engine and validating the generated MIDI file.
+    /// </summary>
+    /// <param name="outputPath"></param>
+    public static void Run(string outputPath) {
         Chord c = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.C, Alteration.neutral, ChordType.NoneOrMajor);
         Chord g = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.G, Alteration.neutral, ChordType.NoneOrMajor);
         ChordVoicingRequest[] requests = { new(c), new(g) };
 
-        TwoHandVoicingSettings settings = new()
-        {
+        TwoHandVoicingSettings settings = new() {
             MinLeftHandNote = new Pitch(NoteStep.C, Alteration.neutral, 1),
             MaxLeftHandNote = new Pitch(NoteStep.B, Alteration.neutral, 2),
             MinRightHandNote = new Pitch(NoteStep.C, Alteration.neutral, 3),
@@ -43,14 +50,12 @@ public static class TwoHandVoicingSelfTest
 
         Expect(result.Count == engineResult.Count,
             "The high-level two-hand generator returned an unexpected number of voicings.");
-        for (int i = 0; i < result.Count; i++)
-        {
+        for (int i = 0; i < result.Count; i++) {
             Expect(result[i].Pitches.SequenceEqual(engineResult[i].Pitches),
                 "The high-level two-hand generator produced a different progression than the engine.");
         }
         Expect(result.Count == 2, "Expected two two-hand voicings.");
-        foreach (TwoHandChordVoicing v in result)
-        {
+        foreach (TwoHandChordVoicing v in result) {
             Expect(v.LeftHand.Count >= 1, "Each chord must contain a left-hand note.");
             Expect(v.RightHand.Count >= 1, "Each chord must contain a right-hand note.");
             Expect(v.Pitches.Count == 3, "C and G major should contain three chord tones.");
@@ -66,11 +71,12 @@ public static class TwoHandVoicingSelfTest
         Console.WriteLine("TwoHandVoicingSelfTest: ALL OK");
     }
 
-    private static void TwoHandExactVoicingRejectsNonChordTone()
-    {
+    /// <summary>
+    /// Tests that the two-hand exact voicing generation correctly rejects notes that do not belong to the specified chord.
+    /// </summary>
+    private static void TwoHandExactVoicingRejectsNonChordTone() {
         Chord c = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.C, Alteration.neutral, ChordType.NoneOrMajor);
-        TwoHandVoicingSettings settings = new()
-        {
+        TwoHandVoicingSettings settings = new() {
             MinLeftHandNote = new Pitch(NoteStep.C, Alteration.neutral, 1),
             MaxLeftHandNote = new Pitch(NoteStep.B, Alteration.neutral, 2),
             MinRightHandNote = new Pitch(NoteStep.C, Alteration.neutral, 3),
@@ -83,27 +89,26 @@ public static class TwoHandVoicingSelfTest
         };
 
         bool rejected = false;
-        try
-        {
+        try {
             _ = new TwoHandVoicingEngine(settings).GenerateFirst(
                 ChordVoicingRequest.FromExactVoicing(
                     c,
                     new Pitch(NoteStep.C, Alteration.neutral, 2),
                     new Pitch(NoteStep.F, Alteration.neutral, 3)));
-        }
-        catch (ArgumentException)
-        {
+        } catch (ArgumentException) {
             rejected = true;
         }
 
         Expect(rejected, "A two-hand exact voicing must reject notes that do not belong to the chord.");
     }
 
-    private static void TwoHandExtendedChordReduction()
-    {
+
+    /// <summary>
+    /// Tests that the two-hand voicing engine correctly reduces extended chords (like C13) to a manageable number of voices while respecting chord tone priority.
+    /// </summary>
+    private static void TwoHandExtendedChordReduction() {
         Chord c13 = new(false, new RhythmRationalDuration(1, 1, 0), NoteStep.C, Alteration.neutral, ChordType.Thirteenth);
-        TwoHandVoicingSettings settings = new()
-        {
+        TwoHandVoicingSettings settings = new() {
             MinLeftHandNote = new Pitch(NoteStep.C, Alteration.neutral, 1),
             MaxLeftHandNote = new Pitch(NoteStep.B, Alteration.neutral, 2),
             MinRightHandNote = new Pitch(NoteStep.C, Alteration.neutral, 3),
@@ -124,11 +129,16 @@ public static class TwoHandVoicingSelfTest
             "Two-hand C13 should use the same intelligent tone-priority policy as one-hand voicing.");
     }
 
+    /// <summary>
+    /// Tests that the two-hand voicing engine correctly identifies explicit voice movements between two chord voicings, ensuring that all voices are continued and valid.
+    /// </summary>
+    /// <param name="first"></param>
+    /// <param name="second"></param>
+    /// <param name="settings"></param>
     private static void TwoHandVoiceIdentityIsExplicit(
         TwoHandChordVoicing first,
         TwoHandChordVoicing second,
-        TwoHandVoicingSettings settings)
-    {
+        TwoHandVoicingSettings settings) {
         TwoHandVoicingEngine engine = new(settings);
         VoicingTransitionAnalysis analysis = engine.AnalyzeTransition(first, second);
 
@@ -139,8 +149,14 @@ public static class TwoHandVoicingSelfTest
             "The test progression should keep all voices alive.");
     }
 
-    private static void Expect(bool condition, string message)
-    {
+
+    /// <summary>
+    /// A helper method to assert a condition and throw an InvalidOperationException with a specified message if the condition is false.
+    /// </summary>
+    /// <param name="condition"></param>
+    /// <param name="message"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    private static void Expect(bool condition, string message) {
         if (!condition) {
             throw new InvalidOperationException(message);
         }
