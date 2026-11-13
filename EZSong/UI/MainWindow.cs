@@ -1,4 +1,6 @@
 ﻿using EZSong.Enums;
+using Melanchall.DryWetMidi.Core;
+using Melanchall.DryWetMidi.Interaction;
 using EZSong.Exporting.Lilypond;
 using EZSong.Helpers;
 using EZSong.IO;
@@ -264,6 +266,7 @@ namespace EZSong.UI {
                 case "file":
                     //TODO : ajouter un bouton "Nouveau projet"
                     flow.Add(CreateIconButton("Ouvrir", (s, e) => LoadProject(), "file-load.svg"));
+                    flow.Add(CreateIconButton("Importer MIDI/KAR", (s, e) => ImportMidiProject(), "file-load.svg"));
                     flow.Add(CreateIconButton("Enregistrer", (s, e) => SaveProject(), "file-save.svg"));
                     break;
 
@@ -287,6 +290,418 @@ namespace EZSong.UI {
             }
 
             return flow;
+        }
+
+        /// <summary>
+        /// Initialise un projet à partir d'un fichier MIDI/KAR. Les pistes mélodiques sont
+        /// choisies graphiquement (une ou deux), puis les notes sont quantifiées au 1/16.
+        /// Les accords sont calculés une seule fois pendant l'import et les paroles KAR
+        /// sont réparties dans les mesures selon leur horodatage MIDI.
+        /// </summary>
+        private void ImportMidiProject() {
+            string fileName;
+
+            FileChooserDialog chooser = new(
+                "Importer un fichier MIDI/KAR",
+                this,
+                FileChooserAction.Open,
+                "Annuler", ResponseType.Cancel,
+                "Importer", ResponseType.Accept);
+
+            try {
+                FileFilter filter = new() {
+                    Name = "Fichiers MIDI / Karaoké"
+                };
+                filter.AddPattern("*.mid");
+                filter.AddPattern("*.midi");
+                filter.AddPattern("*.kar");
+                chooser.AddFilter(filter);
+
+                if (chooser.Run() != (int)ResponseType.Accept) {
+                    return;
+                }
+
+                fileName = chooser.Filename;
+            } finally {
+                chooser.Destroy();
+            }
+
+            try {
+                Console.WriteLine("MIDI 1 : lecture du fichier");
+                MidiFile midi = MidiFile.Read(fileName);
+                Console.WriteLine("MIDI 2 : lecture des pistes");
+                List<TrackChunk> tracks = midi.GetTrackChunks().ToList();
+                if (tracks.Count == 0) {
+                    throw new InvalidDataException("Le fichier ne contient aucune piste MIDI.");
+                }
+                Console.WriteLine("MIDI 3 : affichage du choix des pistes");
+
+                // Une liste de cases à cocher permet de sélectionner au plus deux pistes.
+                Dialog trackDialog = new("Choix des pistes à importer", this, DialogFlags.Modal,
+                    "Annuler", ResponseType.Cancel, "Continuer", ResponseType.Accept);
+                trackDialog.SetDefaultSize(460, 360);
+                Box content = (Box)trackDialog.ContentArea;
+                content.Spacing = 6;
+                content.PackStart(new Label("Sélectionnez une ou deux pistes à convertir en portée :") { Xalign = 0 }, false, false, 6);
+                List<CheckButton> choices = new();
+                for (int i = 0; i < tracks.Count; i++) {
+                    string? trackName = tracks[i].Events.OfType<SequenceTrackNameEvent>().FirstOrDefault()?.Text;
+                    int noteCount = tracks[i].GetNotes().Count();
+                    CheckButton check = new($"Piste {i + 1} — {(string.IsNullOrWhiteSpace(trackName) ? "Sans nom" : trackName)} ({noteCount} notes)");
+                    check.Toggled += (_, _) => {
+                        if (check.Active && choices.Count(c => c.Active) > 2) {
+                            check.Active = false;
+                        }
+                    };
+                    choices.Add(check);
+                    content.PackStart(check, false, false, 2);
+                }
+                if (choices.Count > 0) {
+                    choices[0].Active = true;
+                }
+
+                content.ShowAll();
+                int response = trackDialog.Run();
+                List<int> selected = choices.Select((c, i) => (c, i)).Where(x => x.c.Active).Select(x => x.i).ToList();
+                trackDialog.Destroy();
+                if (response != (int)ResponseType.Accept) {
+                    return;
+                }
+
+                if (selected.Count is < 1 or > 2) {
+                    throw new InvalidOperationException("Choisissez une ou deux pistes.");
+                }
+
+                Console.WriteLine("MIDI 4 : début de l'import des pistes");
+
+                ImportSelectedMidiTracks(midi, tracks, selected, System.IO.Path.GetFileNameWithoutExtension(fileName));
+
+                Console.WriteLine("MIDI 5 : fin de l'import des pistes");
+
+                Console.WriteLine("MIDI 6 : actualisation de l'interface");
+
+                UpdateSongInfoUI();
+                GoToFirstSegment();
+                _globalSegmentEditor.ResetDisplayedStaffs();
+                _globalSegmentEditor.Refresh();
+
+                Console.WriteLine("MIDI 7 : actualisation terminée");
+
+                _ = _statusBar.Push(_statusBarContextId, $"Import MIDI terminé : {selected.Count} portée(s).");
+            } catch (Exception ex) {
+                MessageDialog error = new(this, DialogFlags.Modal, MessageType.Error, ButtonsType.Close,
+                    "Impossible d'importer le fichier MIDI/KAR : " + ex.Message);
+                _ = error.Run(); error.Destroy();
+            }
+        }
+
+        private void ImportSelectedMidiTracks(MidiFile midi, List<TrackChunk> tracks, List<int> selectedTracks, string title) {
+            if (midi.TimeDivision is not TicksPerQuarterNoteTimeDivision tpq) {
+                throw new NotSupportedException("Les fichiers MIDI en division SMPTE ne sont pas pris en charge ; utilisez une division en ticks par noire.");
+            }
+
+            long ticksPerQuarter = tpq.TicksPerQuarterNote;
+            TimeSignatureEvent? tsEvent = tracks.SelectMany(t => t.Events).OfType<TimeSignatureEvent>().FirstOrDefault();
+            int numerator = tsEvent?.Numerator ?? 4;
+            int denominator = tsEvent?.Denominator ?? 4;
+            if (numerator <= 0 || denominator <= 0) { numerator = 4; denominator = 4; }
+            Model.TimeSignature timeSignature = new(numerator, denominator);
+            double measureTicks = ticksPerQuarter * 4.0 * numerator / denominator;
+            if (measureTicks <= 0) {
+                throw new InvalidDataException("Signature rythmique MIDI invalide.");
+            }
+
+            // Deux jeux de notes distincts : les pistes choisies pour la transcription,
+            // et toutes les pistes pour l'analyse harmonique.
+            List<(long Start, long End, int Pitch, int Track)> importedNotes = new();
+            List<(long Start, long End, int Pitch, int Track)> allMidiNotes = new();
+            List<(long Time, string Text)> lyrics = new();
+            for (int trackIndex = 0; trackIndex < tracks.Count; trackIndex++) {
+                TrackChunk track = tracks[trackIndex];
+                foreach (Note note in track.GetNotes()) {
+                    long start = Math.Max(0, note.Time);
+                    long end = Math.Max(start + 1, note.Time + note.Length);
+                    int pitch = (int)(byte)note.NoteNumber;
+                    allMidiNotes.Add((start, end, pitch, trackIndex));
+                    if (selectedTracks.Contains(trackIndex)) {
+                        importedNotes.Add((start, end, pitch, selectedTracks.IndexOf(trackIndex)));
+                    }
+                }
+                // Les événements texte/lyrics sont horodatés en cumulant les DeltaTime de la piste.
+                long absoluteTime = 0;
+                foreach (MidiEvent ev in track.Events) {
+                    absoluteTime += ev.DeltaTime;
+                    if (ev is LyricEvent lyric && !string.IsNullOrWhiteSpace(lyric.Text)) {
+                        lyrics.Add((absoluteTime, lyric.Text.Trim()));
+                    }
+                }
+            }
+            if (importedNotes.Count == 0) {
+                throw new InvalidDataException("Les pistes sélectionnées ne contiennent aucune note.");
+            }
+
+            long lastNoteEnd = importedNotes.Max(n => n.End);
+            long lastLyricTime = lyrics.Count == 0 ? 0 : lyrics.Max(l => l.Time);
+            int noteMeasureCount = (int)Math.Ceiling(lastNoteEnd / measureTicks);
+            int lyricMeasureCount = lyrics.Count == 0 ? 1 : (int)Math.Floor(lastLyricTime / measureTicks) + 1;
+            int measureCount = Math.Max(1, Math.Max(noteMeasureCount, lyricMeasureCount));
+            Song song = new();
+            song.Title = title;
+            song.SongSettings.StaffsSettings.Staffs.Clear();
+            foreach (int sourceIndex in selectedTracks) {
+                
+                string? name = tracks[sourceIndex].Events.OfType<SequenceTrackNameEvent>().FirstOrDefault()?.Text;
+                song.SongSettings.StaffsSettings.Staffs.Add(new StaffSettings(
+                    string.IsNullOrWhiteSpace(name) ? $"Piste {sourceIndex + 1}" : name,
+                    _userSettings.MidiInputDefaultVoice, Constants.MelodyBaseOctave));
+            }
+
+            SegmentData segment = new(0, song.SongSettings, new List<MeasureData>());
+            for (int measureIndex = 0; measureIndex < measureCount; measureIndex++) {
+                List<MeasureGlobalMelody> staffs = new();
+                for (int staffIndex = 0; staffIndex < selectedTracks.Count; staffIndex++) {
+                    List<MelodyChord> melody = importedNotes
+                        .Where(n => n.Track == staffIndex && n.Start >= measureIndex * measureTicks && n.Start < (measureIndex + 1) * measureTicks)
+                        .GroupBy(n => (long)Math.Round(n.Start / (ticksPerQuarter / 4.0)))
+                        .OrderBy(g => g.Key)
+                        .Select(g => new MelodyChord(g.Select(n => Pitch.FromMidi(Math.Clamp(n.Pitch, 0, 127)))
+                            .GroupBy(p => p.ToMidiNoteNumber()).Select(pg => pg.First()).OrderBy(p => p.ToMidiNoteNumber()).ToList()))
+                        .ToList();
+                    MeasureGlobalMelody global = new(staffIndex);
+                    global.Melody = new MeasureMelody(staffIndex, melody);
+                    global.Pattern = BuildQuantizedPattern(staffIndex, timeSignature, importedNotes
+                        .Where(n => n.Track == staffIndex).OrderBy(n => n.Start).ToList(),
+                        measureIndex * measureTicks, ticksPerQuarter);
+                    staffs.Add(global);
+                }
+                string measureLyrics = string.Join(" ", lyrics.Where(l => l.Time >= measureIndex * measureTicks && l.Time < (measureIndex + 1) * measureTicks)
+                    .OrderBy(l => l.Time).Select(l => l.Text));
+                ChordSequence chordSequence = new();
+                chordSequence.InitializeFromTimeSignature(timeSignature);
+                MeasureData measure = new(measureIndex, song.SongSettings, timeSignature, new KeySignature(),
+                    chordSequence, staffs, measureLyrics);
+                // Calcul harmonique effectué à l'import uniquement : un accord par temps à partir
+                // des classes de hauteur présentes dans la fenêtre du temps.
+                CalculateMeasureChords(measure, allMidiNotes, measureIndex, measureTicks, ticksPerQuarter);
+                segment.Measures.Add(measure);
+            }
+            for (int i = 0; i < segment.Measures.Count; i++) {
+                if (i > 0) {
+                    segment.Measures[i].PrecedingMeasure = segment.Measures[i - 1];
+                }
+
+                if (i + 1 < segment.Measures.Count) {
+                    segment.Measures[i].FollowingMeasure = segment.Measures[i + 1];
+                }
+            }
+            song.Segments.Clear(); song.Segments.Add(segment);
+            _currentSong = song;
+            _globalSegmentEditor.SetSong(song);
+        }
+
+        // Quantification sur une grille de double-croches (1/16 de ronde, soit 1/4 de temps noire).
+        private static MeasureRhythmPattern BuildQuantizedPattern(int staffIndex, Model.TimeSignature ts,
+            List<(long Start, long End, int Pitch, int Track)> notes, double measureStart, long ticksPerQuarter) {
+            MeasureRhythmPattern pattern = new(staffIndex, ts);
+            int beatCount = ts.GetBeatCount();
+            RhythmRationalDuration beatDuration = ts.GetBeatDuration().ApplyDots();
+            double beatTicks = ticksPerQuarter * 4.0 * beatDuration.Numerator / beatDuration.Denominator;
+            double gridTicks = ticksPerQuarter / 4.0;
+            for (int beat = 0; beat < beatCount; beat++) {
+                double beatStart = measureStart + beat * beatTicks;
+                double beatEnd = beatStart + beatTicks;
+                List<IRhythmElement> elements = new();
+                double cursor = beatStart;
+                // Les notes simultanées sont regroupées. Une note qui traverse une
+                // frontière de temps est prolongée par une liaison (sans nouvelle attaque).
+                IOrderedEnumerable<IGrouping<long, (long Start, long End, int Pitch, int Track)>> noteGroups = notes.Where(n => n.Start < beatEnd && n.End > beatStart)
+                    .GroupBy(n => (long)Math.Round(n.Start / gridTicks)).OrderBy(g => g.Key);
+                foreach (IGrouping<long, (long Start, long End, int Pitch, int Track)> group in noteGroups) {
+                    double rawStart = group.Min(n => n.Start);
+                    double rawEnd = group.Max(n => n.End);
+                    // Une note située juste avant la fin du temps peut être arrondie
+                    // exactement sur beatEnd. Dans ce cas, start + gridTicks dépasse
+                    // beatEnd et Math.Clamp lève une ArgumentException (min > max).
+                    // On réserve donc au départ de note au moins une cellule de grille.
+                    double effectiveGridTicks = Math.Min(gridTicks, beatEnd - beatStart);
+                    double latestStart = beatEnd - effectiveGridTicks;
+                    double snappedStart = rawStart < beatStart ? beatStart :
+                        Math.Round((rawStart - measureStart) / gridTicks) * gridTicks + measureStart;
+                    double start = Math.Clamp(snappedStart, beatStart, latestStart);
+                    double snappedEnd = Math.Round((rawEnd - measureStart) / gridTicks) * gridTicks + measureStart;
+                    double end = Math.Clamp(snappedEnd, start + effectiveGridTicks, beatEnd);
+                    if (start > cursor + 0.5) {
+                        AddQuantizedDuration(elements, start - cursor, ticksPerQuarter, false);
+                    }
+
+                    double noteStart = Math.Max(start, cursor);
+                    if (end > noteStart + 0.5) {
+                        AddQuantizedDuration(elements, end - noteStart, ticksPerQuarter, true);
+                    }
+
+                    cursor = Math.Max(cursor, end);
+                    if (rawEnd > beatEnd + 0.5 && elements.Count > 0) {
+                        elements.Add(new RhythmTieFrom());
+                    }
+                }
+                if (cursor < beatEnd - 0.5) {
+                    AddQuantizedDuration(elements, beatEnd - cursor, ticksPerQuarter, false);
+                }
+
+                if (elements.Count == 0) {
+                    elements.Add(new RhythmSimpleElement(ts.GetBeatDuration(), true));
+                }
+
+                pattern.SetBeat(beat, new BeatPattern(elements));
+            }
+            return pattern;
+        }
+
+        private static void AddQuantizedDuration(List<IRhythmElement> elements, double ticks, long ticksPerQuarter, bool isNote) {
+            // Convertit les durées quantifiées en fractions binaires reconnues par le modèle.
+            int sixteenths = Math.Max(1, (int)Math.Round(ticks / (ticksPerQuarter / 4.0)));
+            while (sixteenths > 0) {
+                int part = sixteenths >= 4 ? 4 : sixteenths >= 2 ? 2 : 1;
+                int denominator = part == 4 ? 4 : part == 2 ? 8 : 16;
+                elements.Add(new RhythmSimpleElement(new RhythmRationalDuration(1, denominator, 0), !isNote));
+                sixteenths -= part;
+                // Les segments supplémentaires d'une même note sont liés : ils ne
+                // créent donc pas de nouvelle attaque dans le modèle mélodique.
+                if (isNote && sixteenths > 0) {
+                    elements.Add(new RhythmTieFrom());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Déduit les accords de toutes les pistes MIDI, indépendamment des pistes
+        /// sélectionnées pour la transcription. Les pistes aiguës essentiellement
+        /// monophoniques sont considérées comme probablement mélodiques ; les basses
+        /// monophoniques sont conservées car elles apportent une information harmonique.
+        /// </summary>
+        private static void CalculateMeasureChords(MeasureData measure,
+            List<(long Start, long End, int Pitch, int Track)> allNotes, int measureIndex,
+            double measureTicks, long ticksPerQuarter) {
+            if (allNotes.Count == 0) {
+                return;
+            }
+
+            List<(long Start, long End, int Pitch, int Track)> harmonicNotes =
+                SelectHarmonicAnalysisNotes(allNotes);
+            if (harmonicNotes.Count == 0) {
+                harmonicNotes = allNotes;
+            }
+
+            RhythmRationalDuration beatDuration = measure.TimeSignature.GetBeatDuration().ApplyDots();
+            double beatTicks = ticksPerQuarter * 4.0 * beatDuration.Numerator / beatDuration.Denominator;
+            int beatCount = measure.TimeSignature.GetBeatCount();
+            double measureStart = measureIndex * measureTicks;
+            double measureEnd = measureStart + measureTicks;
+            List<(long Start, long End, int Pitch, int Track)> notesInMeasure = harmonicNotes
+                .Where(n => n.Start < measureEnd && n.End > measureStart).ToList();
+            if (notesInMeasure.Count == 0) {
+                return;
+            }
+
+            for (int beat = 0; beat < beatCount; beat++) {
+                double beatStart = measureStart + beat * beatTicks;
+                double beatEnd = beatStart + beatTicks;
+                // L'accord est estimé à partir du temps courant et du contexte de la mesure.
+                // Le temps courant pèse davantage ; le contexte aide pour les arpèges.
+                Dictionary<int, double> weights = new();
+                foreach ((long Start, long End, int Pitch, int Track) note in notesInMeasure) {
+                    double overlapBeat = Math.Max(0, Math.Min(note.End, beatEnd) - Math.Max(note.Start, beatStart));
+                    double overlapMeasure = Math.Max(0, Math.Min(note.End, measureEnd) - Math.Max(note.Start, measureStart));
+                    if (overlapMeasure <= 0) {
+                        continue;
+                    }
+
+                    int pc = ((note.Pitch % 12) + 12) % 12;
+                    double weight = overlapBeat * 2.0 + overlapMeasure * 0.20;
+                    weights[pc] = weights.GetValueOrDefault(pc) + weight;
+                }
+
+                if (weights.Count == 0) {
+                    continue;
+                }
+
+                double maxWeight = weights.Values.Max();
+                if (maxWeight <= 0) {
+                    continue;
+                }
+
+                (int Root, ChordType Type, double Score) best = (-1, ChordType.NoneOrMajor, double.NegativeInfinity);
+                for (int root = 0; root < 12; root++) {
+                    EvaluateChord(root, ChordType.NoneOrMajor, new[] { root, (root + 4) % 12, (root + 7) % 12 });
+                    EvaluateChord(root, ChordType.Minor, new[] { root, (root + 3) % 12, (root + 7) % 12 });
+                }
+
+                // Ne pas inventer un accord si moins de deux notes de l'accord sont
+                // réellement présentes dans la matière musicale de la mesure.
+                if (best.Root < 0) {
+                    continue;
+                }
+
+                Pitch rootPitch = Pitch.FromMidi(60 + best.Root);
+                measure.ChordSequence.ChordBeats[beat].Chords.Add(
+                    new EZSong.Model.Chord(false, measure.TimeSignature.GetBeatDuration(),
+                        rootPitch.Note, rootPitch.Alteration, best.Type));
+
+                void EvaluateChord(int root, ChordType type, int[] tones) {
+                    int matches = tones.Count(pc => weights.GetValueOrDefault(pc) > 0);
+                    if (matches < 2) {
+                        return;
+                    }
+
+                    double chordWeight = tones.Sum(pc => weights.GetValueOrDefault(pc));
+                    double totalWeight = weights.Values.Sum();
+                    double coverage = chordWeight / Math.Max(1.0, totalWeight);
+                    double rootBonus = weights.GetValueOrDefault(root) / Math.Max(1.0, maxWeight);
+                    // Favorise les accords qui expliquent plusieurs notes, avec un léger
+                    // avantage à la fondamentale sans imposer sa présence.
+                    double score = coverage * 100.0 + matches * 8.0 + rootBonus * 5.0;
+                    if (score > best.Score) {
+                        best = (root, type, score);
+                    }
+                }
+            }
+        }
+
+        private static List<(long Start, long End, int Pitch, int Track)> SelectHarmonicAnalysisNotes(
+            List<(long Start, long End, int Pitch, int Track)> allNotes) {
+            List<(long Start, long End, int Pitch, int Track)> selected = new();
+            foreach (IGrouping<int, (long Start, long End, int Pitch, int Track)> trackGroup in allNotes.GroupBy(n => n.Track)) {
+                List<(long Start, long End, int Pitch, int Track)> trackNotes = trackGroup.OrderBy(n => n.Start).ToList();
+                if (trackNotes.Count == 0) {
+                    continue;
+                }
+
+                int medianPitch = trackNotes.Select(n => n.Pitch).OrderBy(p => p).ElementAt(trackNotes.Count / 2);
+                int pitchRange = trackNotes.Max(n => n.Pitch) - trackNotes.Min(n => n.Pitch);
+                int overlappingNotes = 0;
+                for (int i = 0; i < trackNotes.Count; i++) {
+                    bool overlapsAnother = false;
+                    for (int j = 0; j < trackNotes.Count; j++) {
+                        if (i != j && trackNotes[j].Start < trackNotes[i].End && trackNotes[j].End > trackNotes[i].Start) {
+                            overlapsAnother = true;
+                            break;
+                        }
+                    }
+                    if (overlapsAnother) {
+                        overlappingNotes++;
+                    }
+                }
+                double polyphonyRatio = (double)overlappingNotes / trackNotes.Count;
+
+                // Exclusion prudente : seulement les pistes aiguës, quasi monophoniques,
+                // avec une tessiture étendue sont classées comme mélodies probables.
+                // Les pistes graves restent incluses même si elles sont monophoniques.
+                bool likelyMelody = medianPitch >= 60 && pitchRange >= 12 && polyphonyRatio < 0.08 && trackNotes.Count >= 5;
+                if (!likelyMelody) {
+                    selected.AddRange(trackNotes);
+                }
+            }
+            return selected;
         }
 
         /// <summary>
