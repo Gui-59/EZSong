@@ -294,7 +294,8 @@ namespace EZSong.UI {
 
         /// <summary>
         /// Initialise un projet à partir d'un fichier MIDI/KAR. Les pistes mélodiques sont
-        /// choisies graphiquement (une ou deux), puis les notes sont quantifiées au 1/16.
+        /// choisies graphiquement (une ou deux), puis les notes sont quantifiées sur une
+        /// grille adaptée au contenu (1/4, 1/8 ou 1/16 de ronde).
         /// Les accords sont calculés une seule fois pendant l'import et les paroles KAR
         /// sont réparties dans les mesures selon leur horodatage MIDI.
         /// </summary>
@@ -374,7 +375,7 @@ namespace EZSong.UI {
 
                 Console.WriteLine("MIDI 4 : début de l'import des pistes");
 
-                ImportSelectedMidiTracks(midi, tracks, selected, System.IO.Path.GetFileNameWithoutExtension(fileName));
+                int gridSubdivision = ImportSelectedMidiTracks(midi, tracks, selected, System.IO.Path.GetFileNameWithoutExtension(fileName));
 
                 Console.WriteLine("MIDI 5 : fin de l'import des pistes");
 
@@ -387,7 +388,8 @@ namespace EZSong.UI {
 
                 Console.WriteLine("MIDI 7 : actualisation terminée");
 
-                _ = _statusBar.Push(_statusBarContextId, $"Import MIDI terminé : {selected.Count} portée(s).");
+                _ = _statusBar.Push(_statusBarContextId,
+                    $"Import MIDI terminé : {selected.Count} portée(s), grille 1/{gridSubdivision * 4}.");
             } catch (Exception ex) {
                 MessageDialog error = new(this, DialogFlags.Modal, MessageType.Error, ButtonsType.Close,
                     "Impossible d'importer le fichier MIDI/KAR : " + ex.Message);
@@ -395,36 +397,33 @@ namespace EZSong.UI {
             }
         }
 
-        private void ImportSelectedMidiTracks(MidiFile midi, List<TrackChunk> tracks, List<int> selectedTracks, string title) {
+        private int ImportSelectedMidiTracks(MidiFile midi, List<TrackChunk> tracks, List<int> selectedTracks, string title) {
             if (midi.TimeDivision is not TicksPerQuarterNoteTimeDivision tpq) {
                 throw new NotSupportedException("Les fichiers MIDI en division SMPTE ne sont pas pris en charge ; utilisez une division en ticks par noire.");
             }
 
             long ticksPerQuarter = tpq.TicksPerQuarterNote;
-            TimeSignatureEvent? tsEvent = tracks.SelectMany(t => t.Events).OfType<TimeSignatureEvent>().FirstOrDefault();
-            int numerator = tsEvent?.Numerator ?? 4;
-            int denominator = tsEvent?.Denominator ?? 4;
-            if (numerator <= 0 || denominator <= 0) { numerator = 4; denominator = 4; }
-            Model.TimeSignature timeSignature = new(numerator, denominator);
-            double measureTicks = ticksPerQuarter * 4.0 * numerator / denominator;
-            if (measureTicks <= 0) {
-                throw new InvalidDataException("Signature rythmique MIDI invalide.");
-            }
+            List<MidiQuantizer.TimeSignatureChange> timeSignatureChanges = ReadTimeSignatureChanges(tracks);
+            Model.TimeSignature defaultTimeSignature = GetInitialTimeSignature(timeSignatureChanges);
 
             // Deux jeux de notes distincts : les pistes choisies pour la transcription,
             // et toutes les pistes pour l'analyse harmonique.
-            List<(long Start, long End, int Pitch, int Track)> importedNotes = new();
+            List<MidiQuantizer.Note>[] staffNotes = new List<MidiQuantizer.Note>[selectedTracks.Count];
+            for (int i = 0; i < staffNotes.Length; i++) {
+                staffNotes[i] = new List<MidiQuantizer.Note>();
+            }
             List<(long Start, long End, int Pitch, int Track)> allMidiNotes = new();
             List<(long Time, string Text)> lyrics = new();
             for (int trackIndex = 0; trackIndex < tracks.Count; trackIndex++) {
                 TrackChunk track = tracks[trackIndex];
+                int staffIndex = selectedTracks.IndexOf(trackIndex);
                 foreach (Note note in track.GetNotes()) {
                     long start = Math.Max(0, note.Time);
                     long end = Math.Max(start + 1, note.Time + note.Length);
                     int pitch = (int)(byte)note.NoteNumber;
                     allMidiNotes.Add((start, end, pitch, trackIndex));
-                    if (selectedTracks.Contains(trackIndex)) {
-                        importedNotes.Add((start, end, pitch, selectedTracks.IndexOf(trackIndex)));
+                    if (staffIndex >= 0) {
+                        staffNotes[staffIndex].Add(new MidiQuantizer.Note(start, end, pitch));
                     }
                 }
                 // Les événements texte/lyrics sont horodatés en cumulant les DeltaTime de la piste.
@@ -436,15 +435,33 @@ namespace EZSong.UI {
                     }
                 }
             }
-            if (importedNotes.Count == 0) {
+            if (staffNotes.All(notes => notes.Count == 0)) {
                 throw new InvalidDataException("Les pistes sélectionnées ne contiennent aucune note.");
             }
 
-            long lastNoteEnd = importedNotes.Max(n => n.End);
-            long lastLyricTime = lyrics.Count == 0 ? 0 : lyrics.Max(l => l.Time);
-            int noteMeasureCount = (int)Math.Ceiling(lastNoteEnd / measureTicks);
-            int lyricMeasureCount = lyrics.Count == 0 ? 1 : (int)Math.Floor(lastLyricTime / measureTicks) + 1;
-            int measureCount = Math.Max(1, Math.Max(noteMeasureCount, lyricMeasureCount));
+            List<MidiQuantizer.Note> importedNotes = staffNotes.SelectMany(notes => notes).ToList();
+            IEnumerable<Model.TimeSignature> timeSignatures = timeSignatureChanges
+                .Select(change => new Model.TimeSignature(change.Beats, change.BeatUnit))
+                .Append(defaultTimeSignature)
+                .DistinctBy(timeSignature => (timeSignature.Beats, timeSignature.BeatUnit));
+            // La grille est choisie une seule fois pour toutes les portées afin que
+            // les deux voix restent alignées.
+            int gridSubdivision = MidiQuantizer.ChooseGridSubdivision(importedNotes, ticksPerQuarter, timeSignatures);
+            MidiQuantizer.StaffQuantization[] staffQuantizations = staffNotes
+                .Select(notes => MidiQuantizer.Quantize(notes, ticksPerQuarter, gridSubdivision))
+                .ToArray();
+
+            // Les mesures couvrent la dernière note quantifiée (qui peut dépasser
+            // légèrement la dernière note brute) et le dernier événement de paroles.
+            double lastNoteTick = staffQuantizations
+                .SelectMany(quantization => quantization.Notes
+                    .Select(note => note.EndUnit * quantization.GridTicks))
+                .DefaultIfEmpty(0)
+                .Max();
+            double lastLyricTick = lyrics.Count == 0 ? 0 : lyrics.Max(lyric => lyric.Time) + 1;
+            List<MidiQuantizer.MeasureSpan> measureSpans = MidiQuantizer.BuildMeasureSpans(
+                timeSignatureChanges, Math.Max(lastNoteTick, lastLyricTick), ticksPerQuarter, defaultTimeSignature);
+
             Song song = new();
             song.Title = title;
             song.SongSettings.StaffsSettings.Staffs.Clear();
@@ -457,32 +474,24 @@ namespace EZSong.UI {
             }
 
             SegmentData segment = new(0, song.SongSettings, new List<MeasureData>());
-            for (int measureIndex = 0; measureIndex < measureCount; measureIndex++) {
+            for (int measureIndex = 0; measureIndex < measureSpans.Count; measureIndex++) {
+                MidiQuantizer.MeasureSpan span = measureSpans[measureIndex];
                 List<MeasureGlobalMelody> staffs = new();
                 for (int staffIndex = 0; staffIndex < selectedTracks.Count; staffIndex++) {
-                    List<MelodyChord> melody = importedNotes
-                        .Where(n => n.Track == staffIndex && n.Start >= measureIndex * measureTicks && n.Start < (measureIndex + 1) * measureTicks)
-                        .GroupBy(n => (long)Math.Round(n.Start / (ticksPerQuarter / 4.0)))
-                        .OrderBy(g => g.Key)
-                        .Select(g => new MelodyChord(g.Select(n => Pitch.FromMidi(Math.Clamp(n.Pitch, 0, 127)))
-                            .GroupBy(p => p.ToMidiNoteNumber()).Select(pg => pg.First()).OrderBy(p => p.ToMidiNoteNumber()).ToList()))
-                        .ToList();
                     MeasureGlobalMelody global = new(staffIndex);
-                    global.Melody = new MeasureMelody(staffIndex, melody);
-                    global.Pattern = BuildQuantizedPattern(staffIndex, timeSignature, importedNotes
-                        .Where(n => n.Track == staffIndex).OrderBy(n => n.Start).ToList(),
-                        measureIndex * measureTicks, ticksPerQuarter);
+                    global.Melody = new MeasureMelody(staffIndex, staffQuantizations[staffIndex].BuildMelody(span));
+                    global.Pattern = staffQuantizations[staffIndex].BuildPattern(staffIndex, span);
                     staffs.Add(global);
                 }
-                string measureLyrics = string.Join(" ", lyrics.Where(l => l.Time >= measureIndex * measureTicks && l.Time < (measureIndex + 1) * measureTicks)
-                    .OrderBy(l => l.Time).Select(l => l.Text));
+                string measureLyrics = string.Join(" ", lyrics.Where(lyric => span.Contains(lyric.Time))
+                    .OrderBy(lyric => lyric.Time).Select(lyric => lyric.Text));
                 ChordSequence chordSequence = new();
-                chordSequence.InitializeFromTimeSignature(timeSignature);
-                MeasureData measure = new(measureIndex, song.SongSettings, timeSignature, new KeySignature(),
+                chordSequence.InitializeFromTimeSignature(span.TimeSignature);
+                MeasureData measure = new(measureIndex, song.SongSettings, span.TimeSignature, new KeySignature(),
                     chordSequence, staffs, measureLyrics);
                 // Calcul harmonique effectué à l'import uniquement : un accord par temps à partir
                 // des classes de hauteur présentes dans la fenêtre du temps.
-                CalculateMeasureChords(measure, allMidiNotes, measureIndex, measureTicks, ticksPerQuarter);
+                CalculateMeasureChords(measure, allMidiNotes, span.StartTicks, span.DurationTicks, ticksPerQuarter);
                 segment.Measures.Add(measure);
             }
             for (int i = 0; i < segment.Measures.Count; i++) {
@@ -497,80 +506,38 @@ namespace EZSong.UI {
             song.Segments.Clear(); song.Segments.Add(segment);
             _currentSong = song;
             _globalSegmentEditor.SetSong(song);
+            return gridSubdivision;
         }
 
-        // Quantification sur une grille de double-croches (1/16 de ronde, soit 1/4 de temps noire).
-        private static MeasureRhythmPattern BuildQuantizedPattern(int staffIndex, Model.TimeSignature ts,
-            List<(long Start, long End, int Pitch, int Track)> notes, double measureStart, long ticksPerQuarter) {
-            MeasureRhythmPattern pattern = new(staffIndex, ts);
-            int beatCount = ts.GetBeatCount();
-            RhythmRationalDuration beatDuration = ts.GetBeatDuration().ApplyDots();
-            double beatTicks = ticksPerQuarter * 4.0 * beatDuration.Numerator / beatDuration.Denominator;
-            double gridTicks = ticksPerQuarter / 4.0;
-            for (int beat = 0; beat < beatCount; beat++) {
-                double beatStart = measureStart + beat * beatTicks;
-                double beatEnd = beatStart + beatTicks;
-                List<IRhythmElement> elements = new();
-                double cursor = beatStart;
-                // Les notes simultanées sont regroupées. Une note qui traverse une
-                // frontière de temps est prolongée par une liaison (sans nouvelle attaque).
-                IOrderedEnumerable<IGrouping<long, (long Start, long End, int Pitch, int Track)>> noteGroups = notes.Where(n => n.Start < beatEnd && n.End > beatStart)
-                    .GroupBy(n => (long)Math.Round(n.Start / gridTicks)).OrderBy(g => g.Key);
-                foreach (IGrouping<long, (long Start, long End, int Pitch, int Track)> group in noteGroups) {
-                    double rawStart = group.Min(n => n.Start);
-                    double rawEnd = group.Max(n => n.End);
-                    // Une note située juste avant la fin du temps peut être arrondie
-                    // exactement sur beatEnd. Dans ce cas, start + gridTicks dépasse
-                    // beatEnd et Math.Clamp lève une ArgumentException (min > max).
-                    // On réserve donc au départ de note au moins une cellule de grille.
-                    double effectiveGridTicks = Math.Min(gridTicks, beatEnd - beatStart);
-                    double latestStart = beatEnd - effectiveGridTicks;
-                    double snappedStart = rawStart < beatStart ? beatStart :
-                        Math.Round((rawStart - measureStart) / gridTicks) * gridTicks + measureStart;
-                    double start = Math.Clamp(snappedStart, beatStart, latestStart);
-                    double snappedEnd = Math.Round((rawEnd - measureStart) / gridTicks) * gridTicks + measureStart;
-                    double end = Math.Clamp(snappedEnd, start + effectiveGridTicks, beatEnd);
-                    if (start > cursor + 0.5) {
-                        AddQuantizedDuration(elements, start - cursor, ticksPerQuarter, false);
-                    }
-
-                    double noteStart = Math.Max(start, cursor);
-                    if (end > noteStart + 0.5) {
-                        AddQuantizedDuration(elements, end - noteStart, ticksPerQuarter, true);
-                    }
-
-                    cursor = Math.Max(cursor, end);
-                    if (rawEnd > beatEnd + 0.5 && elements.Count > 0) {
-                        elements.Add(new RhythmTieFrom());
+        /// <summary>
+        /// Lit les changements de signature rythmique avec leur date absolue en ticks.
+        /// </summary>
+        private static List<MidiQuantizer.TimeSignatureChange> ReadTimeSignatureChanges(List<TrackChunk> tracks) {
+            List<MidiQuantizer.TimeSignatureChange> changes = new();
+            foreach (TrackChunk track in tracks) {
+                long absoluteTime = 0;
+                foreach (MidiEvent ev in track.Events) {
+                    absoluteTime += ev.DeltaTime;
+                    if (ev is TimeSignatureEvent timeSignature && timeSignature.Numerator > 0 && timeSignature.Denominator > 0) {
+                        changes.Add(new MidiQuantizer.TimeSignatureChange(
+                            absoluteTime, timeSignature.Numerator, timeSignature.Denominator));
                     }
                 }
-                if (cursor < beatEnd - 0.5) {
-                    AddQuantizedDuration(elements, beatEnd - cursor, ticksPerQuarter, false);
-                }
-
-                if (elements.Count == 0) {
-                    elements.Add(new RhythmSimpleElement(ts.GetBeatDuration(), true));
-                }
-
-                pattern.SetBeat(beat, new BeatPattern(elements));
             }
-            return pattern;
+            return changes;
         }
 
-        private static void AddQuantizedDuration(List<IRhythmElement> elements, double ticks, long ticksPerQuarter, bool isNote) {
-            // Convertit les durées quantifiées en fractions binaires reconnues par le modèle.
-            int sixteenths = Math.Max(1, (int)Math.Round(ticks / (ticksPerQuarter / 4.0)));
-            while (sixteenths > 0) {
-                int part = sixteenths >= 4 ? 4 : sixteenths >= 2 ? 2 : 1;
-                int denominator = part == 4 ? 4 : part == 2 ? 8 : 16;
-                elements.Add(new RhythmSimpleElement(new RhythmRationalDuration(1, denominator, 0), !isNote));
-                sixteenths -= part;
-                // Les segments supplémentaires d'une même note sont liés : ils ne
-                // créent donc pas de nouvelle attaque dans le modèle mélodique.
-                if (isNote && sixteenths > 0) {
-                    elements.Add(new RhythmTieFrom());
-                }
-            }
+        /// <summary>
+        /// Retourne la signature rythmique en vigueur au début du fichier (4/4 par défaut).
+        /// </summary>
+        private static Model.TimeSignature GetInitialTimeSignature(List<MidiQuantizer.TimeSignatureChange> changes) {
+            MidiQuantizer.TimeSignatureChange initial = changes
+                .Where(change => change.Time <= 0)
+                .OrderBy(change => change.Time)
+                .FirstOrDefault();
+            return initial.Beats > 0 && initial.BeatUnit > 0
+                ? new Model.TimeSignature(initial.Beats, initial.BeatUnit)
+                : new Model.TimeSignature(4, 4);
         }
 
         /// <summary>
@@ -580,7 +547,7 @@ namespace EZSong.UI {
         /// monophoniques sont conservées car elles apportent une information harmonique.
         /// </summary>
         private static void CalculateMeasureChords(MeasureData measure,
-            List<(long Start, long End, int Pitch, int Track)> allNotes, int measureIndex,
+            List<(long Start, long End, int Pitch, int Track)> allNotes, double measureStart,
             double measureTicks, long ticksPerQuarter) {
             if (allNotes.Count == 0) {
                 return;
@@ -595,7 +562,6 @@ namespace EZSong.UI {
             RhythmRationalDuration beatDuration = measure.TimeSignature.GetBeatDuration().ApplyDots();
             double beatTicks = ticksPerQuarter * 4.0 * beatDuration.Numerator / beatDuration.Denominator;
             int beatCount = measure.TimeSignature.GetBeatCount();
-            double measureStart = measureIndex * measureTicks;
             double measureEnd = measureStart + measureTicks;
             List<(long Start, long End, int Pitch, int Track)> notesInMeasure = harmonicNotes
                 .Where(n => n.Start < measureEnd && n.End > measureStart).ToList();
