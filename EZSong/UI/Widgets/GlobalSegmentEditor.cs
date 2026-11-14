@@ -25,8 +25,16 @@ namespace EZSong.UI.Widgets {
             set {
                 _displayedSegmentIndex = value;
                 RefreshDisplayedSegment();
+                DisplayedSegmentChanged?.Invoke(value);
             }
         }
+
+        /// <summary>
+        /// Déclenché quand le segment affiché change, avec l'index du segment
+        /// nouvellement affiché. Permet au parent de mettre à jour ses
+        /// informations sans connaître l'origine du changement.
+        /// </summary>
+        internal event System.Action<int>? DisplayedSegmentChanged;
 
         private Song _currentSong;
         private UserSettings _userSettings;
@@ -115,8 +123,11 @@ namespace EZSong.UI.Widgets {
         /// </summary>
         /// <param name="currentSong"></param>
         internal void SetSong(Song currentSong) {
+            // Le champ doit suivre le morceau courant : les opérations de
+            // scission, d'insertion et de suppression passent par _currentSong.
+            _currentSong = currentSong;
             _globalMeasuresEditor1.SetSong(currentSong);
-            _globalMeasuresEditor2.SetSong(currentSong);    
+            _globalMeasuresEditor2.SetSong(currentSong);
         }
 
         /// <summary>
@@ -179,6 +190,31 @@ namespace EZSong.UI.Widgets {
             _currentSong.Segments[_displayedSegmentIndex].Measures.Insert(index, newMeasure);
             Reindex();
             Refresh();
+        }
+
+        /// <summary>
+        /// Scinde le segment actuellement affiché juste avant la mesure
+        /// spécifiée : les mesures à partir de celle-ci forment un nouveau
+        /// segment, inséré juste après, qui devient le segment affiché.
+        /// </summary>
+        /// <param name="measure">La première mesure du nouveau segment.</param>
+        internal void SplitSegmentBefore(MeasureData measure) {
+            SegmentData segment =
+                _currentSong.Segments[_displayedSegmentIndex];
+            int measureIndex = segment.Measures.IndexOf(measure);
+            int newSegmentIndex =
+                _currentSong.SplitSegmentBefore(
+                    _displayedSegmentIndex,
+                    measureIndex);
+
+            if (newSegmentIndex < 0) {
+                // Scission impossible : mesure inconnue ou première mesure.
+                return;
+            }
+
+            // Affiche la seconde partie pour que l'utilisateur voie
+            // immédiatement le résultat de la scission.
+            DisplayedSegmentIndex = newSegmentIndex;
         }
 
         /// <summary>

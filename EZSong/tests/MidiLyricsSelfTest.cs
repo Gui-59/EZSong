@@ -19,6 +19,7 @@ public static class MidiLyricsSelfTest {
         TestComplementaryTracksAreMerged();
         TestPlainTextFallback();
         TestKarSpacingPreservesWords();
+        TestKarLineMarkersCreateSpaces();
         TestWordsAreNotSplitAtBarLines();
         TestSentenceSpacing();
         TestAccentedLyricsArePreserved();
@@ -45,7 +46,7 @@ public static class MidiLyricsSelfTest {
             "The first KAR lyric should keep its absolute time.");
         Expect(lyrics[1].Time == 480 && lyrics[1].Text.Trim() == "lo",
             "Delta times should accumulate within the lyric track.");
-        Expect(lyrics[2].Time == 720 && lyrics[2].Text == "world",
+        Expect(lyrics[2].Time == 720 && lyrics[2].Text.Trim() == "world",
             "The '/' line marker should be stripped from the lyric.");
         Expect(MidiLyricsExtractor.Format(lyrics) == "Hello world",
             "The KAR spacing should keep the syllables of a word together.");
@@ -184,6 +185,46 @@ public static class MidiLyricsSelfTest {
             "A word should be dated by its first syllable.");
         Expect(words[4].Text == "POSTERS" && words[4].Time == 5,
             "Multi-syllable words should be rebuilt before measure assignment.");
+    }
+
+    private static void TestKarLineMarkersCreateSpaces() {
+        // KAR line breaks can be encoded either at the beginning of the first
+        // lyric of the next line or at the end of the last lyric. In both
+        // cases the two lines must stay separated by a space.
+        TrackChunk track = new(
+            new TextEvent("PREMIERE"),
+            new TextEvent("\\DEUXIEME ") { DeltaTime = 1 },
+            new TextEvent("LIGNE/") { DeltaTime = 1 },
+            new TextEvent("/TROISIEME ") { DeltaTime = 1 }
+        );
+
+        List<MidiLyricsExtractor.Lyric> lyrics = MidiLyricsExtractor.Extract(new[] { track });
+
+        Expect(MidiLyricsExtractor.Format(lyrics) == "PREMIERE DEUXIEME LIGNE TROISIEME",
+            "Leading and trailing KAR line markers must create spaces.");
+        Expect(lyrics.All(lyric => !lyric.Text.Contains('\\') && !lyric.Text.Contains('/')),
+            "KAR line markers must not leak into the lyrics.");
+
+        List<MidiLyricsExtractor.Lyric> words = MidiLyricsExtractor.GroupWords(lyrics);
+        Expect(words.Count == 4, "Each karaoke line break must create a word boundary.");
+
+        // A marker-only event is a line break as well.
+        TrackChunk markerOnly = new(
+            new TextEvent("PREMIERE"),
+            new TextEvent("\\") { DeltaTime = 1 },
+            new TextEvent("DEUXIEME") { DeltaTime = 1 }
+        );
+        Expect(MidiLyricsExtractor.Format(MidiLyricsExtractor.Extract(new[] { markerOnly }))
+            == "PREMIERE DEUXIEME",
+            "A marker-only event must separate the two lines.");
+
+        // A slash inside a word is not a KAR line marker.
+        TrackChunk internalSlash = new(
+            new TextEvent("rock/pop ")
+        );
+        Expect(MidiLyricsExtractor.Format(MidiLyricsExtractor.Extract(new[] { internalSlash }))
+            == "rock/pop",
+            "An internal slash must stay part of the word.");
     }
 
     private static void TestWordsAreNotSplitAtBarLines() {

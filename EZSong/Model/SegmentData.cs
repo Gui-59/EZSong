@@ -92,5 +92,19 @@ namespace EZSong.Model {
                 measure.AddOrRemoveStaffs(excpectedStaffCount);
             }
         }
+
+        /// <summary>
+        /// Renumérote les mesures du segment et reconstruit les liens entre
+        /// mesures consécutives (mesure précédente / suivante).
+        /// </summary>
+        internal void ReindexMeasures() {
+            for (int i = 0; i < Measures.Count; i++) {
+                Measures[i].Index = i + 1;
+                Measures[i].PrecedingMeasure =
+                    i > 0 ? Measures[i - 1] : null;
+                Measures[i].FollowingMeasure =
+                    i < Measures.Count - 1 ? Measures[i + 1] : null;
+            }
+        }
     }
 }

@@ -178,6 +178,13 @@ namespace EZSong.UI {
             // Mesures
             _globalSegmentEditor = new(_currentSong, _userSettings, _embeddedMidiSynth);
 
+            // Le numéro du segment affiché doit suivre tous les changements
+            // internes (navigation, scission, ...), pas seulement les
+            // commandes de navigation de la fenêtre principale.
+            _globalSegmentEditor.DisplayedSegmentChanged += (int segmentIndex) => {
+                RefreshDisplayedSegmentInfos();
+            };
+
             // Ajout de la page au Notebook (Contenu, Label de l'onglet)
             _ = tabs.AppendPage(_globalSegmentEditor, new Label("Transcription du segment (mesures)"));
 

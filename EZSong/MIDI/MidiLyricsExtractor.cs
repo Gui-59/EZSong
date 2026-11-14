@@ -86,12 +86,13 @@ namespace EZSong.MIDI {
                         continue;
                     }
 
-                    bool isKarLyric = trimmedContent.StartsWith('\\') || trimmedContent.StartsWith('/');
-                    string content = rawContent;
-                    if (isKarLyric) {
-                        // Drop the KAR line marker but keep the spacing that
-                        // follows it: it carries word boundaries.
-                        content = rawContent.TrimStart()[1..];
+                    bool startsNewLine = false;
+                    bool endsLine = false;
+                    string content = StripKarLineMarkers(rawContent, ref startsNewLine, ref endsLine);
+                    bool isKarLyric = startsNewLine || endsLine;
+                    if (startsNewLine &&
+                        (explicitLyrics.Count > 0 || plainLyrics.Count > 0)) {
+                        pendingLineBreak = true;
                     }
 
                     string text = CleanText(content);
@@ -105,6 +106,12 @@ namespace EZSong.MIDI {
                         explicitLyrics.Add(new Lyric(time, text));
                     } else {
                         plainLyrics.Add(new Lyric(time, text));
+                    }
+
+                    // Un marqueur en fin d'événement ferme la ligne : le
+                    // premier mot de la ligne suivante sera séparé par un espace.
+                    if (endsLine) {
+                        pendingLineBreak = true;
                     }
                 }
             }
@@ -129,6 +136,38 @@ namespace EZSong.MIDI {
             }
             combined = combined.OrderBy(lyric => lyric.Time).ToList();
             return new TrackLyrics(combined, true);
+        }
+
+        /// <summary>
+        /// Retire les marqueurs de ligne KAR d'un événement texte. Un '\' ou
+        /// un '/' en tête ouvre une nouvelle ligne, un marqueur en fin ferme
+        /// la ligne courante. Les deux doivent produire un espace pour que le
+        /// dernier mot d'une ligne et le premier de la suivante ne soient
+        /// jamais collés.
+        /// </summary>
+        private static string StripKarLineMarkers(string content, ref bool startsNewLine, ref bool endsLine) {
+            string result = content;
+
+            // Conserver les espaces significatifs autour du texte : ils
+            // délimitent les mots ("VE" + "CU " donne "VECU").
+            int first = 0;
+            while (first < result.Length && char.IsWhiteSpace(result[first])) {
+                first++;
+            }
+            if (first < result.Length && result[first] is '\\' or '/') {
+                startsNewLine = true;
+                result = result.Remove(first, 1);
+            }
+
+            int last = result.Length - 1;
+            while (last >= 0 && char.IsWhiteSpace(result[last])) {
+                last--;
+            }
+            if (last >= 0 && result[last] is '\\' or '/') {
+                endsLine = true;
+                result = result.Remove(last, 1);
+            }
+            return result;
         }
 
         private static string ApplyPendingLineBreak(string text, ref bool pendingLineBreak) {

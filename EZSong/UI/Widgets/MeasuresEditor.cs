@@ -171,22 +171,7 @@ namespace EZSong.UI.Widgets {
         /// Reindexes the measures in the current segment of the song,
         /// </summary>
         internal void Reindex() {
-
-            for (int i = 0; i < _song.Segments[_segmentIndex].Measures.Count; i++) {
-                _song.Segments[_segmentIndex].Measures[i].Index = i + 1;
-
-                if (i > 0) {
-                    _song.Segments[_segmentIndex].Measures[i].PrecedingMeasure = _song.Segments[_segmentIndex].Measures[i - 1];
-                } else {
-                    _song.Segments[_segmentIndex].Measures[i].PrecedingMeasure = null;
-                }
-
-                if (i < _song.Segments[_segmentIndex].Measures.Count - 1) {
-                    _song.Segments[_segmentIndex].Measures[i].FollowingMeasure = _song.Segments[_segmentIndex].Measures[i + 1];
-                } else {
-                    _song.Segments[_segmentIndex].Measures[i].FollowingMeasure = null;
-                }
-            }
+            _song.Segments[_segmentIndex].ReindexMeasures();
         }
 
         /// <summary>

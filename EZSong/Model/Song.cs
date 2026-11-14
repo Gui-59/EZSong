@@ -100,6 +100,53 @@ namespace EZSong.Model {
             SegmentData newSegement = new(Segments.Count, SongSettings);
             Segments.Add(newSegement);
         }
+
+        /// <summary>
+        /// Scinde un segment juste avant la mesure indiquée : les mesures à
+        /// partir de cet index forment un nouveau segment inséré juste après
+        /// le segment source. Les index des segments sont ensuite renumérotés
+        /// pour rester cohérents avec leur position dans la liste.
+        /// </summary>
+        /// <param name="segmentIndex">Index du segment à scinder.</param>
+        /// <param name="measureIndex">Index de la première mesure du nouveau segment.</param>
+        /// <returns>L'index du nouveau segment, ou -1 si la scission est impossible.</returns>
+        internal int SplitSegmentBefore(int segmentIndex, int measureIndex) {
+            if (segmentIndex < 0 || segmentIndex >= Segments.Count) {
+                return -1;
+            }
+
+            SegmentData segment = Segments[segmentIndex];
+
+            // La scission avant la première mesure (ou hors du segment)
+            // produirait un segment vide : on la refuse.
+            if (measureIndex <= 0 || measureIndex >= segment.Measures.Count) {
+                return -1;
+            }
+
+            List<MeasureData> movedMeasures =
+                segment.Measures.GetRange(measureIndex, segment.Measures.Count - measureIndex);
+            segment.Measures.RemoveRange(measureIndex, movedMeasures.Count);
+
+            SegmentData newSegment =
+                new(segmentIndex + 1, SongSettings, movedMeasures);
+            Segments.Insert(segmentIndex + 1, newSegment);
+
+            ReindexSegments();
+            segment.ReindexMeasures();
+            newSegment.ReindexMeasures();
+
+            return segmentIndex + 1;
+        }
+
+        /// <summary>
+        /// Renumérote les segments pour que leur index corresponde à leur
+        /// position dans la liste.
+        /// </summary>
+        private void ReindexSegments() {
+            for (int i = 0; i < Segments.Count; i++) {
+                Segments[i].Index = i;
+            }
+        }
     }
 
 }

@@ -302,6 +302,11 @@ namespace EZSong.UI.Widgets {
                 _globalSegmentEditor.InsertBefore(requestedMeasure);
             };
 
+            widget.SplitSegmentRequested += (MeasureData requestedMeasure) =>
+            {
+                _globalSegmentEditor.SplitSegmentBefore(requestedMeasure);
+            };
+
             widget.DeleteRequested += (MeasureData requestedMeasure) =>
             {
                 _globalSegmentEditor.Delete(requestedMeasure);

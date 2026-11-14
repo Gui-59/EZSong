@@ -43,6 +43,7 @@ namespace EZSong.UI.Widgets {
 
         public event System.Action<MeasureData>? InsertBeforeRequested;
         public event System.Action<MeasureData>? InsertAfterRequested;
+        public event System.Action<MeasureData>? SplitSegmentRequested;
         public event System.Action<MeasureData>? DeleteRequested;
 
         private SelectableValues _selectableValues = new();
@@ -133,6 +134,18 @@ namespace EZSong.UI.Widgets {
                 InsertAfterRequested?.Invoke(_measure);
             };
             buttonsBox.PackStart(addAfter, false, false, 0);
+
+            //Bouton de scission du segment juste avant cette mesure
+            Button splitSegment = new();
+            splitSegment.Label = "Scinder le segment avant"; //TODO : icone à la place du texte
+            splitSegment.TooltipText =
+                "Coupe le segment juste avant cette mesure : elle devient la première mesure d'un nouveau segment.";
+            // Scinder avant la première mesure créerait un segment vide.
+            splitSegment.Sensitive = _measure.Index > 1;
+            splitSegment.Clicked += (o, args) => {
+                SplitSegmentRequested?.Invoke(_measure);
+            };
+            buttonsBox.PackStart(splitSegment, false, false, 0);
 
             topBar.PackStart(buttonsBox, false, false, 0);
 
