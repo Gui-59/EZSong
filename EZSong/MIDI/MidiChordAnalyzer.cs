@@ -69,6 +69,14 @@ namespace EZSong.MIDI {
         };
 
         /// <summary>
+        /// Sous-ensemble d'accords "simples" (triades, 7e, sus, dim, aug, 6e)
+        /// pour une analyse moins détaillée (pas de 9e/11e/13e/add9).
+        /// </summary>
+        private static readonly ChordShape[] _simpleShapes = _shapes.Where(s =>
+            s.Type is not (ChordType.AddNinth or ChordType.Ninth or ChordType.MajorNinth
+                or ChordType.MinorNinth or ChordType.SixthNinth or ChordType.Ninth)).ToArray();
+
+        /// <summary>
         /// Analyse une fenêtre rythmique et renvoie l'accord qui explique le
         /// mieux les notes entendues, ou null si aucun accord n'est fiable.
         /// </summary>
@@ -86,7 +94,8 @@ namespace EZSong.MIDI {
             double beatEnd,
             double measureStart,
             double measureEnd,
-            DetectedChord? previous = null) {
+            DetectedChord? previous = null,
+            bool simpleOnly = false) {
 
             if (notes.Count == 0 ||
                 beatEnd <= beatStart ||
@@ -151,8 +160,9 @@ namespace EZSong.MIDI {
             DetectedChord? best = null;
             double bestScore = double.NegativeInfinity;
 
+            ChordShape[] shapes = simpleOnly ? _simpleShapes : _shapes;
             for (int root = 0; root < 12; root++) {
-                foreach (ChordShape shape in _shapes) {
+                foreach (ChordShape shape in shapes) {
                     double score = ScoreShape(shape, root, weights, totalWeight,
                         bassPitchClass, previous, out int? inversionBass);
                     if (score > bestScore) {

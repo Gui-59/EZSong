@@ -386,7 +386,42 @@ namespace EZSong.UI {
 
                 Console.WriteLine("MIDI 4 : début de l'import des pistes");
 
-                int gridSubdivision = ImportSelectedMidiTracks(midi, tracks, selected, System.IO.Path.GetFileNameWithoutExtension(fileName));
+                // Choix des paramètres de calcul des accords.
+                int chordDensity = 0; // 0 = par temps, 1 = 1/mesure, 2 = 2/mesure
+                bool simpleChords = false;
+                using (Dialog optDialog = new() { Title = "Options d'import (accords)", Modal = true }) {
+                    optDialog.AddButton("Annuler", ResponseType.Cancel);
+                    optDialog.AddButton("Importer", ResponseType.Ok);
+                    Box c = optDialog.ContentArea;
+                    c.Spacing = 6;
+                    Box r1 = new(Orientation.Horizontal, 6);
+                    r1.PackStart(new Label("Calculs par mesure :"), false, false, 0);
+                    ComboBoxText densityCombo = new();
+                    densityCombo.Append("0", "À chaque temps");
+                    densityCombo.Append("1", "1 par mesure");
+                    densityCombo.Append("2", "2 par mesure");
+                    densityCombo.ActiveId = "0";
+                    r1.PackStart(densityCombo, false, false, 0);
+                    c.PackStart(r1, false, false, 0);
+                    Box r2 = new(Orientation.Horizontal, 6);
+                    r2.PackStart(new Label("Niveau de détail :"), false, false, 0);
+                    ComboBoxText detailCombo = new();
+                    detailCombo.Append("jazz", "Jazz (complet)");
+                    detailCombo.Append("simple", "Simple");
+                    detailCombo.ActiveId = "jazz";
+                    r2.PackStart(detailCombo, false, false, 0);
+                    c.PackStart(r2, false, false, 0);
+                    optDialog.ShowAll();
+                    if (optDialog.Run() != (int)ResponseType.Ok) {
+                        optDialog.Destroy();
+                        return;
+                    }
+                    chordDensity = int.Parse(densityCombo.ActiveId);
+                    simpleChords = detailCombo.ActiveId == "simple";
+                    optDialog.Destroy();
+                }
+
+                int gridSubdivision = ImportSelectedMidiTracks(midi, tracks, selected, System.IO.Path.GetFileNameWithoutExtension(fileName), chordDensity, simpleChords);
 
                 Console.WriteLine("MIDI 5 : fin de l'import des pistes");
 
@@ -408,7 +443,7 @@ namespace EZSong.UI {
             }
         }
 
-        private int ImportSelectedMidiTracks(MidiFile midi, List<TrackChunk> tracks, List<int> selectedTracks, string title) {
+        private int ImportSelectedMidiTracks(MidiFile midi, List<TrackChunk> tracks, List<int> selectedTracks, string title, int chordDensity = 0, bool simpleChords = false) {
             if (midi.TimeDivision is not TicksPerQuarterNoteTimeDivision tpq) {
                 throw new NotSupportedException("Les fichiers MIDI en division SMPTE ne sont pas pris en charge ; utilisez une division en ticks par noire.");
             }
@@ -521,7 +556,7 @@ namespace EZSong.UI {
                 // Calcul harmonique effectué à l'import uniquement : un accord par temps à partir
                 // des classes de hauteur présentes dans la fenêtre du temps.
                 CalculateMeasureChords(measure, harmonicNotes, span.StartTicks, span.DurationTicks,
-                    ticksPerQuarter, preferFlats);
+                    ticksPerQuarter, preferFlats, chordDensity, simpleChords);
                 allMeasures.Add(measure);
             }
 
@@ -739,7 +774,8 @@ namespace EZSong.UI {
         /// </summary>
         private static void CalculateMeasureChords(MeasureData measure,
             List<MidiChordAnalyzer.MidiNote> harmonicNotes, double measureStart,
-            double measureTicks, long ticksPerQuarter, bool preferFlats) {
+            double measureTicks, long ticksPerQuarter, bool preferFlats,
+            int chordDensity = 0, bool simpleChords = false) {
             if (harmonicNotes.Count == 0) {
                 return;
             }
@@ -757,16 +793,28 @@ namespace EZSong.UI {
             int beatCount = measure.TimeSignature.GetBeatCount();
             MidiChordAnalyzer.DetectedChord? previousChord = null;
 
-            for (int beat = 0; beat < beatCount; beat++) {
-                double beatStart = measureStart + beat * beatTicks;
-                double beatEnd = beatStart + beatTicks;
+            // Liste des fenêtres (début, fin, index de temps cible) à analyser.
+            List<(double Start, double End, int TargetBeat)> windows = new();
+            if (chordDensity == 1) {
+                windows.Add((measureStart, measureEnd, 0));
+            } else if (chordDensity == 2) {
+                double mid = measureStart + measureTicks / 2.0;
+                int midBeat = Math.Max(0, Math.Min(beatCount - 1, beatCount / 2));
+                windows.Add((measureStart, mid, 0));
+                windows.Add((mid, measureEnd, midBeat));
+            } else {
+                for (int beat = 0; beat < beatCount; beat++) {
+                    windows.Add((measureStart + beat * beatTicks, measureStart + (beat + 1) * beatTicks, beat));
+                }
+            }
 
+            foreach ((double beatStart, double beatEnd, int targetBeat) in windows) {
                 // L'analyseur ne renvoie un accord que si les notes réellement
                 // jouées pendant le temps (et, pour les arpèges, pendant la
                 // mesure) le justifient. Un temps sans harmonie claire reste
                 // vide plutôt que de recevoir un accord inventé.
                 MidiChordAnalyzer.DetectedChord? detected = MidiChordAnalyzer.Analyze(
-                    notesInMeasure, beatStart, beatEnd, measureStart, measureEnd, previousChord);
+                    notesInMeasure, beatStart, beatEnd, measureStart, measureEnd, previousChord, simpleChords);
                 if (detected is null) {
                     continue;
                 }
@@ -783,10 +831,12 @@ namespace EZSong.UI {
                     bassAlteration = detectedBassAlteration;
                 }
 
-                measure.ChordSequence.ChordBeats[beat].Chords.Add(
-                    new EZSong.Model.Chord(false, measure.TimeSignature.GetBeatDuration(),
-                        rootNote, rootAlteration, detected.Type,
-                        bassNote, bassAlteration));
+                if (targetBeat >= 0 && targetBeat < measure.ChordSequence.ChordBeats.Count) {
+                    measure.ChordSequence.ChordBeats[targetBeat].Chords.Add(
+                        new EZSong.Model.Chord(false, measure.TimeSignature.GetBeatDuration(),
+                            rootNote, rootAlteration, detected.Type,
+                            bassNote, bassAlteration));
+                }
             }
         }
 
