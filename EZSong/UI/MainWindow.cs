@@ -1064,9 +1064,20 @@ namespace EZSong.UI {
         private void ExportPdf() {
             FileChooserDialog dlg = new("Exporter en PDF", this, FileChooserAction.Save, "Annuler", ResponseType.Cancel, "Exporter", ResponseType.Accept);
             if (dlg.Run() == (int)ResponseType.Accept) {
-                //TODO : revoir la construction du chemin de sauvegarde pour ajouter l'extension .pdf si nécessaire
-                LilypondFileBuilder builder = new(_currentSong);
-                builder.GeneratePdfFile(dlg.Filename);
+                string filename = dlg.Filename;
+                if (!filename.ToLowerInvariant().EndsWith(".pdf")) {
+                    filename += ".pdf";
+                }
+                try {
+                    LilypondFileBuilder builder = new(_currentSong);
+                    builder.GeneratePdfFile(filename);
+                } catch (Exception ex) {
+                    MessageDialog md = new(this, DialogFlags.Modal, MessageType.Error, ButtonsType.Ok, ex.Message) {
+                        UseMarkup = false
+                    };
+                    md.Run();
+                    md.Destroy();
+                }
             }
             dlg.Destroy();
         }

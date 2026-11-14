@@ -154,13 +154,19 @@ namespace EZSong.UI.Widgets {
             };
             buttonsBox.PackStart(splitSegment, false, false, 0);
 
-            Button changeKeyForN = new() { Label = "Tonalité (n mes.)" };
-            changeKeyForN.TooltipText = "Change la tonalité pour n mesures à partir de celle-ci.";
+            Button changeKeyForN = new() {
+                Image = EZSong.UI.SvgHelper.LoadSvgAsGtkImage("EZSong.Ressources.SVG.icon-placeholder.svg", 16),
+                TooltipText = "Changer la tonalité pour n mesures à partir de celle-ci.",
+                Relief = ReliefStyle.None
+            };
             changeKeyForN.Clicked += (o, args) => ChangeKeyForNRequested?.Invoke(_measure);
             buttonsBox.PackStart(changeKeyForN, false, false, 0);
 
-            Button autoKeyForN = new() { Label = "Calculer tonalité (n)" };
-            autoKeyForN.TooltipText = "Calcule automatiquement la tonalité pour n mesures à partir de celle-ci.";
+            Button autoKeyForN = new() {
+                Image = EZSong.UI.SvgHelper.LoadSvgAsGtkImage("EZSong.Ressources.SVG.icon-placeholder.svg", 16),
+                TooltipText = "Calculer automatiquement la tonalité pour n mesures à partir de celle-ci.",
+                Relief = ReliefStyle.None
+            };
             autoKeyForN.Clicked += (o, args) => AutoKeyForNRequested?.Invoke(_measure);
             buttonsBox.PackStart(autoKeyForN, false, false, 0);
 

@@ -174,16 +174,16 @@ namespace EZSong.Model {
                     lilyPondString += ":aug7";
                     break;
                 case ChordType.AddSecond:
-                    lilyPondString += ":add2";
+                    lilyPondString += ":2";
                     break;
                 case ChordType.AddFourth:
-                    lilyPondString += ":add4";
+                    lilyPondString += ":4";
                     break;
                 case ChordType.AddSixth:
-                    lilyPondString += ":add6";
+                    lilyPondString += ":6";
                     break;
                 case ChordType.AddNinth:
-                    lilyPondString += ":add9";
+                    lilyPondString += ":5.9";
                     break;
                 case ChordType.Ninth:
                     lilyPondString += ":9";
@@ -213,10 +213,12 @@ namespace EZSong.Model {
                     lilyPondString += ":maj13";
                     break;
                 case ChordType.MinorMajorSeventh:
-                    lilyPondString += ":m(maj7)";
+                    // LilyPond 2.24 ne reconnaît pas :m(maj7) : on retombe
+                    // sur une septième mineure pour rester valide.
+                    lilyPondString += ":m7";
                     break;
                 case ChordType.SixthNinth:
-                    lilyPondString += ":6/9";
+                    lilyPondString += ":6.9";
                     break;
                 case ChordType.SeventhMinusFive:
                     lilyPondString += ":7-5";
@@ -225,7 +227,7 @@ namespace EZSong.Model {
                     lilyPondString += ":7+5";
                     break;
                 case ChordType.MinorSeventhFlatFive:
-                    lilyPondString += ":m7b5";
+                    lilyPondString += ":m7.5-";
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

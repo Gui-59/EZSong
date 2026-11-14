@@ -117,8 +117,13 @@ namespace EZSong.Exporting.Lilypond {
         /// <param name="outputFilePath"></param>
         public void GeneratePdfFile(String outputFilePath) {
 
+            if (!outputFilePath.ToLowerInvariant().EndsWith(".pdf")) {
+                outputFilePath += ".pdf";
+            }
+
             //TODO : cr�er une m�thode pour g�n�rer un nom de r�pertoire temporaire unique
-            String tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()); 
+            String tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempDirectory);
             String tempFileName = Path.GetFileNameWithoutExtension(outputFilePath) + ".ly";
             String tempFilePath = Path.Combine(tempDirectory, tempFileName);
             GenerateLilypondFile(tempFilePath);
@@ -130,19 +135,28 @@ namespace EZSong.Exporting.Lilypond {
             // C:\path\to\lilypond.exe -I "C:\temp\dir\path" -I "C:\path\to\stylesheets\directory" -o "C:\output\file\path" "tempFileName.ly"   
 
             string lilypondExe = @"C:\lilypond\bin\lilypond.exe"; //TODO : param�trer
+            if (!File.Exists(lilypondExe)) {
+                throw new FileNotFoundException("LilyPond introuvable : " + lilypondExe, lilypondExe);
+            }
 
             string exeDir = AppContext.BaseDirectory;
             string stylesheetDir = Path.Combine(exeDir, "Exporting", "Lilypond", "Stylesheets");
 
+            string outputPrefix = outputFilePath;
+            if (outputPrefix.ToLowerInvariant().EndsWith(".pdf")) {
+                outputPrefix = outputPrefix.Substring(0, outputPrefix.Length - 4);
+            }
+
             string arguments =
                 $"-I \"{tempDirectory}\" " +
                 $"-I \"{stylesheetDir}\" " +
-                $"-o \"{outputFilePath}\" " +
+                $"-o \"{outputPrefix}\" " +
                 $"\"{tempFileName}\"";
 
             ProcessStartInfo psi = new() {
                 FileName = lilypondExe,
                 Arguments = arguments,
+                WorkingDirectory = tempDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -151,15 +165,19 @@ namespace EZSong.Exporting.Lilypond {
 
             using (Process? process = Process.Start(psi)) {
                 if (process != null) {
-                    _ = process.StandardOutput.ReadToEnd();
-
-                    string log = process.StandardError.ReadToEnd();
-                    Console.WriteLine(log);
-                    //TODO : g�rer les erreurs de g�n�ration
-
-                    //TODO : Permettre de sauvegarder le log de g�n�ration dans un fichier texte pour analyse ult�rieure (mettre le contenu du .ly en tout d�but de fichier)
-
+                    string stdout = process.StandardOutput.ReadToEnd();
+                    string stderr = process.StandardError.ReadToEnd();
                     process.WaitForExit();
+
+                    Console.WriteLine(stdout);
+                    Console.WriteLine(stderr);
+
+                    if (process.ExitCode != 0) {
+                        throw new InvalidOperationException("Echec PDF (code " + process.ExitCode + ").\n" + stderr);
+                    }
+                    return;
+                } else {
+                    throw new InvalidOperationException("Impossible de demarrer LilyPond.");
                 }
             }
         }
