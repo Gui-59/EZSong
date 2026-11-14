@@ -20,6 +20,8 @@ public static class MidiLyricsSelfTest {
         TestPlainTextFallback();
         TestKarSpacingPreservesWords();
         TestWordsAreNotSplitAtBarLines();
+        TestSentenceSpacing();
+        TestAccentedLyricsArePreserved();
         TestWhitespaceAndControlCharactersAreCleaned();
         Console.WriteLine("MidiLyricsSelfTest: ALL OK");
     }
@@ -202,6 +204,61 @@ public static class MidiLyricsSelfTest {
             "A word crossing a bar line must stay whole and keep its attack time.");
         Expect(words[1].Text == "SUIVANT" && words[1].Time == 1440,
             "The following word should keep its own time.");
+    }
+
+    private static void TestSentenceSpacing() {
+        // Some KAR files concatenate the end of a sentence with the first
+        // word of the next one. A sentence boundary must always be readable,
+        // even when the source contains no space at all.
+        TrackChunk track = new(
+            new TextEvent("VOUS."),
+            new TextEvent("J'EN ") { DeltaTime = 1 },
+            new TextEvent("AI ") { DeltaTime = 1 },
+            new TextEvent("REUSSI") { DeltaTime = 1 },
+            new TextEvent("!") { DeltaTime = 1 },
+            new TextEvent("OUI") { DeltaTime = 1 },
+            new TextEvent("?") { DeltaTime = 1 },
+            new TextEvent("NON") { DeltaTime = 1 }
+        );
+
+        List<MidiLyricsExtractor.Lyric> lyrics = MidiLyricsExtractor.Extract(new[] { track });
+
+        Expect(MidiLyricsExtractor.Format(lyrics) == "VOUS. J'EN AI REUSSI! OUI? NON",
+            "A space must separate sentences even without a source space.");
+
+        List<MidiLyricsExtractor.Lyric> words = MidiLyricsExtractor.GroupWords(lyrics);
+        Expect(words.Count == 6, "Sentence punctuation must also create word boundaries.");
+        Expect(words[0].Text == "VOUS." && words[3].Text == "REUSSI!"
+            && words[4].Text == "OUI?" && words[5].Text == "NON",
+            "Each sentence should keep its own words and timing.");
+
+        // Ellipsis is a sentence terminator too, but consecutive dots must
+        // stay grouped and decimal numbers must not be split.
+        Expect(MidiLyricsExtractor.Format(new[] { new MidiLyricsExtractor.Lyric(0, "SI...SI") })
+            == "SI... SI",
+            "An ellipsis should be followed by a space before the next sentence.");
+        Expect(MidiLyricsExtractor.Format(new[] { new MidiLyricsExtractor.Lyric(0, "1.5") })
+            == "1.5",
+            "A decimal point must not be turned into a sentence boundary.");
+    }
+
+    private static void TestAccentedLyricsArePreserved() {
+        // All events share the same tick, so their source order must be kept
+        // instead of being reordered alphabetically.
+        TrackChunk track = new(
+            new TextEvent("Été "),
+            new TextEvent("à "),
+            new TextEvent("Noël."),
+            new TextEvent("Déjà "),
+            new TextEvent("vu.")
+        );
+
+        List<MidiLyricsExtractor.Lyric> lyrics = MidiLyricsExtractor.Extract(new[] { track });
+
+        Expect(MidiLyricsExtractor.Format(lyrics) == "Été à Noël. Déjà vu.",
+            "Accents, special characters and source order must be preserved.");
+        Expect(MidiLyricsExtractor.GroupWords(lyrics).Count == 5,
+            "Accented words must be grouped like plain ASCII words.");
     }
 
     private static void TestWhitespaceAndControlCharactersAreCleaned() {

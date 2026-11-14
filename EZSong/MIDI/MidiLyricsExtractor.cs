@@ -127,7 +127,7 @@ namespace EZSong.MIDI {
                     combined.Add(lyric);
                 }
             }
-            combined.Sort((left, right) => left.Time.CompareTo(right.Time));
+            combined = combined.OrderBy(lyric => lyric.Time).ToList();
             return new TrackLyrics(combined, true);
         }
 
@@ -201,9 +201,10 @@ namespace EZSong.MIDI {
                 }
             }
 
+            // OrderBy is stable: lyric events sharing the same tick keep their
+            // source order, which matters for syllables split on one beat.
             return merged
                 .OrderBy(lyric => lyric.Time)
-                .ThenBy(lyric => lyric.Text, StringComparer.Ordinal)
                 .ToList();
         }
 
@@ -232,7 +233,8 @@ namespace EZSong.MIDI {
             }
 
             string text = hasSpacingCues ? string.Concat(texts) : string.Join(" ", texts);
-            return string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+            text = string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+            return EnsureSentenceSpacing(text);
         }
 
         /// <summary>
@@ -271,6 +273,13 @@ namespace EZSong.MIDI {
                     currentWord.Clear();
                     hasCurrentWord = false;
                 }
+                // Une ponctuation forte marque la fin d'une phrase : même sans
+                // espace dans le fichier KAR, le mot suivant doit être séparé.
+                if (hasCurrentWord && !leadingSpace && StartsNewSentence(currentWord, text)) {
+                    words.Add(new Lyric(wordTime, currentWord.ToString()));
+                    currentWord.Clear();
+                    hasCurrentWord = false;
+                }
                 if (!hasCurrentWord) {
                     wordTime = lyric.Time;
                     hasCurrentWord = true;
@@ -288,6 +297,86 @@ namespace EZSong.MIDI {
                 words.Add(new Lyric(wordTime, currentWord.ToString()));
             }
             return words;
+        }
+
+        /// <summary>
+        /// Ensures a space after sentence-ending punctuation. KAR files
+        /// sometimes concatenate the last word of a sentence with the first
+        /// word of the next one ("VOUS.J'EN") when the line break is missing.
+        /// </summary>
+        private static string EnsureSentenceSpacing(string text) {
+            if (text.Length == 0) {
+                return text;
+            }
+
+            StringBuilder builder = new(text.Length + 8);
+            for (int index = 0; index < text.Length; index++) {
+                char character = text[index];
+                builder.Append(character);
+                if (!IsSentenceTerminator(character)) {
+                    continue;
+                }
+
+                // Keep grouped punctuation such as "?!", "..." and quotes
+                // that close the sentence before looking at the next word.
+                int next = index + 1;
+                while (next < text.Length &&
+                       (IsSentenceTerminator(text[next]) || IsClosingPunctuation(text[next]))) {
+                    builder.Append(text[next]);
+                    next++;
+                }
+
+                if (next < text.Length &&
+                    !char.IsWhiteSpace(text[next]) &&
+                    !IsDecimalPoint(text, index, next)) {
+                    builder.Append(' ');
+                }
+                index = next - 1;
+            }
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// Detects the start of a new sentence while grouping syllables into
+        /// words, so that a sentence boundary also acts as a word boundary.
+        /// </summary>
+        private static bool StartsNewSentence(StringBuilder word, string nextText) {
+            int index = word.Length - 1;
+            while (index >= 0 && IsClosingPunctuation(word[index])) {
+                index--;
+            }
+            if (index < 0 || !IsSentenceTerminator(word[index])) {
+                return false;
+            }
+
+            char next = nextText[0];
+            if (char.IsWhiteSpace(next) || IsClosingPunctuation(next) || IsSentenceTerminator(next)) {
+                return false;
+            }
+
+            // Ne pas séparer un nombre décimal stocké en deux événements.
+            if (word[index] == '.' &&
+                index > 0 &&
+                char.IsDigit(word[index - 1]) &&
+                char.IsDigit(next)) {
+                return false;
+            }
+            return true;
+        }
+
+        private static bool IsDecimalPoint(string text, int terminatorIndex, int nextIndex) {
+            return text[terminatorIndex] == '.' &&
+                terminatorIndex > 0 &&
+                char.IsDigit(text[terminatorIndex - 1]) &&
+                char.IsDigit(text[nextIndex]);
+        }
+
+        private static bool IsSentenceTerminator(char character) {
+            return character is '.' or '!' or '?' or '\u2026';
+        }
+
+        private static bool IsClosingPunctuation(char character) {
+            return character is '"' or '\'' or '\u201D' or '\u2019' or '\u00BB' or ')' or ']' or '}';
         }
 
         /// <summary>

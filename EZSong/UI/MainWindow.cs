@@ -297,7 +297,8 @@ namespace EZSong.UI {
         /// choisies graphiquement (une ou deux), puis les notes sont quantifiées sur une
         /// grille adaptée au contenu (1/4, 1/8 ou 1/16 de ronde).
         /// Les accords sont calculés une seule fois pendant l'import et les paroles KAR
-        /// sont réparties dans les mesures selon leur horodatage MIDI.
+        /// sont réparties dans les mesures selon leur horodatage MIDI. Les textes sont
+        /// décodés en UTF-8 ou Windows-1252 afin de préserver les accents.
         /// </summary>
         private void ImportMidiProject() {
             string fileName;
@@ -329,7 +330,10 @@ namespace EZSong.UI {
 
             try {
                 Console.WriteLine("MIDI 1 : lecture du fichier");
-                MidiFile midi = MidiFile.Read(fileName);
+                // DryWetMidi décode par défaut les textes en US-ASCII, ce qui
+                // remplace les accents par des '?'. On utilise donc un décodeur
+                // qui essaie UTF-8 puis Windows-1252/Latin-1.
+                MidiFile midi = MidiFile.Read(fileName, MidiTextDecoder.CreateReadingSettings());
                 Console.WriteLine("MIDI 2 : lecture des pistes");
                 List<TrackChunk> tracks = midi.GetTrackChunks().ToList();
                 if (tracks.Count == 0) {
