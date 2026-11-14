@@ -284,6 +284,16 @@ namespace EZSong.UI.Widgets {
                     this);
             };
 
+            widget.ChangeKeyForNRequested += (MeasureData startMeasure) =>
+            {
+                _globalSegmentEditor.ChangeKeyForNMeasures(startMeasure);
+            };
+
+            widget.AutoKeyForNRequested += (MeasureData startMeasure) =>
+            {
+                _globalSegmentEditor.AutoKeyForNMeasures(startMeasure);
+            };
+
             widget.StaffChanged += (MeasureData changedMeasure, int staffIndex) =>
             {
                 _globalSegmentEditor.NotifyStaffChanged(

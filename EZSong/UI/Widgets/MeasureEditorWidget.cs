@@ -17,6 +17,7 @@ namespace EZSong.UI.Widgets {
     public class MeasureEditorWidget : Frame {
 
         private ComboBoxText _keyCombo;
+        private Label _keyWarningLabel;
         private ComboBoxText _upperTimeSigCombo;
         private ComboBoxText _lowerTimeSigCombo;
         private MeasureChordsEditor _measureChordsEditor;
@@ -38,6 +39,8 @@ namespace EZSong.UI.Widgets {
         }
 
         public event System.Action<MeasureData>? MeasureChanged;
+        public event System.Action<MeasureData>? ChangeKeyForNRequested;
+        public event System.Action<MeasureData>? AutoKeyForNRequested;
 
         public event System.Action<MeasureData, int>? StaffChanged;
 
@@ -69,6 +72,10 @@ namespace EZSong.UI.Widgets {
             _staffIndex = staffIndex;
             GlobalMelodyEditor = new(_segmentIndex, _staffIndex, _measure, userSettings, embeddedMidiSynth);
             _keyCombo = new();
+            _keyWarningLabel = new() {
+                Text = "",
+                Xalign = 0f
+            };
             _upperTimeSigCombo = new();
             _lowerTimeSigCombo = new();
             _measureChordsEditor = new();
@@ -147,6 +154,16 @@ namespace EZSong.UI.Widgets {
             };
             buttonsBox.PackStart(splitSegment, false, false, 0);
 
+            Button changeKeyForN = new() { Label = "Tonalité (n mes.)" };
+            changeKeyForN.TooltipText = "Change la tonalité pour n mesures à partir de celle-ci.";
+            changeKeyForN.Clicked += (o, args) => ChangeKeyForNRequested?.Invoke(_measure);
+            buttonsBox.PackStart(changeKeyForN, false, false, 0);
+
+            Button autoKeyForN = new() { Label = "Calculer tonalité (n)" };
+            autoKeyForN.TooltipText = "Calcule automatiquement la tonalité pour n mesures à partir de celle-ci.";
+            autoKeyForN.Clicked += (o, args) => AutoKeyForNRequested?.Invoke(_measure);
+            buttonsBox.PackStart(autoKeyForN, false, false, 0);
+
             topBar.PackStart(buttonsBox, false, false, 0);
 
             // Ajouter la barre de boutons en haut de la mesure
@@ -156,19 +173,27 @@ namespace EZSong.UI.Widgets {
                 Homogeneous = false
             };
 
-            // Tonalité (ComboBoxText)
-            
+            // Tonalité (ComboBoxText) : toutes les tonalités possibles.
+            mesureSetupBar.PackStart(new Label("Tonalité :") { Xalign = 0f }, false, false, 0);
+
             foreach (string k in _selectableValues.Tonalities.Keys) {
                 _keyCombo.Append(k, _selectableValues.Tonalities[k]);
             }
-            _keyCombo.ActiveId = _measure.KeySignature.ToDropDownId() != "" ? _measure.KeySignature.ToDropDownId() : _selectableValues.DefaultKeySignature.ToDropDownId();
+            string currentKeyId = _measure.KeySignature.ToDropDownId();
+            if (string.IsNullOrEmpty(currentKeyId) || !_selectableValues.Tonalities.ContainsKey(currentKeyId)) {
+                currentKeyId = _selectableValues.DefaultKeySignature.ToDropDownId();
+            }
+            _keyCombo.ActiveId = currentKeyId;
+            UpdateKeyIndicator();
             _keyCombo.Changed += (o, args) => {
                 if (!string.IsNullOrEmpty(_keyCombo.ActiveId) && _selectableValues.Tonalities.ContainsKey(_keyCombo.ActiveId)) {
                     _measure.KeySignature = new(_keyCombo.ActiveId);
                 }
+                UpdateKeyIndicator();
                 MeasureChanged?.Invoke(_measure);
             };
             mesureSetupBar.PackStart(_keyCombo, false, false, 0);
+            mesureSetupBar.PackStart(_keyWarningLabel, false, false, 0);
 
             // Signature temporelle : Upper (ComboBoxText)
             
@@ -279,9 +304,28 @@ namespace EZSong.UI.Widgets {
         /// <summary>
         /// Refreshes the shared properties of the measure (key signature, time signature, chords, lyrics) from the model,
         /// </summary>
+        private void UpdateKeyIndicator() {
+            bool consistent = KeySignatureDetector.IsConsistent(_measure);
+            if (consistent) {
+                _keyWarningLabel.Text = "";
+                _keyWarningLabel.TooltipText = "";
+            } else {
+                KeySignature? detected = KeySignatureDetector.DetectFromMeasure(_measure);
+                string suggested = detected is null ? "" : detected.ToDropDownLabel();
+                _keyWarningLabel.Text = "⚠";
+                _keyWarningLabel.TooltipText = string.IsNullOrEmpty(suggested)
+                    ? "La tonalité indiquée semble incohérente avec les notes/accords."
+                    : $"La tonalité indiquée semble incohérente. Suggestion : {suggested}";
+            }
+        }
+
         internal void RefreshSharedFromModel() {
-            _keyCombo.ActiveId =
-                _measure.KeySignature.ToDropDownId();
+            string keyId = _measure.KeySignature.ToDropDownId();
+            if (string.IsNullOrEmpty(keyId) || !_selectableValues.Tonalities.ContainsKey(keyId)) {
+                keyId = _selectableValues.DefaultKeySignature.ToDropDownId();
+            }
+            _keyCombo.ActiveId = keyId;
+            UpdateKeyIndicator();
 
             int upperIndex =
                 Array.IndexOf(

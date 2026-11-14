@@ -451,6 +451,9 @@ namespace EZSong.UI {
             // fichiers karaoké qui déclarent do majeur par défaut.
             sbyte? midiKeySignature = ReadInitialKeySignature(tracks);
             bool preferFlats = PreferFlatSpelling(allMidiNotes, midiKeySignature);
+            // Tonalité calculée automatiquement à partir des notes jouées.
+            KeySignature autoKeySignature = KeySignatureDetector.DetectFromNotes(
+                allMidiNotes.Select(n => (n.Start, n.End, n.Pitch, n.Track))) ?? new KeySignature();
             // Les notes sont pondérées une seule fois : les voix mélodiques
             // (chant, flûte, lead…) comptent moins que l'accompagnement dans
             // le calcul des accords.
@@ -498,7 +501,7 @@ namespace EZSong.UI {
                     _userSettings.MidiInputDefaultVoice, Constants.MelodyBaseOctave));
             }
 
-            SegmentData segment = new(0, song.SongSettings, new List<MeasureData>());
+            List<MeasureData> allMeasures = new();
             for (int measureIndex = 0; measureIndex < measureSpans.Count; measureIndex++) {
                 MidiQuantizer.MeasureSpan span = measureSpans[measureIndex];
                 List<MeasureGlobalMelody> staffs = new();
@@ -513,24 +516,57 @@ namespace EZSong.UI {
                     .OrderBy(word => word.Time));
                 ChordSequence chordSequence = new();
                 chordSequence.InitializeFromTimeSignature(span.TimeSignature);
-                MeasureData measure = new(measureIndex, song.SongSettings, span.TimeSignature, new KeySignature(),
+                MeasureData measure = new(measureIndex, song.SongSettings, span.TimeSignature, new KeySignature(autoKeySignature.Note, autoKeySignature.Alteration, autoKeySignature.Mode),
                     chordSequence, staffs, measureLyrics);
                 // Calcul harmonique effectué à l'import uniquement : un accord par temps à partir
                 // des classes de hauteur présentes dans la fenêtre du temps.
                 CalculateMeasureChords(measure, harmonicNotes, span.StartTicks, span.DurationTicks,
                     ticksPerQuarter, preferFlats);
-                segment.Measures.Add(measure);
+                allMeasures.Add(measure);
             }
-            for (int i = 0; i < segment.Measures.Count; i++) {
-                if (i > 0) {
-                    segment.Measures[i].PrecedingMeasure = segment.Measures[i - 1];
-                }
 
-                if (i + 1 < segment.Measures.Count) {
-                    segment.Measures[i].FollowingMeasure = segment.Measures[i + 1];
+            // Tonalité initiale : on ignore les mesures vides en tête et on
+            // détecte la tonalité à partir des premières mesures contenant des
+            // notes, puis on applique cette tonalité à toutes les mesures.
+            KeySignature initialKey = autoKeySignature;
+            // Trouver la première mesure non vide.
+            int firstNonEmpty = -1;
+            for (int i = 0; i < allMeasures.Count; i++) {
+                bool hasContent = allMeasures[i].ChordSequence.ChordBeats
+                    .SelectMany(b => b.Chords).Any(c => !c.IsSilentChord)
+                    || allMeasures[i].Staffs.SelectMany(g => g.Melody.MelodyChords).Any();
+                if (hasContent) { firstNonEmpty = i; break; }
+            }
+            if (firstNonEmpty >= 0) {
+                // Prendre jusqu'à 16 mesures à partir de la première non vide.
+                int endIdx = Math.Min(allMeasures.Count, firstNonEmpty + 16);
+                double secStart = measureSpans[firstNonEmpty].StartTicks;
+                double secEnd = measureSpans[endIdx - 1].StartTicks + measureSpans[endIdx - 1].DurationTicks;
+                List<(long Start, long End, int Pitch, int Track)> secNotes = harmonicNotes
+                    .Where(n => n.Start < secEnd && n.End > secStart)
+                    .Select(n => (n.Start, n.End, n.Pitch, n.Track))
+                    .ToList();
+                KeySignature? detected = secNotes.Count > 0
+                    ? KeySignatureDetector.DetectFromNotes(secNotes)
+                    : null;
+                if (detected is not null) {
+                    initialKey = detected;
                 }
             }
-            song.Segments.Clear(); song.Segments.Add(segment);
+            foreach (MeasureData m in allMeasures) {
+                m.KeySignature = new KeySignature(initialKey.Note, initialKey.Alteration, initialKey.Mode);
+            }
+            // Un seul segment : on conserve toutes les mesures (y compris les
+            // mesures vides en tête), afin de ne pas découper artificiellement
+            // le morceau. La structure (intro, couplet, refrain, pont) est
+            // détectée pour la tonalité, pas pour le découpage.
+            SegmentData segment = new(0, song.SongSettings, allMeasures);
+            for (int i = 0; i < segment.Measures.Count; i++) {
+                segment.Measures[i].PrecedingMeasure = i > 0 ? segment.Measures[i - 1] : null;
+                segment.Measures[i].FollowingMeasure = i + 1 < segment.Measures.Count ? segment.Measures[i + 1] : null;
+            }
+            song.Segments.Clear();
+            song.Segments.Add(segment);
             _currentSong = song;
             _globalSegmentEditor.SetSong(song);
             return gridSubdivision;

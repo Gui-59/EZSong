@@ -231,6 +231,101 @@ namespace EZSong.UI.Widgets {
         }
 
         /// <summary>
+        /// Change la tonalité pour n mesures à partir de la mesure indiquée.
+        /// Affiche une boîte de dialogue pour choisir la tonalité et le nombre.
+        /// </summary>
+        internal void ChangeKeyForNMeasures(MeasureData startMeasure) {
+            var measures = _currentSong.Segments[_displayedSegmentIndex].Measures;
+            int idx = measures.IndexOf(startMeasure);
+            if (idx < 0) return;
+
+            using Dialog dialog = new() { Title = "Changer la tonalité", Modal = true };
+            dialog.AddButton("Annuler", ResponseType.Cancel);
+            dialog.AddButton("Appliquer", ResponseType.Ok);
+
+            Box content = dialog.ContentArea;
+            content.Spacing = 6;
+
+            // Nombre de mesures
+            Box rowN = new(Orientation.Horizontal, 6);
+            rowN.PackStart(new Label("Nombre de mesures :"), false, false, 0);
+            SpinButton spin = new(new Adjustment(4, 1, measures.Count - idx, 1, 1, 0), 0, 0);
+            rowN.PackStart(spin, false, false, 0);
+            content.PackStart(rowN, false, false, 0);
+
+            // Tonalité
+            Box rowK = new(Orientation.Horizontal, 6);
+            rowK.PackStart(new Label("Tonalité :"), false, false, 0);
+            ComboBoxText combo = new();
+            foreach (KeySignature k in KeySignatureDetector.CandidateKeys) {
+                combo.Append(k.ToDropDownId(), k.ToDropDownLabel());
+            }
+            combo.ActiveId = startMeasure.KeySignature.ToDropDownId();
+            rowK.PackStart(combo, false, false, 0);
+            content.PackStart(rowK, false, false, 0);
+
+            dialog.ShowAll();
+            if (dialog.Run() != (int)ResponseType.Ok) {
+                dialog.Destroy();
+                return;
+            }
+            int count = (int)spin.Value;
+            string? keyId = combo.ActiveId;
+            dialog.Destroy();
+
+            if (string.IsNullOrEmpty(keyId)) return;
+            KeySignature key = new(keyId);
+            int end = Math.Min(measures.Count, idx + count);
+            for (int i = idx; i < end; i++) {
+                measures[i].KeySignature = new KeySignature(key.Note, key.Alteration, key.Mode);
+            }
+            Refresh();
+        }
+
+        /// <summary>
+        /// Calcule automatiquement la tonalité pour n mesures à partir de la
+        /// mesure indiquée, et l'applique.
+        /// </summary>
+        internal void AutoKeyForNMeasures(MeasureData startMeasure) {
+            var measures = _currentSong.Segments[_displayedSegmentIndex].Measures;
+            int idx = measures.IndexOf(startMeasure);
+            if (idx < 0) return;
+
+            using Dialog dialog = new() { Title = "Calculer la tonalité", Modal = true };
+            dialog.AddButton("Annuler", ResponseType.Cancel);
+            dialog.AddButton("Calculer", ResponseType.Ok);
+
+            Box content = dialog.ContentArea;
+            content.Spacing = 6;
+
+            Box rowN = new(Orientation.Horizontal, 6);
+            rowN.PackStart(new Label("Nombre de mesures :"), false, false, 0);
+            SpinButton spin = new(new Adjustment(4, 1, measures.Count - idx, 1, 1, 0), 0, 0);
+            rowN.PackStart(spin, false, false, 0);
+            content.PackStart(rowN, false, false, 0);
+
+            dialog.ShowAll();
+            if (dialog.Run() != (int)ResponseType.Ok) {
+                dialog.Destroy();
+                return;
+            }
+            int count = (int)spin.Value;
+            dialog.Destroy();
+
+            int end = Math.Min(measures.Count, idx + count);
+            List<MeasureData> selected = measures.Skip(idx).Take(end - idx).ToList();
+            KeySignature? detected = KeySignatureDetector.DetectFromMeasures(selected);
+            if (detected is null) {
+                // Pas assez de données : on garde la tonalité existante.
+                return;
+            }
+            for (int i = idx; i < end; i++) {
+                measures[i].KeySignature = new KeySignature(detected.Note, detected.Alteration, detected.Mode);
+            }
+            Refresh();
+        }
+
+        /// <summary>
         /// Creates a new empty measure with the specified index and time signature,        
         /// </summary>
         /// <param name="index">The index of the new measure.</param>

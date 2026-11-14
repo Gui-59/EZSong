@@ -12,20 +12,20 @@ using System.Text;
 namespace EZSong.Exporting.Lilypond {
     public class LilypondFileBuilder {
 
-        const string _backslash = "\\"; //TODO : utiliser un verbatim string pour éviter d'avoir à doubler les backslashs
-        const string _dblquote = "\""; //TODO : utiliser un verbatim string pour éviter d'avoir à doubler les guillemets
-        const string _opening_bracket = "{"; //TODO : utiliser un verbatim string pour éviter d'avoir à doubler les accolades
-        const string _closing_bracket = "}"; //TODO : utiliser un verbatim string pour éviter d'avoir à doubler les accolades
+        const string _backslash = "\\"; //TODO : utiliser un verbatim string pour ï¿½viter d'avoir ï¿½ doubler les backslashs
+        const string _dblquote = "\""; //TODO : utiliser un verbatim string pour ï¿½viter d'avoir ï¿½ doubler les guillemets
+        const string _opening_bracket = "{"; //TODO : utiliser un verbatim string pour ï¿½viter d'avoir ï¿½ doubler les accolades
+        const string _closing_bracket = "}"; //TODO : utiliser un verbatim string pour ï¿½viter d'avoir ï¿½ doubler les accolades
 
 		/// <summary>
         /// LilyPond Target Version
         /// </summary>
-        const string _lilypondTargetVersion = "2.24.2"; //TODO : paramétrer la version de Lilypond à utiliser pour la génération du fichier .ly
+        const string _lilypondTargetVersion = "2.24.2"; //TODO : paramï¿½trer la version de Lilypond ï¿½ utiliser pour la gï¿½nï¿½ration du fichier .ly
 
         /// <summary>
         /// Lilypond Style Sheet Name
         /// </summary>
-        const string _styleSheetName = "default-style"; //TODO : paramétrer le nom de la feuille de style à utiliser pour la génération du fichier .ly (la feuille de style doit se trouver dans le répertoire "Stylesheets" du projet)
+        const string _styleSheetName = "default-style"; //TODO : paramï¿½trer le nom de la feuille de style ï¿½ utiliser pour la gï¿½nï¿½ration du fichier .ly (la feuille de style doit se trouver dans le rï¿½pertoire "Stylesheets" du projet)
 
 
         private List<LilyPondVar> _lilypondSongMelodies;
@@ -117,19 +117,19 @@ namespace EZSong.Exporting.Lilypond {
         /// <param name="outputFilePath"></param>
         public void GeneratePdfFile(String outputFilePath) {
 
-            //TODO : créer une méthode pour générer un nom de répertoire temporaire unique
+            //TODO : crï¿½er une mï¿½thode pour gï¿½nï¿½rer un nom de rï¿½pertoire temporaire unique
             String tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()); 
             String tempFileName = Path.GetFileNameWithoutExtension(outputFilePath) + ".ly";
             String tempFilePath = Path.Combine(tempDirectory, tempFileName);
             GenerateLilypondFile(tempFilePath);
 
-            //TODO : placer cette génération dans un thread séparé pour ne pas bloquer l'interface utilisateur (et afficher une barre de progression)
+            //TODO : placer cette gï¿½nï¿½ration dans un thread sï¿½parï¿½ pour ne pas bloquer l'interface utilisateur (et afficher une barre de progression)
             /////////////////////
             
-            // On exécute une commande de génération sur le modèle : 
+            // On exï¿½cute une commande de gï¿½nï¿½ration sur le modï¿½le : 
             // C:\path\to\lilypond.exe -I "C:\temp\dir\path" -I "C:\path\to\stylesheets\directory" -o "C:\output\file\path" "tempFileName.ly"   
 
-            string lilypondExe = @"C:\lilypond\bin\lilypond.exe"; //TODO : paramétrer
+            string lilypondExe = @"C:\lilypond\bin\lilypond.exe"; //TODO : paramï¿½trer
 
             string exeDir = AppContext.BaseDirectory;
             string stylesheetDir = Path.Combine(exeDir, "Exporting", "Lilypond", "Stylesheets");
@@ -155,9 +155,9 @@ namespace EZSong.Exporting.Lilypond {
 
                     string log = process.StandardError.ReadToEnd();
                     Console.WriteLine(log);
-                    //TODO : gérer les erreurs de génération
+                    //TODO : gï¿½rer les erreurs de gï¿½nï¿½ration
 
-                    //TODO : Permettre de sauvegarder le log de génération dans un fichier texte pour analyse ultérieure (mettre le contenu du .ly en tout début de fichier)
+                    //TODO : Permettre de sauvegarder le log de gï¿½nï¿½ration dans un fichier texte pour analyse ultï¿½rieure (mettre le contenu du .ly en tout dï¿½but de fichier)
 
                     process.WaitForExit();
                 }
@@ -187,7 +187,7 @@ namespace EZSong.Exporting.Lilypond {
         private string GenerateLilypondSheetHeader() {
             StringBuilder sw = new();
 
-			//Entête (titre et compositeur)
+			//Entï¿½te (titre et compositeur)
             //TODO : Ajouter l'info "remarques"
             _ = sw.AppendLine(
                 $"{_backslash}header " +
@@ -211,27 +211,27 @@ namespace EZSong.Exporting.Lilypond {
             /*
               * Rappel de la synthaxe : 
               * 
-              * Les noms des notes doivent toujours être en minuscules 
-              * (et doivent indiquer une durée totale exactement égale à la longeur de la mesure)            
+              * Les noms des notes doivent toujours ï¿½tre en minuscules 
+              * (et doivent indiquer une durï¿½e totale exactement ï¿½gale ï¿½ la longeur de la mesure)            
               * c' ? do une octave au-dessus
               * c'' ? deux octaves au-dessus
               * c ? do central
               * c, ? do une octave en dessous
               * c,, ? deux octaves en dessous
               * 
-              * Altérations : 
-              * Altération	        Suffixe	
-              * ? (dièse)	        is	    
-              * ? (bémol)	        es	
-              * ? (bécarre)	        !	
-              * ?? (double dièse)	isis	
-              * ?? (double bémol)	eses
+              * Altï¿½rations : 
+              * Altï¿½ration	        Suffixe	
+              * ? (diï¿½se)	        is	    
+              * ? (bï¿½mol)	        es	
+              * ? (bï¿½carre)	        !	
+              * ?? (double diï¿½se)	isis	
+              * ?? (double bï¿½mol)	eses
               * 
-              * On entoure les notes d’un accord avec < >.
+              * On entoure les notes dï¿½un accord avec < >.
               * 
-              * La durée est indiquée par un chiffre après la note :
+              * La durï¿½e est indiquï¿½e par un chiffre aprï¿½s la note :
               * 
-              * Durée	        Code LilyPond	Nom français
+              * Durï¿½e	        Code LilyPond	Nom franï¿½ais
               * ronde	        1	            1
               * blanche	        2	            1/2
               * noire	        4	            1/4
@@ -239,24 +239,34 @@ namespace EZSong.Exporting.Lilypond {
               * double croche    16	            1/16
               * triple croche    32	            1/32
               * 
-              * Pour les notes pointées : 
-              * On ajoute un "." après la durée
+              * Pour les notes pointï¿½es : 
+              * On ajoute un "." aprï¿½s la durï¿½e
               * 
               * Un tuplet (ex. trois croches en une noire) se note avec \tuplet.
               * Exemple : "\tuplet 3/2 { c8 d e }"   (3 croches en place de 2)
               * 
-              * Pour lier une note avec sa suivante : il suffit de mettre un tilde juste après la note
+              * Pour lier une note avec sa suivante : il suffit de mettre un tilde juste aprï¿½s la note
               * 
-              * un silence est matérialisé par "r" (avec une durée comme pour les notes)
+              * un silence est matï¿½rialisï¿½ par "r" (avec une durï¿½e comme pour les notes)
               * 
               */
 
 
             _ = sw.AppendLine($"{lilypondMelodyVar.Name} = {_opening_bracket}");
 
+            KeySignature? previousKeySignature = null;
             foreach (MeasureData m in _song.Segments[songElementCoordinates.SegmentIndex].Measures) {
                 KeySignature keySignature = m.KeySignature;
-                _ = sw.AppendLine(KeySignatureToLilyPondString(keySignature));
+                // La commande \\key n'est rÃ©Ã©mise que lorsqu'elle change, afin de
+                // gÃ©nÃ©rer correctement les changements de tonalitÃ© sans rÃ©pÃ©ter
+                // inutilement la mÃªme armure Ã  chaque mesure.
+                if (previousKeySignature is null
+                    || previousKeySignature.Note != keySignature.Note
+                    || previousKeySignature.Alteration != keySignature.Alteration
+                    || previousKeySignature.Mode != keySignature.Mode) {
+                    _ = sw.AppendLine(KeySignatureToLilyPondString(keySignature));
+                    previousKeySignature = keySignature;
+                }
 
                 TimeSignature timeSignature = new(m.TimeSignature.Beats, m.TimeSignature.BeatUnit);
                 _ = sw.AppendLine(TimeSignatureToLilyPondString(timeSignature));
@@ -281,7 +291,7 @@ namespace EZSong.Exporting.Lilypond {
         /// </summary>
         /// <param name="timeSignature"></param>
         /// <returns></returns>
-        //TODO : déplacer cette méthode dans la classe LilypondConverter
+        //TODO : dï¿½placer cette mï¿½thode dans la classe LilypondConverter
         private string TimeSignatureToLilyPondString(TimeSignature timeSignature) {
             return "\\time " + _lilypondConverter.TimeSignatureToLilyPondString(timeSignature);
         }
@@ -291,42 +301,42 @@ namespace EZSong.Exporting.Lilypond {
         /// </summary>
         /// <param name="keySignature"></param>
         /// <returns></returns>
-        //TODO : déplacer cette méthode dans la classe LilypondConverter
+        //TODO : dï¿½placer cette mï¿½thode dans la classe LilypondConverter
         private string KeySignatureToLilyPondString(KeySignature keySignature) {
-            // Pour l'instant, on réimplémente ici la conversion (TODO)
+            // Pour l'instant, on rï¿½implï¿½mente ici la conversion (TODO)
             string lilypondCode = string.Empty;
 			/*
-             * Tonalité	    Armure		Notes altérées							Commande LilyPond
-             * Do majeur	—			—										\key c \major
-             * La mineur	—			—										\key a \minor
+             * Tonalitï¿½	    Armure		Notes altï¿½rï¿½es							Commande LilyPond
+             * Do majeur	ï¿½			ï¿½										\key c \major
+             * La mineur	ï¿½			ï¿½										\key a \minor
              * Sol majeur	1 ?			fa?										\key g \major
              * Mi mineur	1 ?			fa?										\key e \minor
-             * Ré majeur	2 ?			fa?, do?								\key d \major
+             * Rï¿½ majeur	2 ?			fa?, do?								\key d \major
              * Si mineur	2 ?			fa?, do?								\key b \minor
              * La majeur	3 ?			fa?, do?, sol?							\key a \major
              * Fa? mineur	3 ?			fa?, do?, sol?							\key fis \minor
-             * Mi majeur	4 ?			fa?, do?, sol?, ré?						\key e \major
-             * Do? mineur	4 ?			fa?, do?, sol?, ré?						\key cis \minor
-             * Si majeur	5 ?			fa?, do?, sol?, ré?, la?				\key b \major
-             * Sol? mineur	5 ?			fa?, do?, sol?, ré?, la?				\key gis \minor
-             * Fa? majeur	6 ?			fa?, do?, sol?, ré?, la?, mi?			\key fis \major
-             * Ré? mineur	6 ?			fa?, do?, sol?, ré?, la?, mi?			\key dis \minor
-             * Do? majeur	7 ?			fa?, do?, sol?, ré?, la?, mi?, si?		\key cis \major
-             * La? mineur	7 ?			fa?, do?, sol?, ré?, la?, mi?, si?		\key ais \minor
+             * Mi majeur	4 ?			fa?, do?, sol?, rï¿½?						\key e \major
+             * Do? mineur	4 ?			fa?, do?, sol?, rï¿½?						\key cis \minor
+             * Si majeur	5 ?			fa?, do?, sol?, rï¿½?, la?				\key b \major
+             * Sol? mineur	5 ?			fa?, do?, sol?, rï¿½?, la?				\key gis \minor
+             * Fa? majeur	6 ?			fa?, do?, sol?, rï¿½?, la?, mi?			\key fis \major
+             * Rï¿½? mineur	6 ?			fa?, do?, sol?, rï¿½?, la?, mi?			\key dis \minor
+             * Do? majeur	7 ?			fa?, do?, sol?, rï¿½?, la?, mi?, si?		\key cis \major
+             * La? mineur	7 ?			fa?, do?, sol?, rï¿½?, la?, mi?, si?		\key ais \minor
              * Fa majeur	1 ?			si?										\key f \major
-             * Ré mineur	1 ?			si?										\key d \minor
+             * Rï¿½ mineur	1 ?			si?										\key d \minor
              * Si? majeur	2 ?			si?, mi?									\key bes \major
              * Sol mineur	2 ?			si?, mi?									\key g \minor
              * Mi? majeur	3 ?			si?, mi?, la?							\key ees \major
              * Do mineur	3 ?			si?, mi?, la?							\key c \minor
-             * La? majeur	4 ?			si?, mi?, la?, ré?						\key aes \major
-             * Fa mineur	4 ?			si?, mi?, la?, ré?						\key f \minor
-             * Ré? majeur	5 ?			si?, mi?, la?, ré?, sol?					\key des \major
-             * Si? mineur	5 ?			si?, mi?, la?, ré?, sol?					\key bes \minor
-             * Sol? majeur	6 ?			si?, mi?, la?, ré?, sol?, do?				\key ges \major
-             * Mi? mineur	6 ?			si?, mi?, la?, ré?, sol?, do?				\key ees \minor
-             * Do? majeur	7 ?			si?, mi?, la?, ré?, sol?, do?, fa?		\key ces \major
-             * La? mineur	7 ?			si?, mi?, la?, ré?, sol?, do?, fa?		\key aes \minor
+             * La? majeur	4 ?			si?, mi?, la?, rï¿½?						\key aes \major
+             * Fa mineur	4 ?			si?, mi?, la?, rï¿½?						\key f \minor
+             * Rï¿½? majeur	5 ?			si?, mi?, la?, rï¿½?, sol?					\key des \major
+             * Si? mineur	5 ?			si?, mi?, la?, rï¿½?, sol?					\key bes \minor
+             * Sol? majeur	6 ?			si?, mi?, la?, rï¿½?, sol?, do?				\key ges \major
+             * Mi? mineur	6 ?			si?, mi?, la?, rï¿½?, sol?, do?				\key ees \minor
+             * Do? majeur	7 ?			si?, mi?, la?, rï¿½?, sol?, do?, fa?		\key ces \major
+             * La? mineur	7 ?			si?, mi?, la?, rï¿½?, sol?, do?, fa?		\key aes \minor
              */
 
             lilypondCode += "\\key ";
@@ -423,7 +433,7 @@ namespace EZSong.Exporting.Lilypond {
 
             StringBuilder sw = new();
 
-			//Paroles sans découpage par syllabe (une phrase par mesure)
+			//Paroles sans dï¿½coupage par syllabe (une phrase par mesure)
             _ = sw.AppendLine($"{lilypondLyricsVar.Name} = {_opening_bracket}");
             foreach (MeasureData m in _song.Segments[songElementCoordinates.SegmentIndex].Measures) {
                 _ = sw.AppendLine($"s1_{_backslash}markup {_opening_bracket} {_dblquote}{m.Lyrics}{_dblquote} {_closing_bracket} ");
@@ -447,7 +457,7 @@ namespace EZSong.Exporting.Lilypond {
 			//Code LilyPond pour l'assemblage de la partition 	
             
 
-            //On générer le score avec tout les segments en utilisant les variables de mélodies, d'accords et de paroles générées précédemment
+            //On gï¿½nï¿½rer le score avec tout les segments en utilisant les variables de mï¿½lodies, d'accords et de paroles gï¿½nï¿½rï¿½es prï¿½cï¿½demment
 
             foreach (SegmentData segment in _song.Segments) {
                 _ = sw.AppendLine($"{_backslash}score {_opening_bracket}");
@@ -465,21 +475,21 @@ namespace EZSong.Exporting.Lilypond {
         /// <returns></returns>
         private string GenerateLilypondSegmentAssembly(SegmentData segment) {
 
-            //Système de portées
+            //Systï¿½me de portï¿½es
             //https://lilypond.org/doc/v2.23/Documentation/learning/multiple-staves
 
             StringBuilder sw = new();
 
-            String segmentTitle = "Segment "+ segment.Index; //Titre de segment (TODO : ajouter un champ "titre de segment" dans le modèle de données)
+            String segmentTitle = "Segment "+ segment.Index; //Titre de segment (TODO : ajouter un champ "titre de segment" dans le modï¿½le de donnï¿½es)
             _ = sw.AppendLine("\\header {");
             _ = sw.AppendLine("piece = \"" + segmentTitle + "\""); 
             _ = sw.AppendLine("}");
 
-            _ = sw.AppendLine($"<<"); //Début de système de portées
+            _ = sw.AppendLine($"<<"); //Dï¿½but de systï¿½me de portï¿½es
 
             for (int staffIndex = 0; staffIndex < _song.SongSettings.StaffsSettings.Staffs.Count(); staffIndex++) {
 
-                _ = sw.AppendLine($"{_backslash}new Staff = {_dblquote}melStaff_{segment.Index}_{staffIndex}{_dblquote} <<"); //Début de portée
+                _ = sw.AppendLine($"{_backslash}new Staff = {_dblquote}melStaff_{segment.Index}_{staffIndex}{_dblquote} <<"); //Dï¿½but de portï¿½e
 
                 SongElementCoordinates songElementCoordinates = new(segment.Index, staffIndex);
 
@@ -505,7 +515,7 @@ namespace EZSong.Exporting.Lilypond {
                         );
                 }
 
-                _ = sw.AppendLine($">>"); //Fin de portée
+                _ = sw.AppendLine($">>"); //Fin de portï¿½e
             }
 
             SongElementCoordinates songElementCoordinates3 = new(segment.Index, null);
@@ -522,7 +532,7 @@ namespace EZSong.Exporting.Lilypond {
                     $"{_closing_bracket}"
                 );
 
-            _ = sw.AppendLine($">>"); //Fin de système de portées
+            _ = sw.AppendLine($">>"); //Fin de systï¿½me de portï¿½es
 
             return sw.ToString();
         }
