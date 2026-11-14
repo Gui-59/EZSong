@@ -423,7 +423,7 @@ namespace EZSong.UI {
             for (int i = 0; i < staffNotes.Length; i++) {
                 staffNotes[i] = new List<MidiQuantizer.Note>();
             }
-            List<(long Start, long End, int Pitch, int Track)> allMidiNotes = new();
+            List<(long Start, long End, int Pitch, int Track, int Channel)> allMidiNotes = new();
             for (int trackIndex = 0; trackIndex < tracks.Count; trackIndex++) {
                 TrackChunk track = tracks[trackIndex];
                 int staffIndex = selectedTracks.IndexOf(trackIndex);
@@ -431,7 +431,12 @@ namespace EZSong.UI {
                     long start = Math.Max(0, note.Time);
                     long end = Math.Max(start + 1, note.Time + note.Length);
                     int pitch = (int)(byte)note.NoteNumber;
-                    allMidiNotes.Add((start, end, pitch, trackIndex));
+                    // Le canal 10 (index 9) est réservé aux percussions : ses
+                    // notes ne décrivent pas l'harmonie et fausseraient la
+                    // détection des accords.
+                    if (note.Channel != 9) {
+                        allMidiNotes.Add((start, end, pitch, trackIndex, (int)note.Channel));
+                    }
                     if (staffIndex >= 0) {
                         staffNotes[staffIndex].Add(new MidiQuantizer.Note(start, end, pitch));
                     }
@@ -440,6 +445,17 @@ namespace EZSong.UI {
             // Les paroles sont lues dans toutes les pistes, indépendamment des
             // pistes choisies pour la transcription.
             List<MidiLyricsExtractor.Lyric> lyrics = MidiLyricsExtractor.Extract(tracks, ticksPerQuarter / 8);
+            // L'armure MIDI sert d'abord à choisir l'orthographe des accords
+            // (bémols ou dièses). Si elle est vide (0 altération), on déduit
+            // l'armure des notes réellement jouées : c'est le cas de nombreux
+            // fichiers karaoké qui déclarent do majeur par défaut.
+            sbyte? midiKeySignature = ReadInitialKeySignature(tracks);
+            bool preferFlats = PreferFlatSpelling(allMidiNotes, midiKeySignature);
+            // Les notes sont pondérées une seule fois : les voix mélodiques
+            // (chant, flûte, lead…) comptent moins que l'accompagnement dans
+            // le calcul des accords.
+            List<MidiChordAnalyzer.MidiNote> harmonicNotes =
+                SelectHarmonicAnalysisNotes(allMidiNotes, ReadVoicePrograms(tracks));
             // Les syllabes sont regroupées en mots avant la répartition dans
             // les mesures : un mot traversant une barre de mesure n'est ainsi
             // jamais coupé en deux.
@@ -501,7 +517,8 @@ namespace EZSong.UI {
                     chordSequence, staffs, measureLyrics);
                 // Calcul harmonique effectué à l'import uniquement : un accord par temps à partir
                 // des classes de hauteur présentes dans la fenêtre du temps.
-                CalculateMeasureChords(measure, allMidiNotes, span.StartTicks, span.DurationTicks, ticksPerQuarter);
+                CalculateMeasureChords(measure, harmonicNotes, span.StartTicks, span.DurationTicks,
+                    ticksPerQuarter, preferFlats);
                 segment.Measures.Add(measure);
             }
             for (int i = 0; i < segment.Measures.Count; i++) {
@@ -538,6 +555,136 @@ namespace EZSong.UI {
         }
 
         /// <summary>
+        /// Lit la première armure MIDI (nombre d'altérations : positif = dièses,
+        /// négatif = bémols), ou null si le fichier n'en contient pas.
+        /// </summary>
+        private static sbyte? ReadInitialKeySignature(List<TrackChunk> tracks) {
+            foreach (TrackChunk track in tracks) {
+                foreach (MidiEvent midiEvent in track.Events) {
+                    if (midiEvent is KeySignatureEvent keySignature) {
+                        return keySignature.Key;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Détermine l'orthographe des altérations à utiliser pour les noms
+        /// d'accords. L'armure MIDI est prioritaire ; lorsqu'elle est neutre
+        /// (do majeur / la mineur déclaré par défaut), l'armure est déduite des
+        /// notes jouées afin d'écrire par exemple si bémol plutôt que la dièse.
+        /// </summary>
+        private static bool PreferFlatSpelling(
+            List<(long Start, long End, int Pitch, int Track, int Channel)> notes,
+            sbyte? midiKeySignature) {
+            if (midiKeySignature is sbyte key) {
+                if (key < 0) {
+                    return true;
+                }
+                if (key > 0) {
+                    return false;
+                }
+            }
+
+            double[] weights = new double[12];
+            foreach ((long Start, long End, int Pitch, int Track, int Channel) note in notes) {
+                weights[((note.Pitch % 12) + 12) % 12] += 1.0;
+            }
+
+            // Meilleure gamme majeure : on compare les notes qui appartiennent
+            // à chaque gamme à celles qui en sortent. Les gammes relatives
+            // (majeure / mineure) partagent les mêmes altérations, ce qui suffit
+            // pour choisir entre bémols et dièses.
+            int bestTonic = 0;
+            double bestScore = double.NegativeInfinity;
+            for (int tonic = 0; tonic < 12; tonic++) {
+                double inside = 0;
+                double outside = 0;
+                for (int pitchClass = 0; pitchClass < 12; pitchClass++) {
+                    if (IsInMajorScale(pitchClass, tonic)) {
+                        inside += weights[pitchClass];
+                    } else {
+                        outside += weights[pitchClass];
+                    }
+                }
+
+                double score = inside - outside * 0.5;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestTonic = tonic;
+                }
+            }
+
+            return bestTonic switch {
+                // Tonalités à bémols les plus courantes (réb, mib, fa, lab, sib).
+                1 or 3 or 5 or 8 or 10 => true,
+                // Tonalités à dièses (ré, mi, fa#, sol, la, si).
+                2 or 4 or 6 or 7 or 9 or 11 => false,
+                // Do majeur / la mineur : on regarde les altérations
+                // accidentelles réellement présentes.
+                _ => weights[1] + weights[6] + weights[8]
+                     <= weights[3] + weights[10]
+            };
+        }
+
+        private static bool IsInMajorScale(int pitchClass, int tonic) {
+            int degree = ((pitchClass - tonic) % 12 + 12) % 12;
+            return degree is 0 or 2 or 4 or 5 or 7 or 9 or 11;
+        }
+
+        /// <summary>
+        /// Convertit une classe de hauteur en nom de note, avec des bémols ou
+        /// des dièses selon l'armure retenue.
+        /// </summary>
+        private static (NoteStep Note, Alteration Alteration) GetChordNoteSpelling(
+            int pitchClass, bool preferFlats) {
+            return (((pitchClass % 12) + 12) % 12) switch {
+                0 => (NoteStep.C, Alteration.neutral),
+                1 => preferFlats ? (NoteStep.D, Alteration.flat) : (NoteStep.C, Alteration.sharp),
+                2 => (NoteStep.D, Alteration.neutral),
+                3 => preferFlats ? (NoteStep.E, Alteration.flat) : (NoteStep.D, Alteration.sharp),
+                4 => (NoteStep.E, Alteration.neutral),
+                5 => (NoteStep.F, Alteration.neutral),
+                6 => preferFlats ? (NoteStep.G, Alteration.flat) : (NoteStep.F, Alteration.sharp),
+                7 => (NoteStep.G, Alteration.neutral),
+                8 => preferFlats ? (NoteStep.A, Alteration.flat) : (NoteStep.G, Alteration.sharp),
+                9 => (NoteStep.A, Alteration.neutral),
+                10 => preferFlats ? (NoteStep.B, Alteration.flat) : (NoteStep.A, Alteration.sharp),
+                _ => (NoteStep.B, Alteration.neutral)
+            };
+        }
+
+        /// <summary>
+        /// Orthographie la fondamentale d'un accord. En armure à bémols, un
+        /// accord mineur ou diminué sur sol bémol n'existe pas en pratique
+        /// (il faudrait des doubles bémols) : on écrit alors fa dièse.
+        /// </summary>
+        private static (NoteStep Note, Alteration Alteration) GetChordRootSpelling(
+            int pitchClass, ChordType type, bool preferFlats) {
+            if ((((pitchClass % 12) + 12) % 12) == 6
+                && preferFlats
+                && IsMinorFamily(type)) {
+                return (NoteStep.F, Alteration.sharp);
+            }
+
+            return GetChordNoteSpelling(pitchClass, preferFlats);
+        }
+
+        private static bool IsMinorFamily(ChordType type) {
+            return type is ChordType.Minor
+                or ChordType.MinorSixth
+                or ChordType.MinorSeventh
+                or ChordType.MinorMajorSeventh
+                or ChordType.MinorNinth
+                or ChordType.MinorEleventh
+                or ChordType.MinorThirteenth
+                or ChordType.Diminished
+                or ChordType.DiminishedSeventh
+                or ChordType.MinorSeventhFlatFive;
+        }
+
+        /// <summary>
         /// Retourne la signature rythmique en vigueur au début du fichier (4/4 par défaut).
         /// </summary>
         private static Model.TimeSignature GetInitialTimeSignature(List<MidiQuantizer.TimeSignatureChange> changes) {
@@ -552,132 +699,169 @@ namespace EZSong.UI {
 
         /// <summary>
         /// Déduit les accords de toutes les pistes MIDI, indépendamment des pistes
-        /// sélectionnées pour la transcription. Les pistes aiguës essentiellement
-        /// monophoniques sont considérées comme probablement mélodiques ; les basses
-        /// monophoniques sont conservées car elles apportent une information harmonique.
+        /// sélectionnées pour la transcription.
         /// </summary>
         private static void CalculateMeasureChords(MeasureData measure,
-            List<(long Start, long End, int Pitch, int Track)> allNotes, double measureStart,
-            double measureTicks, long ticksPerQuarter) {
-            if (allNotes.Count == 0) {
+            List<MidiChordAnalyzer.MidiNote> harmonicNotes, double measureStart,
+            double measureTicks, long ticksPerQuarter, bool preferFlats) {
+            if (harmonicNotes.Count == 0) {
                 return;
             }
 
-            List<(long Start, long End, int Pitch, int Track)> harmonicNotes =
-                SelectHarmonicAnalysisNotes(allNotes);
-            if (harmonicNotes.Count == 0) {
-                harmonicNotes = allNotes;
+            double measureEnd = measureStart + measureTicks;
+            List<MidiChordAnalyzer.MidiNote> notesInMeasure = harmonicNotes
+                .Where(n => n.Start < measureEnd && n.End > measureStart)
+                .ToList();
+            if (notesInMeasure.Count == 0) {
+                return;
             }
 
             RhythmRationalDuration beatDuration = measure.TimeSignature.GetBeatDuration().ApplyDots();
             double beatTicks = ticksPerQuarter * 4.0 * beatDuration.Numerator / beatDuration.Denominator;
             int beatCount = measure.TimeSignature.GetBeatCount();
-            double measureEnd = measureStart + measureTicks;
-            List<(long Start, long End, int Pitch, int Track)> notesInMeasure = harmonicNotes
-                .Where(n => n.Start < measureEnd && n.End > measureStart).ToList();
-            if (notesInMeasure.Count == 0) {
-                return;
-            }
+            MidiChordAnalyzer.DetectedChord? previousChord = null;
 
             for (int beat = 0; beat < beatCount; beat++) {
                 double beatStart = measureStart + beat * beatTicks;
                 double beatEnd = beatStart + beatTicks;
-                // L'accord est estimé à partir du temps courant et du contexte de la mesure.
-                // Le temps courant pèse davantage ; le contexte aide pour les arpèges.
-                Dictionary<int, double> weights = new();
-                foreach ((long Start, long End, int Pitch, int Track) note in notesInMeasure) {
-                    double overlapBeat = Math.Max(0, Math.Min(note.End, beatEnd) - Math.Max(note.Start, beatStart));
-                    double overlapMeasure = Math.Max(0, Math.Min(note.End, measureEnd) - Math.Max(note.Start, measureStart));
-                    if (overlapMeasure <= 0) {
-                        continue;
-                    }
 
-                    int pc = ((note.Pitch % 12) + 12) % 12;
-                    double weight = overlapBeat * 2.0 + overlapMeasure * 0.20;
-                    weights[pc] = weights.GetValueOrDefault(pc) + weight;
-                }
-
-                if (weights.Count == 0) {
+                // L'analyseur ne renvoie un accord que si les notes réellement
+                // jouées pendant le temps (et, pour les arpèges, pendant la
+                // mesure) le justifient. Un temps sans harmonie claire reste
+                // vide plutôt que de recevoir un accord inventé.
+                MidiChordAnalyzer.DetectedChord? detected = MidiChordAnalyzer.Analyze(
+                    notesInMeasure, beatStart, beatEnd, measureStart, measureEnd, previousChord);
+                if (detected is null) {
                     continue;
                 }
 
-                double maxWeight = weights.Values.Max();
-                if (maxWeight <= 0) {
-                    continue;
+                previousChord = detected;
+                (NoteStep rootNote, Alteration rootAlteration) =
+                    GetChordRootSpelling(detected.RootPitchClass, detected.Type, preferFlats);
+                NoteStep? bassNote = null;
+                Alteration bassAlteration = Alteration.neutral;
+                if (detected.BassPitchClass is int bassPitchClass) {
+                    (NoteStep detectedBassNote, Alteration detectedBassAlteration) =
+                        GetChordNoteSpelling(bassPitchClass, preferFlats);
+                    bassNote = detectedBassNote;
+                    bassAlteration = detectedBassAlteration;
                 }
 
-                (int Root, ChordType Type, double Score) best = (-1, ChordType.NoneOrMajor, double.NegativeInfinity);
-                for (int root = 0; root < 12; root++) {
-                    EvaluateChord(root, ChordType.NoneOrMajor, new[] { root, (root + 4) % 12, (root + 7) % 12 });
-                    EvaluateChord(root, ChordType.Minor, new[] { root, (root + 3) % 12, (root + 7) % 12 });
-                }
-
-                // Ne pas inventer un accord si moins de deux notes de l'accord sont
-                // réellement présentes dans la matière musicale de la mesure.
-                if (best.Root < 0) {
-                    continue;
-                }
-
-                Pitch rootPitch = Pitch.FromMidi(60 + best.Root);
                 measure.ChordSequence.ChordBeats[beat].Chords.Add(
                     new EZSong.Model.Chord(false, measure.TimeSignature.GetBeatDuration(),
-                        rootPitch.Note, rootPitch.Alteration, best.Type));
-
-                void EvaluateChord(int root, ChordType type, int[] tones) {
-                    int matches = tones.Count(pc => weights.GetValueOrDefault(pc) > 0);
-                    if (matches < 2) {
-                        return;
-                    }
-
-                    double chordWeight = tones.Sum(pc => weights.GetValueOrDefault(pc));
-                    double totalWeight = weights.Values.Sum();
-                    double coverage = chordWeight / Math.Max(1.0, totalWeight);
-                    double rootBonus = weights.GetValueOrDefault(root) / Math.Max(1.0, maxWeight);
-                    // Favorise les accords qui expliquent plusieurs notes, avec un léger
-                    // avantage à la fondamentale sans imposer sa présence.
-                    double score = coverage * 100.0 + matches * 8.0 + rootBonus * 5.0;
-                    if (score > best.Score) {
-                        best = (root, type, score);
-                    }
-                }
+                        rootNote, rootAlteration, detected.Type,
+                        bassNote, bassAlteration));
             }
         }
 
-        private static List<(long Start, long End, int Pitch, int Track)> SelectHarmonicAnalysisNotes(
-            List<(long Start, long End, int Pitch, int Track)> allNotes) {
-            List<(long Start, long End, int Pitch, int Track)> selected = new();
-            foreach (IGrouping<int, (long Start, long End, int Pitch, int Track)> trackGroup in allNotes.GroupBy(n => n.Track)) {
-                List<(long Start, long End, int Pitch, int Track)> trackNotes = trackGroup.OrderBy(n => n.Start).ToList();
+        private static List<MidiChordAnalyzer.MidiNote> SelectHarmonicAnalysisNotes(
+            List<(long Start, long End, int Pitch, int Track, int Channel)> allNotes,
+            List<int> voicePrograms) {
+            List<MidiChordAnalyzer.MidiNote> selected = new();
+            foreach (IGrouping<int, (long Start, long End, int Pitch, int Track, int Channel)> trackGroup
+                     in allNotes.GroupBy(n => n.Track)) {
+                int trackIndex = trackGroup.Key;
+                List<(long Start, long End, int Pitch, int Track, int Channel)> trackNotes =
+                    trackGroup.OrderBy(n => n.Start).ToList();
                 if (trackNotes.Count == 0) {
                     continue;
                 }
 
                 int medianPitch = trackNotes.Select(n => n.Pitch).OrderBy(p => p).ElementAt(trackNotes.Count / 2);
                 int pitchRange = trackNotes.Max(n => n.Pitch) - trackNotes.Min(n => n.Pitch);
-                int overlappingNotes = 0;
-                for (int i = 0; i < trackNotes.Count; i++) {
-                    bool overlapsAnother = false;
-                    for (int j = 0; j < trackNotes.Count; j++) {
-                        if (i != j && trackNotes[j].Start < trackNotes[i].End && trackNotes[j].End > trackNotes[i].Start) {
-                            overlapsAnother = true;
-                            break;
-                        }
-                    }
-                    if (overlapsAnother) {
-                        overlappingNotes++;
+
+                // Nombre maximal de notes simultanées dans la piste : une mélodie
+                // est essentiellement monophonique, contrairement à l'accompagnement.
+                int maxSimultaneous = MaxSimultaneousNotes(trackNotes);
+
+                // Instrument déclaré pour cette piste (programme GM), s'il existe.
+                int program = (voicePrograms is not null && trackIndex < voicePrograms.Count)
+                    ? voicePrograms[trackIndex] : 0;
+
+                // Une piste est considérée comme mélodique si son instrument est un
+                // instrument de lead (bois, cuivres solo, synthés lead, voix…) ou
+                // si son comportement est celui d'une mélodie : monophonique,
+                // registre aigu ou médium-aigu, tessiture large. Les pistes graves
+                // restent toujours incluses, même monophoniques (basses harmoniques).
+                bool likelyMelody = false;
+                if (IsMelodicProgram(program)) {
+                    likelyMelody = true;
+                } else if (medianPitch >= 55) {
+                    if (maxSimultaneous <= 1 && trackNotes.Count >= 5 && pitchRange >= 7) {
+                        likelyMelody = true;
+                    } else if (maxSimultaneous <= 2 && medianPitch >= 66 && pitchRange >= 12
+                               && trackNotes.Count >= 6) {
+                        likelyMelody = true;
+                    } else if (medianPitch >= 72 && pitchRange >= 5 && trackNotes.Count >= 4) {
+                        likelyMelody = true;
                     }
                 }
-                double polyphonyRatio = (double)overlappingNotes / trackNotes.Count;
 
-                // Exclusion prudente : seulement les pistes aiguës, quasi monophoniques,
-                // avec une tessiture étendue sont classées comme mélodies probables.
-                // Les pistes graves restent incluses même si elles sont monophoniques.
-                bool likelyMelody = medianPitch >= 60 && pitchRange >= 12 && polyphonyRatio < 0.08 && trackNotes.Count >= 5;
-                if (!likelyMelody) {
-                    selected.AddRange(trackNotes);
+                if (likelyMelody) {
+                    continue;
+                }
+
+                foreach ((long Start, long End, int Pitch, int Track, int Channel) note in trackNotes) {
+                    selected.Add(new MidiChordAnalyzer.MidiNote(note.Start, note.End, note.Pitch, note.Track, 1.0));
                 }
             }
+
+            // Repli : si aucune piste n'a été retenue (tout a été classé comme
+            // mélodie), on analyse toutes les notes avec un poids plein plutôt que
+            // de ne produire aucun accord.
+            if (selected.Count == 0) {
+                foreach ((long Start, long End, int Pitch, int Track, int Channel) note in allNotes) {
+                    selected.Add(new MidiChordAnalyzer.MidiNote(note.Start, note.End, note.Pitch, note.Track, 1.0));
+                }
+            }
+
             return selected;
+        }
+
+        private static int MaxSimultaneousNotes(
+            List<(long Start, long End, int Pitch, int Track, int Channel)> notes) {
+            List<(long Time, int Delta)> events = new();
+            foreach ((long Start, long End, int Pitch, int Track, int Channel) note in notes) {
+                events.Add((note.Start, 1));
+                events.Add((note.End, -1));
+            }
+            // À temps égal, les fins (-1) précèdent les débuts (+1) : deux notes
+            // qui se touchent ne sont pas simultanées.
+            events.Sort((a, b) => a.Time == b.Time ? a.Delta.CompareTo(b.Delta) : a.Time.CompareTo(b.Time));
+            int current = 0;
+            int maximum = 0;
+            foreach ((long Time, int Delta) ev in events) {
+                current += ev.Delta;
+                if (current > maximum) {
+                    maximum = current;
+                }
+            }
+            return maximum;
+        }
+
+        private static bool IsMelodicProgram(int program) {
+            // Programmes General MIDI considérés comme des instruments de lead
+            // (mélodie) plutôt que comme de l'accompagnement harmonique.
+            return program is (>= 52 and <= 54)   // voix / chœurs
+                or (>= 56 and <= 60)              // cuivres solo
+                or (>= 64 and <= 79)              // anches / flûtes
+                or (>= 80 and <= 87)              // synthés lead
+                or (>= 104 and <= 119);           // effets / percussifs
+        }
+
+        private static List<int> ReadVoicePrograms(List<TrackChunk> tracks) {
+            List<int> programs = new();
+            foreach (TrackChunk track in tracks) {
+                int program = 0;
+                foreach (MidiEvent midiEvent in track.Events) {
+                    if (midiEvent is ProgramChangeEvent programChange) {
+                        program = (int)programChange.ProgramNumber;
+                        break;
+                    }
+                }
+                programs.Add(program);
+            }
+            return programs;
         }
 
         /// <summary>
