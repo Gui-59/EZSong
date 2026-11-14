@@ -413,7 +413,6 @@ namespace EZSong.UI {
                 staffNotes[i] = new List<MidiQuantizer.Note>();
             }
             List<(long Start, long End, int Pitch, int Track)> allMidiNotes = new();
-            List<(long Time, string Text)> lyrics = new();
             for (int trackIndex = 0; trackIndex < tracks.Count; trackIndex++) {
                 TrackChunk track = tracks[trackIndex];
                 int staffIndex = selectedTracks.IndexOf(trackIndex);
@@ -426,15 +425,14 @@ namespace EZSong.UI {
                         staffNotes[staffIndex].Add(new MidiQuantizer.Note(start, end, pitch));
                     }
                 }
-                // Les événements texte/lyrics sont horodatés en cumulant les DeltaTime de la piste.
-                long absoluteTime = 0;
-                foreach (MidiEvent ev in track.Events) {
-                    absoluteTime += ev.DeltaTime;
-                    if (ev is LyricEvent lyric && !string.IsNullOrWhiteSpace(lyric.Text)) {
-                        lyrics.Add((absoluteTime, lyric.Text.Trim()));
-                    }
-                }
             }
+            // Les paroles sont lues dans toutes les pistes, indépendamment des
+            // pistes choisies pour la transcription.
+            List<MidiLyricsExtractor.Lyric> lyrics = MidiLyricsExtractor.Extract(tracks, ticksPerQuarter / 8);
+            // Les syllabes sont regroupées en mots avant la répartition dans
+            // les mesures : un mot traversant une barre de mesure n'est ainsi
+            // jamais coupé en deux.
+            List<MidiLyricsExtractor.Lyric> lyricWords = MidiLyricsExtractor.GroupWords(lyrics);
             if (staffNotes.All(notes => notes.Count == 0)) {
                 throw new InvalidDataException("Les pistes sélectionnées ne contiennent aucune note.");
             }
@@ -483,8 +481,9 @@ namespace EZSong.UI {
                     global.Pattern = staffQuantizations[staffIndex].BuildPattern(staffIndex, span);
                     staffs.Add(global);
                 }
-                string measureLyrics = string.Join(" ", lyrics.Where(lyric => span.Contains(lyric.Time))
-                    .OrderBy(lyric => lyric.Time).Select(lyric => lyric.Text));
+                string measureLyrics = MidiLyricsExtractor.Format(lyricWords
+                    .Where(word => span.Contains(word.Time))
+                    .OrderBy(word => word.Time));
                 ChordSequence chordSequence = new();
                 chordSequence.InitializeFromTimeSignature(span.TimeSignature);
                 MeasureData measure = new(measureIndex, song.SongSettings, span.TimeSignature, new KeySignature(),
